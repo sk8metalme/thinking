@@ -1,0 +1,7 @@
+interface:
+  display_name: "GitHub Pages公開"
+  short_description: "GitHub Pages記事の作成・検証・公開準備を支援"
+  default_prompt: "$publish-github-pages を使って、thinkingの記事を読者確認・図表レビュー・検証付きで公開準備して"
+
+policy:
+  allow_implicit_invocation: true

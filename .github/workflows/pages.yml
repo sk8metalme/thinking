@@ -1,0 +1,138 @@
+name: GitHub Pages
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    name: Validate pages
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
+
+      - name: Check repository contract
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          test -f docs/index.html
+          test -f docs/.nojekyll
+          git diff --check HEAD^ HEAD
+
+          while IFS= read -r -d '' file; do
+            name="$(basename "$file")"
+            if [ "$name" != "index.html" ] && ! printf '%s\n' "$name" | grep -Eq '^[a-z0-9]+(-[a-z0-9]+)*\.html$'; then
+              echo "invalid HTML filename: $file" >&2
+              exit 1
+            fi
+
+            grep -Eq '^<!DOCTYPE html>' "$file"
+            grep -Eq '<html[^>]+lang="[^"]+"' "$file"
+            grep -Eq '<meta[^>]+name="viewport"' "$file"
+            grep -Eq '<title>[^<]+</title>' "$file"
+          done < <(find docs -type f -name '*.html' -print0)
+
+      - name: Check local links and anchors
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from html.parser import HTMLParser
+          from pathlib import Path
+          from urllib.parse import unquote, urlsplit
+
+          root = Path("docs").resolve()
+
+          class Document(HTMLParser):
+              def __init__(self):
+                  super().__init__()
+                  self.references = []
+                  self.anchors = set()
+
+              def handle_starttag(self, tag, attrs):
+                  attributes = dict(attrs)
+                  if attributes.get("id"):
+                      self.anchors.add(attributes["id"])
+                  if tag == "a" and attributes.get("name"):
+                      self.anchors.add(attributes["name"])
+                  for attribute in ("href", "src"):
+                      if attributes.get(attribute):
+                          self.references.append(attributes[attribute])
+
+          documents = {}
+          for page in sorted(root.rglob("*.html")):
+              parser = Document()
+              parser.feed(page.read_text(encoding="utf-8"))
+              documents[page.resolve()] = parser
+
+          failures = []
+          for page, document in documents.items():
+              for reference in document.references:
+                  parts = urlsplit(reference)
+                  if parts.scheme or parts.netloc:
+                      continue
+
+                  target_path = unquote(parts.path)
+                  target = (page.parent / target_path).resolve() if target_path else page
+                  try:
+                      target.relative_to(root)
+                  except ValueError:
+                      failures.append(f"{page}: link escapes docs/: {reference}")
+                      continue
+
+                  if target.is_dir():
+                      target /= "index.html"
+                  if not target.exists():
+                      failures.append(f"{page}: missing target: {reference}")
+                      continue
+                  if parts.fragment and parts.fragment not in documents.get(target, Document()).anchors:
+                      failures.append(f"{page}: missing anchor: {reference}")
+
+          if failures:
+              print("\n".join(failures))
+              raise SystemExit(1)
+          PY
+
+  deploy:
+    name: Deploy pages
+    needs: validate
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: ./docs
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
