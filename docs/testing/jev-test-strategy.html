@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>テスト戦略にJevを差し込む — 判断を分解する</title>
+<meta name="description" content="人間が担ってきたテスト戦略の判断をJevへ推薦させ、コード側の安全なgateと組み合わせる導入案">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Shippori+Mincho+B1:wght@600;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EEF2F0; --paper-2:#E3E9E6; --card:#F8FAF9;
+  --ink:#16232C; --ink-2:#4A5A63; --rule:#C6D1CC;
+  --teal:#1F6F63; --teal-soft:#D5E8E3;
+  --red:#B5392A; --red-soft:#F3DCD7;
+  --amber:#A8720C; --amber-soft:#F2E6CC;
+  --navy:#2D4A6B; --navy-soft:#DCE4EE;
+  --code-bg:#1B2830; --code-ink:#DDE7E3;
+  --serif:"Shippori Mincho B1","Hiragino Mincho ProN","Yu Mincho",serif;
+  --sans:"BIZ UDPGothic","Hiragino Sans","Yu Gothic",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#10191F; --paper-2:#16222A; --card:#18252E;
+    --ink:#E3EAE7; --ink-2:#9FB0AA; --rule:#2C3C45;
+    --teal:#5FBFAE; --teal-soft:#16352F;
+    --red:#EE7A68; --red-soft:#3A1F1B;
+    --amber:#E3B04F; --amber-soft:#382C14;
+    --navy:#8FB0D6; --navy-soft:#1C2B3D;
+    --code-bg:#0B1216; --code-ink:#D5E0DC;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#10191F; --paper-2:#16222A; --card:#18252E;
+  --ink:#E3EAE7; --ink-2:#9FB0AA; --rule:#2C3C45;
+  --teal:#5FBFAE; --teal-soft:#16352F;
+  --red:#EE7A68; --red-soft:#3A1F1B;
+  --amber:#E3B04F; --amber-soft:#382C14;
+  --navy:#8FB0D6; --navy-soft:#1C2B3D;
+  --code-bg:#0B1216; --code-ink:#D5E0DC;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 16px);scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.85;-webkit-font-smoothing:antialiased}
+a{color:var(--navy);text-underline-offset:3px}
+a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid var(--amber);outline-offset:2px;border-radius:4px}
+code{font-family:var(--mono);font-size:.88em;background:var(--paper-2);padding:.1em .35em;border-radius:4px}
+h1,h2,h3,h4{font-family:var(--serif);line-height:1.35;letter-spacing:.01em}
+h2{font-size:clamp(1.6rem,3.2vw,2.1rem);margin:0 0 .6em}
+h3{font-size:1.2rem;margin:0 0 .6em}
+h4{font-size:1.05rem;margin:0 0 .5em}
+p{margin:0 0 1.1em}
+strong{color:var(--ink)}
+
+/* ---------- layout ---------- */
+.shell{display:grid;grid-template-columns:230px minmax(0,1fr);gap:48px;max-width:1180px;margin:0 auto;padding:0 24px}
+nav.toc{position:sticky;top:calc(env(safe-area-inset-top,0px) + 24px);align-self:start;padding-top:40px;font-size:.88rem;max-height:calc(100vh - 48px);overflow:auto}
+nav.toc p{font-family:var(--serif);font-weight:800;margin-bottom:.6em}
+nav.toc ol{list-style:none;margin:0;padding:0;border-left:2px solid var(--rule)}
+nav.toc li a{display:block;padding:.3em .9em;color:var(--ink-2);text-decoration:none;border-left:2px solid transparent;margin-left:-2px}
+nav.toc li a:hover,nav.toc li a.active{color:var(--ink);border-left-color:var(--teal)}
+main{min-width:0;padding-bottom:80px}
+section.block{padding:64px 0 24px;border-top:1px solid var(--rule)}
+.prose{max-width:760px}
+.eyebrow{font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;color:var(--teal);font-weight:700}
+@media (max-width:900px){
+  .shell{grid-template-columns:1fr;gap:0}
+  nav.toc{display:none}
+}
+
+/* ---------- hero ---------- */
+.hero{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:40px;align-items:center;padding:56px 0 48px}
+.hero h1{font-size:clamp(2.1rem,5vw,3.4rem);font-weight:800;margin:.35em 0 .4em;line-height:1.2}
+.hero .lede{font-size:1.08rem;color:var(--ink-2);max-width:36em}
+.premise{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px;padding:0;list-style:none}
+.premise li{font-size:.85rem;border:1px solid var(--rule);background:var(--card);border-radius:999px;padding:.25em .9em}
+.decision-map{background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:18px}
+.decision-map figcaption{font-size:.8rem;color:var(--ink-2);text-align:center;margin-top:4px}
+.decision-map svg{display:block;width:100%;height:auto}
+.decision-map .box{fill:var(--paper-2);stroke:var(--rule)}
+.decision-map .ask{fill:var(--amber-soft);stroke:var(--amber)}
+.decision-map .gate{fill:var(--teal-soft);stroke:var(--teal)}
+.decision-map text{font-family:var(--sans);font-size:12px;fill:var(--ink)}
+.decision-map .small{font-size:10px;fill:var(--ink-2)}
+.decision-map path{fill:none;stroke:var(--ink-2);stroke-width:1.4}
+@media (max-width:760px){.hero{grid-template-columns:1fr}.decision-map{max-width:420px;margin:0 auto}}
+
+/* ---------- common components ---------- */
+.two,.three{display:grid;gap:18px;margin:24px 0}
+.two{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.three{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.panel,.card{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:18px 20px}
+.panel p:last-child,.card p:last-child{margin-bottom:0}
+.panel ul,.card ul{margin:.4em 0 0;padding-left:1.2em}
+.panel li,.card li{margin:.3em 0}
+.callout{border-left:4px solid var(--teal);background:var(--teal-soft);padding:16px 20px;border-radius:0 8px 8px 0;margin:22px 0;max-width:820px}
+.callout.warn{border-color:var(--red);background:var(--red-soft)}
+.callout.idea{border-color:var(--amber);background:var(--amber-soft)}
+.callout p:last-child{margin-bottom:0}
+.small{font-size:.86rem;color:var(--ink-2)}
+.note{border-left:4px solid var(--navy);background:var(--navy-soft);padding:14px 18px;border-radius:0 8px 8px 0;margin:22px 0;max-width:820px;font-size:.94rem}
+.badge{display:inline-block;font-size:.73rem;padding:.1em .65em;border-radius:999px;margin-bottom:.65em;font-weight:700}
+.badge.teal{color:var(--teal);background:var(--teal-soft)}
+.badge.amber{color:var(--amber);background:var(--amber-soft)}
+.badge.red{color:var(--red);background:var(--red-soft)}
+.badge.navy{color:var(--navy);background:var(--navy-soft)}
+
+/* ---------- tables ---------- */
+.scroll{overflow-x:auto;background:var(--card);border:1px solid var(--rule);border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:.9rem;min-width:720px}
+th,td{padding:.75em 1em;text-align:left;vertical-align:top;border-bottom:1px solid var(--rule)}
+th{font-weight:700;background:var(--paper-2);font-size:.82rem;color:var(--ink-2)}
+tr:last-child td{border-bottom:0}
+td:first-child{font-weight:700}
+.status{font-weight:700;white-space:nowrap}
+.status.good{color:var(--teal)}.status.caution{color:var(--amber)}.status.stop{color:var(--red)}
+
+/* ---------- flow ---------- */
+.flow{display:flex;align-items:stretch;gap:10px;margin:24px 0 8px}
+.flow-step{flex:1;position:relative;padding:16px 14px;border:1px solid var(--rule);border-radius:10px;background:var(--card)}
+.flow-step:not(:last-child)::after{content:"→";position:absolute;right:-17px;top:50%;z-index:1;transform:translateY(-50%);color:var(--teal);font-size:1.4rem;font-weight:900}
+.flow-step b{display:block;margin-bottom:3px;color:var(--teal);font-size:.92rem}
+.flow-step span{color:var(--ink-2);font-size:.8rem}
+@media (max-width:850px){
+  .flow{flex-direction:column}
+  .flow-step:not(:last-child)::after{content:"↓";right:auto;top:auto;bottom:-21px;left:50%;transform:translateX(-50%)}
+}
+.pipe{margin:24px 0;background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:16px;overflow-x:auto}
+.pipe svg{min-width:820px;display:block}
+.pipe text{font-family:var(--sans);font-size:12px;fill:var(--ink)}
+.pipe .lane{font-family:var(--serif);font-weight:800;font-size:13px;fill:var(--ink-2)}
+.pipe rect{fill:var(--paper-2);stroke:var(--rule)}
+.pipe rect.ask{fill:var(--amber-soft);stroke:var(--amber)}
+.pipe rect.gate{fill:var(--teal-soft);stroke:var(--teal)}
+.pipe rect.observe{fill:var(--navy-soft);stroke:var(--navy)}
+.pipe path{fill:none;stroke:var(--ink-2);stroke-width:1.3}
+
+/* ---------- code and checklist ---------- */
+pre.code{background:var(--code-bg);color:var(--code-ink);font-family:var(--mono);font-size:.82rem;line-height:1.65;padding:16px 18px;border-radius:10px;overflow-x:auto;margin:18px 0}
+pre.code .k{color:#E7B86A}pre.code .s{color:#8FD0BF}pre.code .c{color:#7F9A92}
+.checklist{columns:2 300px;column-gap:32px;margin:20px 0;padding:0;list-style:none;font-size:.93rem}
+.checklist li{break-inside:avoid;padding:.35em 0 .35em 1.7em;position:relative}
+.checklist li::before{content:"";position:absolute;left:0;top:.75em;width:12px;height:12px;border:2px solid var(--teal);border-radius:3px}
+.road{list-style:none;padding:0;margin:24px 0;counter-reset:r;max-width:820px}
+.road li{position:relative;padding:0 0 26px 58px;border-left:2px solid var(--rule);margin-left:18px}
+.road li:last-child{border-left-color:transparent}
+.road li::before{counter-increment:r;content:counter(r);position:absolute;left:-19px;top:-2px;width:36px;height:36px;border-radius:50%;background:var(--ink);color:var(--paper);display:grid;place-items:center;font-family:var(--serif);font-weight:800}
+.road h4{margin:0 0 .3em;font-size:1.08rem}
+.road p{margin:0;font-size:.93rem;color:var(--ink-2)}
+
+details.faq{border-bottom:1px solid var(--rule);padding:.7em 0;max-width:820px}
+details.faq summary{cursor:pointer;font-weight:700;list-style:none;display:flex;gap:.6em}
+details.faq summary::before{content:"+";font-family:var(--mono);color:var(--teal);width:1em}
+details.faq[open] summary::before{content:"−"}
+details.faq div{padding:.6em 0 0 1.6em;font-size:.94rem;color:var(--ink-2)}
+footer{border-top:1px solid var(--rule);margin-top:40px;padding-top:24px;font-size:.82rem;color:var(--ink-2)}
+.theme-toggle{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:5;background:var(--card);color:var(--ink);border:1px solid var(--rule);border-radius:999px;padding:.4em .9em;font:inherit;font-size:.82rem;cursor:pointer}
+@media print{
+  body{background:#fff}
+  nav.toc{position:static}
+  .panel,.card,.scroll,.pipe{box-shadow:none}
+  section{break-inside:avoid}
+  .theme-toggle{display:none}
+}
+</style>
+</head>
+<body>
+<button class="theme-toggle" id="themeBtn" type="button">表示テーマ切替</button>
+<div class="shell">
+<nav class="toc" aria-label="目次">
+  <p>目次</p>
+  <ol>
+    <li><a href="#summary">先に結論</a></li>
+    <li><a href="#boundary">代替する判断</a></li>
+    <li><a href="#layers">七枚の網への差し込み方</a></li>
+    <li><a href="#usecases">適用候補</a></li>
+    <li><a href="#contract">Decision Contract</a></li>
+    <li><a href="#flow">実行フロー</a></li>
+    <li><a href="#roadmap">導入の順番</a></li>
+    <li><a href="#metrics">測る指標</a></li>
+    <li><a href="#faq">よくある迷い</a></li>
+  </ol>
+</nav>
+
+<main>
+<header class="hero">
+  <div>
+    <div class="eyebrow">TEST STRATEGY × JEV</div>
+    <h1>テスト戦略の<br>if / switchを、Jevに相談する</h1>
+    <p class="lede">人間がコードを書く前後に行ってきた「どのテストを回すか」「この失敗をどう読むか」「何を追加で確かめるか」という判断を、Jevへの問いに変える。ただし、最終的な合否・権限・安全側への退避は決定的なコードに残す。</p>
+    <ul class="premise" aria-label="このページの前提">
+      <li>既存の七枚の網は維持</li>
+      <li>Jevは推薦・分類を担当</li>
+      <li>不明は安全側へ倒す</li>
+      <li>Shadow Modeから始める</li>
+    </ul>
+  </div>
+  <figure class="decision-map" style="margin:0">
+    <svg viewBox="0 0 360 300" role="img" aria-label="決定的な前処理とJevの推薦をコード側のgateでつなぐ流れ">
+      <rect class="box" x="24" y="18" width="312" height="48" rx="8"/>
+      <text x="180" y="39" text-anchor="middle">コードが状態を作る</text>
+      <text class="small" x="180" y="56" text-anchor="middle">diff / test inventory / fixture / redaction</text>
+      <path d="M180 66 V94"/>
+      <rect class="ask" x="24" y="96" width="312" height="58" rx="8"/>
+      <text x="180" y="120" text-anchor="middle">Jevへ意味のある問いを投げる</text>
+      <text class="small" x="180" y="139" text-anchor="middle">choice / score / unknown + reason</text>
+      <path d="M180 154 V182"/>
+      <rect class="gate" x="24" y="184" width="312" height="58" rx="8"/>
+      <text x="180" y="208" text-anchor="middle">コード側がgateする</text>
+      <text class="small" x="180" y="227" text-anchor="middle">threshold / margin / fallback / audit</text>
+      <path d="M180 242 V270"/>
+      <text x="180" y="291" text-anchor="middle">テスト実行とreceipt</text>
+    </svg>
+    <figcaption>判断を分解すると、Jevを使う場所と使わない場所が見える。</figcaption>
+  </figure>
+</header>
+
+<!-- ============ SUMMARY ============ -->
+<section class="block" id="summary">
+  <div class="prose">
+    <h2>先に結論：導入できる。ただし「合否判定器」にはしない</h2>
+    <p>Jevは、構文解析やテスト実行の代わりではない。人間が経験と文脈で行ってきた、候補の絞り込み・意味の分類・優先順位付けを、型のある回答として返す部品にするとテスト戦略へ差し込める。</p>
+  </div>
+  <div class="callout">
+    <p><strong>提案：</strong>最初の導入先は、テストを減らす仕組みではなく、<strong>テストを選び、失敗を分類し、追加検証を提案するShadow Mode</strong>。Jevの回答はrecommendationとして記録し、既存のテスト結果や決定的なルールと比較する。</p>
+    <p class="small">この境界なら、Jevが不明・timeout・outageになっても通常の安全なテストフローを壊さず、判断の質とコストを測りながら段階的に自動化できる。</p>
+  </div>
+  <div class="three">
+    <div class="card"><span class="badge teal">Jevに寄せる</span><h3>意味を読む判断</h3><p>変更とテストの影響関係、失敗ログの意味、仕様とテストのズレ、追加すべき境界例の候補。</p></div>
+    <div class="card"><span class="badge navy">コードに残す</span><h3>決定的な責務</h3><p>対象抽出、テスト発見、schema検証、閾値、最終exit code、必須テスト、権限、秘密の除外。</p></div>
+    <div class="card"><span class="badge red">人へ戻す</span><h3>危険な不確実性</h3><p>回答が割れる場合、入力stateが足りない場合、破壊的操作やCI blockingに関わる場合はdeferしてレビューへ。</p></div>
+  </div>
+</section>
+
+<!-- ============ BOUNDARY ============ -->
+<section class="block" id="boundary">
+  <div class="prose">
+    <h2>代替するのは、判定文ではなく「問いを作る作業」</h2>
+    <p>Jevをif文の置き換えとして考えると、責務が広がりすぎる。置き換える対象は、if文へ入れる前に人間が行っている「何を見ればよいか」「どの候補を比較するか」「この結果をどう説明するか」の作業だ。</p>
+  </div>
+  <div class="scroll">
+    <table>
+      <thead><tr><th>判断の種類</th><th>人間がこれまでしていたこと</th><th>Jevへ聞く問い</th><th>最終的に決めるもの</th></tr></thead>
+      <tbody>
+        <tr><td>テスト候補</td><td>変更箇所とテストの関係を読み、優先順をつける</td><td>このdiffが影響しそうなテストはどれか</td><td>必須テストと実行順はコード＋ポリシー</td></tr>
+        <tr><td>失敗分類</td><td>ログ・diff・履歴を見て原因の仮説を立てる</td><td>この失敗は実装・環境・フレークのどれに近いか</td><td>再試行、停止、担当者通知はコード＋人間</td></tr>
+        <tr><td>追加ケース</td><td>仕様と既存テストを読み、抜けた境界を考える</td><td>この仕様に対して未検証の境界例は何か</td><td>実行可能なtest codeは人間のレビュー後</td></tr>
+        <tr><td>ミューテーション</td><td>生き残った変異を読み、重要度と追加テストを判断する</td><td>この変異は本当の検証漏れか、等価か</td><td>スコア反映・閾値変更は決定的ルール</td></tr>
+        <tr><td>リリースリスク</td><td>変更範囲・証拠・過去障害をまとめて判断する</td><td>今回の証拠から、追加確認が必要なリスクは何か</td><td>リリース停止やrollbackはSLO・policy</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="note"><strong>原則：</strong>決定的に解けるものはJevへ送らない。型、schema、静的解析、テスト実行、カバレッジ計算、exit codeは安定した機械に任せ、Jevには意味の曖昧さだけを渡す。</div>
+</section>
+
+<!-- ============ LAYERS ============ -->
+<section class="block" id="layers">
+  <div class="prose">
+    <h2>七枚の網に、判断レイヤーを差し込む</h2>
+    <p>既存のテスト戦略に新しい網を一枚足すのではなく、各網の前後にある判断を薄いJevレイヤーで補助する。テストそのものの信頼性を落とさず、網が何を捕まえたかを説明しやすくする。</p>
+  </div>
+  <div class="flow" aria-label="Jevを含むテスト判断の流れ">
+    <div class="flow-step"><b>1. Collect</b><span>diff、テスト一覧、仕様、過去結果を集める</span></div>
+    <div class="flow-step"><b>2. Normalize</b><span>対象とstateをコードで要約・redactする</span></div>
+    <div class="flow-step"><b>3. Ask</b><span>Jevへtyped questionをbatchで投げる</span></div>
+    <div class="flow-step"><b>4. Gate</b><span>threshold・margin・fallbackをコードで判定</span></div>
+    <div class="flow-step"><b>5. Run</b><span>テストを実行し、回答と結果をreceipt化</span></div>
+  </div>
+  <div class="scroll">
+    <table>
+      <thead><tr><th>網</th><th>Jevに相談できること</th><th>相談しないこと</th><th>安全な着地点</th></tr></thead>
+      <tbody>
+        <tr><td>静的解析</td><td>規約違反の意味的な優先順位、review signal</td><td>型、構文、依存方向の検証</td><td>warning中心。exit codeは静的解析</td></tr>
+        <tr><td>単体</td><td>境界値・異常系の追加候補</td><td>assertionの合否、coverage計算</td><td>候補をfixture化し、人間レビュー後に実装</td></tr>
+        <tr><td>ミューテーション</td><td>生存変異の分類と追加テストの提案</td><td>変異を殺したとみなす判定</td><td>mutation resultとJev回答を別々に記録</td></tr>
+        <tr><td>契約</td><td>変更が影響しそうなconsumer・契約の候補</td><td>schema互換性の検証</td><td>全必須契約は決定的に実行</td></tr>
+        <tr><td>統合</td><td>失敗の原因候補、追加の障害注入候補</td><td>DB・queue・networkの実際の整合</td><td>環境結果を根拠として保存</td></tr>
+        <tr><td>E2E</td><td>変更に近いcritical journeyの優先順位</td><td>必須導線の省略、成功判定</td><td>critical pathは常に実行</td></tr>
+        <tr><td>本番検証</td><td>アラートの関連事象の分類、調査の次の一手</td><td>SLO判定、rollback、権限変更</td><td>運用policyが最終判断を保持</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============ USE CASES ============ -->
+<section class="block" id="usecases">
+  <div class="prose">
+    <h2>最初に試せる適用候補</h2>
+    <p>価値が出やすく、失敗しても本番コードの実行を直接変えない順に並べる。共通するのは、Jevの提案を見なくても既存フローが成立することだ。</p>
+  </div>
+  <div class="three">
+    <article class="panel">
+      <span class="badge teal">P1 · Shadow</span>
+      <h3>差分からテスト候補を選ぶ</h3>
+      <p><strong>問い：</strong>今回のdiffに影響しそうなテストを、理由付きで順位づけできるか。</p>
+      <p><strong>出力：</strong>test id、score、reason、confidence、候補漏れの有無。</p>
+      <p class="small"><strong>ガード：</strong>必須suiteは省略しない。Jevは追加実行候補と並び順だけを提案する。</p>
+    </article>
+    <article class="panel">
+      <span class="badge teal">P1 · Review aid</span>
+      <h3>ミューテーション生存変異を読む</h3>
+      <p><strong>問い：</strong>生き残った変異は検証漏れか、等価変異か、対象外か。</p>
+      <p><strong>出力：</strong>分類、根拠、追加テスト案、確信度。</p>
+      <p class="small"><strong>ガード：</strong>mutation scoreの計算と閾値は既存runnerが持ち、回答だけをreview signalにする。</p>
+    </article>
+    <article class="panel">
+      <span class="badge amber">P1 · Shadow</span>
+      <h3>仕様・実装・テストのズレを探す</h3>
+      <p><strong>問い：</strong>説明・実装・テストが同じ振る舞いを主張しているか。</p>
+      <p><strong>出力：</strong>矛盾箇所、対象行、検証すべき主張。</p>
+      <p class="small"><strong>ガード：</strong>最初はCIを赤くせず、誤検出率と有用検出率をrule単位で測る。</p>
+    </article>
+    <article class="panel">
+      <span class="badge amber">P2 · Triage</span>
+      <h3>フレークの仮説を分類する</h3>
+      <p><strong>問い：</strong>時間・順序・共有状態・外部依存のどれが失敗と整合するか。</p>
+      <p><strong>出力：</strong>原因候補、再現手順、追加ログの提案。</p>
+      <p class="small"><strong>ガード：</strong>自動retryやskipの理由にはしない。skipは別の人間承認が必要。</p>
+    </article>
+    <article class="panel">
+      <span class="badge navy">P2 · Planning</span>
+      <h3>契約・E2Eの焦点を絞る</h3>
+      <p><strong>問い：</strong>変更に近いconsumerやcritical journeyはどれか。</p>
+      <p><strong>出力：</strong>優先順位と、見落としがありそうな境界。</p>
+      <p class="small"><strong>ガード：</strong>全必須契約とcritical journeyは必ず残し、Jevは追加の観測を増やす。</p>
+    </article>
+    <article class="panel">
+      <span class="badge navy">P2 · Operations</span>
+      <h3>本番後の調査を補助する</h3>
+      <p><strong>問い：</strong>アラートと直近変更・テスト証拠の組み合わせから、次に見るべき証拠は何か。</p>
+      <p><strong>出力：</strong>調査順、関連receipt、再現用fixtureの候補。</p>
+      <p class="small"><strong>ガード：</strong>SLO判定・rollback・権限操作は既存の運用policyから切り離さない。</p>
+    </article>
+  </div>
+</section>
+
+<!-- ============ CONTRACT ============ -->
+<section class="block" id="contract">
+  <div class="prose">
+    <h2>Jevとの境界をDecision Contractにする</h2>
+    <p>Jevを便利な関数として直接呼ぶと、問い・state・閾値・fallbackが各機能に散らばる。テスト判断を共通の契約にして、回答がなくてもコード側のgateだけで再現できるようにする。</p>
+  </div>
+  <div class="two">
+    <div class="panel"><h3>送ってよいstate</h3><ul>
+      <li>変更ファイルの要約、テストID、schema・契約の版</li>
+      <li>過去の結果、mutationの種別、必要最小限のログ</li>
+      <li>redaction済みの仕様断片と、状態のdigest</li>
+      <li>問いのversion、候補集合、予算、実行モード</li>
+    </ul></div>
+    <div class="panel"><h3>境界の外に置くもの</h3><ul>
+      <li>秘密、API key、会話全文、巨大な生ログ</li>
+      <li>テストの必須・禁止ポリシーそのもの</li>
+      <li>最終exit code、rollback、権限付与</li>
+      <li>Jevのconfidenceだけで決めるallow</li>
+    </ul></div>
+  </div>
+  <pre class="code">{
+  <span class="k">"kind"</span>: <span class="s">"test-impact"</span>,
+  <span class="k">"contract_version"</span>: <span class="s">"score.v1"</span>,
+  <span class="k">"question_version"</span>: <span class="s">"impact.2026-09"</span>,
+  <span class="k">"state_digest"</span>: <span class="s">"sha256:…"</span>,
+  <span class="k">"answer"</span>: { <span class="k">"items"</span>: [<span class="s">"unit.auth.12"</span>], <span class="k">"score"</span>: 3.4, <span class="k">"confidence"</span>: 0.78 },
+  <span class="k">"decision"</span>: { <span class="k">"status"</span>: <span class="s">"recommend"</span>, <span class="k">"margin"</span>: 0.21 },
+  <span class="k">"fallback"</span>: <span class="s">"run-required-suite"</span>,
+  <span class="k">"cost"</span>: { <span class="k">"calls"</span>: 1, <span class="k">"tokens"</span>: 812, <span class="k">"latency_ms"</span>: 427 },
+  <span class="k">"replay_id"</span>: <span class="s">"replay_…"</span>
+}</pre>
+  <div class="callout warn"><strong>unknownは失敗ではなく、重要な結果。</strong> timeout・outage・入力不足・回答の割れを「テスト不要」へ変換しない。必須suiteを実行する、deferする、または人間レビューへ戻す。</div>
+</section>
+
+<!-- ============ FLOW ============ -->
+<section class="block" id="flow">
+  <div class="prose">
+    <h2>実行フロー：Jevはテストパイプラインの横に置く</h2>
+    <p>Jevの相談が落ちても通常のテストが続く構成から始める。Jevの結果は実行経路を上書きするのではなく、既存結果と並ぶ証拠にする。</p>
+  </div>
+  <div class="pipe">
+    <svg viewBox="0 0 1000 245" role="img" aria-label="変更からテスト実行とDecision Receiptまでの流れ">
+      <text class="lane" x="10" y="24">決定的な準備</text>
+      <text class="lane" x="10" y="126">意味判定</text>
+      <text class="lane" x="10" y="218">実行と記録</text>
+      <rect x="105" y="5" width="150" height="40" rx="6"/><text x="180" y="30" text-anchor="middle">diff / test discovery</text>
+      <rect x="300" y="5" width="160" height="40" rx="6"/><text x="380" y="30" text-anchor="middle">state builder / redact</text>
+      <rect class="ask" x="505" y="5" width="165" height="40" rx="6"/><text x="587" y="30" text-anchor="middle">question + batch</text>
+      <path d="M255 25 H300"/><path d="M460 25 H505"/>
+      <rect class="ask" x="300" y="107" width="160" height="40" rx="6"/><text x="380" y="132" text-anchor="middle">Jev answer</text>
+      <rect class="gate" x="505" y="107" width="165" height="40" rx="6"/><text x="587" y="132" text-anchor="middle">code-side gate</text>
+      <path d="M587 45 V107"/><path d="M460 127 H505"/>
+      <rect class="observe" x="105" y="199" width="160" height="40" rx="6"/><text x="185" y="224" text-anchor="middle">required tests</text>
+      <rect class="observe" x="310" y="199" width="160" height="40" rx="6"/><text x="390" y="224" text-anchor="middle">recommended tests</text>
+      <rect x="515" y="199" width="155" height="40" rx="6"/><text x="592" y="224" text-anchor="middle">results / compare</text>
+      <rect class="gate" x="715" y="199" width="170" height="40" rx="6"/><text x="800" y="224" text-anchor="middle">receipt / replay</text>
+      <path d="M587 147 V174 H185 V199"/><path d="M587 147 V174 H390 V199"/><path d="M265 219 H310"/><path d="M470 219 H515"/><path d="M670 219 H715"/>
+    </svg>
+  </div>
+  <pre class="code"><span class="k">collect</span> → discover tests, schema, fixtures, prior results
+<span class="k">build_state</span> → summarize and redact; calculate state_digest
+<span class="k">ask</span> → request typed <span class="s">choice / score / unknown</span>; never execute from raw text
+<span class="k">gate</span> → apply threshold, margin, policy, timeout and fallback in code
+<span class="k">run</span> → always run required tests; optionally add recommendations
+<span class="k">record</span> → save answer, decision, cost, result and replay_id</pre>
+  <div class="note"><strong>CIの初期形：</strong>Jevが落ちてもrequired testsは通常どおり回る。Jevはログ・JSON・PRコメントへ推薦を出すだけにし、適合率・候補漏れ・遅延・費用が既存baselineを上回った後で、限定的なgate候補を検討する。</div>
+</section>
+
+<!-- ============ ROADMAP ============ -->
+<section class="block" id="roadmap">
+  <div class="prose">
+    <h2>導入の順番：RED → GREEN → REFACTOR</h2>
+    <p>先にJevを本番の判断へ接続すると、失敗した理由と価値が分からなくなる。回答を固定したテストから始め、測れるようになってから実際の推薦を足す。</p>
+  </div>
+  <ol class="road">
+    <li><h4>Baseline：既存の必須テストと人間の判断を記録する</h4><p>テスト候補、失敗分類、mutationの扱いをfixture化する。現状の実行時間・見逃し・レビュー時間も測り、比較対象を作る。</p></li>
+    <li><h4>RED：Decision Contractの失敗例を先に書く</h4><p>unknown、timeout、入力不足、低margin、危険な推薦が安全側へ倒れることをテストで表現する。Jevを呼ばずに再現できる形にする。</p></li>
+    <li><h4>GREEN：recorded answerでgateを通す</h4><p>同じstate digestとrecorded answerから、同じdecision・fallback・receiptが得られるようにする。ここではネットワーク品質を評価対象に混ぜない。</p></li>
+    <li><h4>Shadow：実Jevの推薦を既存結果と並べる</h4><p>必須suiteを省略せず、推薦された候補・理由・confidence・コストを観測する。誤判定があっても自動blockしない。</p></li>
+    <li><h4>Calibrate：評価packで閾値と問いを更新する</h4><p>代表例、似た候補、none、境界例、失敗例を一つのpackにし、question・model・候補schemaの版と一緒にレビューする。</p></li>
+    <li><h4>Refactor：証拠が揃った縦機能だけを狭く自動化する</h4><p>まず追加テストの提案や調査順の優先付けから。テスト省略・CI blocking・権限操作は別の安全性レビューが通るまで自動化しない。</p></li>
+  </ol>
+  <div class="callout idea"><strong>Definition of Done：</strong>同じfixtureでdecisionを再生でき、unknown / timeout / outageが安全側へ流れ、候補漏れ・誤推薦・p95・costを比較できる。Jevの回答がなくてもrequired testsは成立する。</div>
+</section>
+
+<!-- ============ METRICS ============ -->
+<section class="block" id="metrics">
+  <div class="prose">
+    <h2>測るべき指標：正しさだけでなく、危険を増やしていないか</h2>
+    <p>Jevを導入した結果、CIが少し速くなっただけでは不十分。人間の判断を置き換えるなら、置き換え前の判断と比較できる証拠を残す。</p>
+  </div>
+  <div class="scroll">
+    <table>
+      <thead><tr><th>指標</th><th>見ること</th><th>導入初期の扱い</th></tr></thead>
+      <tbody>
+        <tr><td>candidate recall</td><td>本当に必要だった候補を落としていないか</td><td><span class="status stop">最優先</span> required testsの漏れはゼロにする</td></tr>
+        <tr><td>useful precision</td><td>推薦された候補が実際に役立った割合</td><td><span class="status good">Shadow</span> rule・packごとに分ける</td></tr>
+        <tr><td>safe fallback rate</td><td>unknown・timeout・outageが安全側へ流れた割合</td><td><span class="status stop">100%</span> 自動allowを許さない</td></tr>
+        <tr><td>replay consistency</td><td>同じinput・versionで同じanswer / decisionになるか</td><td><span class="status good">必須</span> recorded answerで決定的に再現</td></tr>
+        <tr><td>mutation catch uplift</td><td>追加提案が生存変異の検出改善につながったか</td><td><span class="status caution">比較</span> scoreを直接置き換えない</td></tr>
+        <tr><td>false block / false alarm</td><td>不要なCI停止・レビュー負荷を増やしていないか</td><td><span class="status caution">上限を決める</span> ruleごとに公開</td></tr>
+        <tr><td>p95 / cost / tokens</td><td>人間の判断時間と運用費に見合うか</td><td><span class="status good">記録</span> 候補ごとに比較可能にする</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <ul class="checklist">
+    <li>Jevの回答がなくても必須テストは決まる</li>
+    <li>決定的な処理をJevへ渡していない</li>
+    <li>入力stateとredaction理由を再現できる</li>
+    <li>threshold・margin・policyが版管理される</li>
+    <li>回答と最終decisionを別々に記録する</li>
+    <li>candidate missを人間が確認できる</li>
+    <li>秘密・巨大な生ログを送受信しない</li>
+    <li>CI blockingへの移行条件が先に決まっている</li>
+  </ul>
+</section>
+
+<!-- ============ FAQ ============ -->
+<section class="block" id="faq">
+  <div class="prose"><h2>よくある迷い</h2></div>
+  <details class="faq"><summary>Jevに「テストは通った」と判定させてよい？</summary><div>させません。テストrunnerのexit code、assertion、schema互換性、SLOは決定的な仕組みが持ちます。Jevは「何を追加で見るべきか」「この失敗は何に近いか」を推薦する役割です。</div></details>
+  <details class="faq"><summary>Jevの推薦でテストを省略すれば、CIは速くなるのでは？</summary><div>速くなる可能性はありますが、最初の目的にしません。まずrequired suiteを維持したShadow Modeで候補漏れと有用性を測り、十分な証拠と明示的なpolicyが揃った範囲だけ、追加・任意テストの順序を変えます。</div></details>
+  <details class="faq"><summary>confidenceが高ければ自動化してよい？</summary><div>confidenceは与えたstateに対する回答の確からしさであり、現実全体の正しさの証明ではありません。state completeness、margin、unknown、再現性、危険度を含めてコード側でgateします。</div></details>
+  <details class="faq"><summary>最初の小さな導入単位は何？</summary><div>一つのテスト種別と一つの問いに絞った評価packがおすすめです。たとえば「変更diffから追加候補を順位づけする」だけを、required suiteを変えないCLIまたはPRコメントとして運用します。</div></details>
+  <details class="faq"><summary>Jevを使わない方がよい判断は？</summary><div>型・構文・schema・テスト実行・数値集計・権限付与のように、正確で再現可能な機械的ルールで解けるものです。Jevを使う必然性が説明できない機能は、まず決定的な実装を選びます。</div></details>
+
+<footer>
+  <p><a href="../">thinking トップに戻る</a> · <a href="ai-coding-test-strategy.html">既存のAIコーディングテスト戦略</a></p>
+  <p>このページは、既存のテスト戦略とJevに関する比較資料を材料にした導入仮説です。Jevの回答を権限や合否へ直結させず、実装時は各環境の公式仕様・評価結果・セキュリティレビューを確認してください。</p>
+</footer>
+</section>
+</main>
+</div>
+
+<script>
+(function(){
+  var root=document.documentElement,btn=document.getElementById('themeBtn');
+  try{var t=localStorage.getItem('theme');if(t)root.setAttribute('data-theme',t);}catch(e){}
+  btn.addEventListener('click',function(){
+    var cur=root.getAttribute('data-theme');
+    if(!cur)cur=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
+    var next=cur==='dark'?'light':'dark';
+    root.setAttribute('data-theme',next);
+    try{localStorage.setItem('theme',next);}catch(e){}
+  });
+  var links=[].slice.call(document.querySelectorAll('nav.toc a'));
+  if('IntersectionObserver' in window){
+    var io=new IntersectionObserver(function(es){
+      es.forEach(function(e){
+        if(e.isIntersecting){
+          links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href')==='#'+e.target.id);});
+        }
+      });
+    },{rootMargin:'-40% 0px -55% 0px'});
+    document.querySelectorAll('section.block').forEach(function(s){io.observe(s);});
+  }
+})();
+</script>
+</body>
+</html>

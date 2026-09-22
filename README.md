@@ -11,7 +11,8 @@ docs/                     GitHub Pages の公開ルート（main ブランチの
 ├── .nojekyll             Jekyll 処理を無効化し、HTML をそのまま配信する
 ├── index.html            トップページ（各ページへの一覧）
 └── testing/              テスト戦略カテゴリ
-    └── ai-coding-test-strategy.html
+    ├── ai-coding-test-strategy.html
+    └── jev-test-strategy.html
 ```
 
 ## ページの追加手順
