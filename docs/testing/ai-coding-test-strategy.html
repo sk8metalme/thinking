@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AIコーディング時代のテスト戦略 — バグを通さない七枚の網</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Shippori+Mincho+B1:wght@600;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EEF2F0; --paper-2:#E3E9E6; --card:#F8FAF9;
+  --ink:#16232C; --ink-2:#4A5A63; --rule:#C6D1CC;
+  --teal:#1F6F63; --teal-soft:#D5E8E3;
+  --red:#B5392A; --red-soft:#F3DCD7;
+  --amber:#A8720C; --amber-soft:#F2E6CC;
+  --navy:#2D4A6B; --navy-soft:#DCE4EE;
+  --code-bg:#1B2830; --code-ink:#DDE7E3;
+  --serif:"Shippori Mincho B1","Hiragino Mincho ProN","Yu Mincho",serif;
+  --sans:"BIZ UDPGothic","Hiragino Sans","Yu Gothic",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#10191F; --paper-2:#16222A; --card:#18252E;
+    --ink:#E3EAE7; --ink-2:#9FB0AA; --rule:#2C3C45;
+    --teal:#5FBFAE; --teal-soft:#16352F;
+    --red:#EE7A68; --red-soft:#3A1F1B;
+    --amber:#E3B04F; --amber-soft:#382C14;
+    --navy:#8FB0D6; --navy-soft:#1C2B3D;
+    --code-bg:#0B1216; --code-ink:#D5E0DC;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#10191F; --paper-2:#16222A; --card:#18252E;
+  --ink:#E3EAE7; --ink-2:#9FB0AA; --rule:#2C3C45;
+  --teal:#5FBFAE; --teal-soft:#16352F;
+  --red:#EE7A68; --red-soft:#3A1F1B;
+  --amber:#E3B04F; --amber-soft:#382C14;
+  --navy:#8FB0D6; --navy-soft:#1C2B3D;
+  --code-bg:#0B1216; --code-ink:#D5E0DC;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 16px);scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.85;-webkit-font-smoothing:antialiased}
+img,svg{max-width:100%}
+a{color:var(--navy);text-underline-offset:3px}
+a:focus-visible,button:focus-visible,summary:focus-visible,input:focus-visible+span{outline:3px solid var(--amber);outline-offset:2px;border-radius:4px}
+code{font-family:var(--mono);font-size:.88em;background:var(--paper-2);padding:.1em .35em;border-radius:4px}
+h1,h2,h3{font-family:var(--serif);line-height:1.35;letter-spacing:.01em}
+h2{font-size:clamp(1.6rem,3.2vw,2.1rem);margin:0 0 .6em}
+h3{font-size:1.2rem;margin:2em 0 .6em}
+p{margin:0 0 1.1em}
+strong{color:var(--ink)}
+
+/* ---------- layout ---------- */
+.shell{display:grid;grid-template-columns:230px minmax(0,1fr);gap:48px;max-width:1180px;margin:0 auto;padding:0 24px}
+nav.toc{position:sticky;top:calc(env(safe-area-inset-top,0px) + 24px);align-self:start;padding-top:40px;font-size:.88rem;max-height:calc(100vh - 48px);overflow:auto}
+nav.toc p{font-family:var(--serif);font-weight:800;margin-bottom:.6em}
+nav.toc ol{list-style:none;margin:0;padding:0;border-left:2px solid var(--rule)}
+nav.toc li a{display:block;padding:.3em .9em;color:var(--ink-2);text-decoration:none;border-left:2px solid transparent;margin-left:-2px}
+nav.toc li a:hover,nav.toc li a.active{color:var(--ink);border-left-color:var(--teal)}
+main{min-width:0;padding-bottom:80px}
+section.block{padding:64px 0 24px;border-top:1px solid var(--rule)}
+.prose{max-width:720px}
+@media (max-width:900px){
+  .shell{grid-template-columns:1fr;gap:0}
+  nav.toc{display:none}
+}
+
+/* ---------- hero ---------- */
+.hero{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:40px;align-items:center;padding:56px 0 48px}
+.hero h1{font-size:clamp(2.1rem,5vw,3.4rem);font-weight:800;margin:0 0 .4em;line-height:1.2}
+.hero .lede{font-size:1.08rem;color:var(--ink-2);max-width:34em}
+.premise{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px;padding:0;list-style:none}
+.premise li{font-size:.85rem;border:1px solid var(--rule);background:var(--card);border-radius:999px;padding:.25em .9em}
+.net-wrap{position:relative}
+.net-wrap figcaption{font-size:.8rem;color:var(--ink-2);text-align:center;margin-top:6px}
+@media (max-width:760px){.hero{grid-template-columns:1fr}.net-wrap{max-width:360px;margin:0 auto}}
+
+/* hero svg */
+.band line{stroke:var(--ink-2);stroke-width:1.5;stroke-dasharray:3 5}
+.band text{font-family:var(--sans);font-size:12px;fill:var(--ink-2)}
+.band .n{font-family:var(--serif);font-weight:800;fill:var(--teal);font-size:13px}
+.bug{fill:var(--red)}
+.bug.caught{fill:var(--teal)}
+.bug{animation:fall 1.6s cubic-bezier(.45,.05,.6,1) both;transform-box:fill-box}
+@keyframes fall{from{transform:translateY(0);opacity:.2}to{transform:translateY(var(--y));opacity:1}}
+@media (prefers-reduced-motion: reduce){.bug{animation:none;transform:translateY(var(--y))}}
+
+/* ---------- dialogue ---------- */
+.talk{display:grid;gap:14px;margin:28px 0 32px;max-width:720px}
+.say{display:grid;grid-template-columns:52px minmax(0,1fr);gap:12px;align-items:start}
+.say.r{grid-template-columns:minmax(0,1fr) 52px}
+.say.r .who{order:2}
+.who{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;font-family:var(--serif);font-weight:800;font-size:.8rem;color:#fff;line-height:1}
+.who.reimu{background:var(--red)}
+.who.marisa{background:var(--amber)}
+:root[data-theme="dark"] .who,.who{color:#fff}
+.bubble{background:var(--card);border:1px solid var(--rule);border-radius:14px;padding:.8em 1.05em;font-size:.97rem;position:relative}
+.say:not(.r) .bubble{border-top-left-radius:4px}
+.say.r .bubble{border-top-right-radius:4px;background:var(--paper-2)}
+.bubble p:last-child{margin-bottom:0}
+.bubble .name{display:block;font-size:.75rem;color:var(--ink-2);margin-bottom:.1em}
+
+/* ---------- failure modes ---------- */
+.modes{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:10px;overflow:hidden;margin:24px 0}
+.mode{background:var(--card);padding:18px 18px 16px}
+.mode h4{margin:0 0 .4em;font-size:1rem;font-family:var(--serif)}
+.mode p{font-size:.9rem;color:var(--ink-2);margin:0}
+.mode .guard{display:block;margin-top:.7em;font-size:.82rem;color:var(--teal)}
+
+/* ---------- gates stepper ---------- */
+.gates{display:grid;grid-template-columns:260px minmax(0,1fr);gap:0;border:1px solid var(--rule);border-radius:12px;overflow:hidden;background:var(--card);margin-top:24px}
+.gate-list{list-style:none;margin:0;padding:0;border-right:1px solid var(--rule);background:var(--paper-2)}
+.gate-list button{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:34px 1fr;gap:10px;align-items:center;width:100%;padding:12px 16px;border-bottom:1px solid var(--rule);font-size:.93rem}
+.gate-list li:last-child button{border-bottom:0}
+.gate-list .num{font-family:var(--serif);font-weight:800;font-size:1.25rem;color:var(--ink-2);text-align:center}
+.gate-list button[aria-selected="true"]{background:var(--card);box-shadow:inset 4px 0 0 var(--teal)}
+.gate-list button[aria-selected="true"] .num{color:var(--teal)}
+.gate-list small{display:block;color:var(--ink-2);font-size:.75rem;line-height:1.4}
+.gate-panel{padding:24px 28px}
+.gate-panel h3{margin-top:0}
+.gate-panel dl{display:grid;grid-template-columns:7.5em minmax(0,1fr);gap:.5em 1em;margin:0 0 1em;font-size:.93rem}
+.gate-panel dt{color:var(--ink-2)}
+.gate-panel dd{margin:0}
+.when{display:inline-block;font-size:.78rem;padding:.1em .7em;border-radius:999px;background:var(--navy-soft);color:var(--navy);margin-bottom:.8em}
+@media (max-width:760px){
+  .gates{grid-template-columns:1fr}
+  .gate-list{display:flex;overflow-x:auto;border-right:0;border-bottom:1px solid var(--rule)}
+  .gate-list li{flex:0 0 auto}
+  .gate-list button{grid-template-columns:auto;border-bottom:0;border-right:1px solid var(--rule);text-align:center;padding:10px 14px}
+  .gate-list small{display:none}
+  .gate-list button[aria-selected="true"]{box-shadow:inset 0 -3px 0 var(--teal)}
+  .gate-panel dl{grid-template-columns:1fr}
+  .gate-panel dt{margin-top:.4em}
+}
+
+/* ---------- tables ---------- */
+.tabs{display:flex;gap:4px;margin-top:22px;border-bottom:1px solid var(--rule);flex-wrap:wrap}
+.tabs button{all:unset;cursor:pointer;padding:.55em 1.1em;font-size:.93rem;border:1px solid transparent;border-bottom:0;border-radius:8px 8px 0 0;color:var(--ink-2)}
+.tabs button[aria-selected="true"]{background:var(--card);border-color:var(--rule);color:var(--ink);font-weight:700;margin-bottom:-1px}
+.tabpanel{background:var(--card);border:1px solid var(--rule);border-top:0;border-radius:0 0 10px 10px}
+.tabpanel[hidden]{display:none}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.9rem;min-width:640px}
+th,td{padding:.75em 1em;text-align:left;vertical-align:top;border-bottom:1px solid var(--rule)}
+th{font-weight:700;background:var(--paper-2);font-size:.82rem;color:var(--ink-2)}
+tr:last-child td{border-bottom:0}
+td:first-child{font-weight:700;width:22%}
+.chip{display:inline-block;font-size:.75rem;padding:.05em .6em;border-radius:999px;margin:.15em .3em .15em 0;white-space:nowrap;text-decoration:none}
+.chip.u{background:var(--teal-soft);color:var(--teal)}
+.chip.c{background:var(--navy-soft);color:var(--navy)}
+.chip.i{background:var(--amber-soft);color:var(--amber)}
+.chip.o{background:var(--red-soft);color:var(--red)}
+.lvl{font-weight:700}
+.lvl.x{color:var(--red)}.lvl.t{color:var(--amber)}
+
+/* ---------- callouts ---------- */
+.note{border-left:4px solid var(--teal);background:var(--teal-soft);padding:14px 18px;border-radius:0 8px 8px 0;margin:22px 0;max-width:720px;font-size:.95rem}
+.note.warn{border-color:var(--red);background:var(--red-soft)}
+.note.idea{border-color:var(--amber);background:var(--amber-soft)}
+.note b{display:block;margin-bottom:.2em}
+.note p:last-child{margin:0}
+
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;margin:22px 0}
+.panel{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:18px 20px}
+.panel h4{margin:0 0 .5em;font-family:var(--serif);font-size:1.05rem}
+.panel ul{margin:0;padding-left:1.2em;font-size:.92rem}
+.panel li{margin:.3em 0}
+
+/* mutation demo */
+.mut{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin:22px 0}
+.mut pre{margin:0}
+.mut .panel{padding:0;overflow:hidden}
+.mut .cap{padding:10px 14px;font-size:.85rem;border-bottom:1px solid var(--rule);background:var(--paper-2)}
+.mut .res{padding:10px 14px;font-size:.85rem}
+.mut .res.bad{color:var(--red)} .mut .res.good{color:var(--teal)}
+pre.code{background:var(--code-bg);color:var(--code-ink);font-family:var(--mono);font-size:.82rem;line-height:1.65;padding:16px 18px;border-radius:10px;overflow-x:auto;margin:18px 0}
+pre.code .c{color:#7F9A92}
+pre.code .k{color:#E7B86A}
+pre.code .s{color:#8FD0BF}
+pre.code .d{background:rgba(238,122,104,.22)}
+
+/* checker */
+.checker{background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:22px 24px;margin:26px 0;max-width:720px}
+.checker h4{margin:0 0 .8em;font-family:var(--serif);font-size:1.1rem}
+.checker label{display:flex;gap:.7em;align-items:flex-start;padding:.45em 0;cursor:pointer;font-size:.94rem;border-bottom:1px dashed var(--rule)}
+.checker label:last-of-type{border-bottom:0}
+.checker input{margin-top:.45em;accent-color:var(--teal);width:18px;height:18px;flex:0 0 auto}
+.verdict{margin-top:14px;padding:14px 16px;border-radius:8px;background:var(--paper-2);font-size:.95rem}
+.verdict b{font-family:var(--serif);font-size:1.05rem}
+.meter{height:8px;border-radius:99px;background:var(--rule);overflow:hidden;margin:8px 0 10px}
+.meter span{display:block;height:100%;width:0;background:var(--teal);transition:width .3s}
+@media (prefers-reduced-motion: reduce){.meter span{transition:none}}
+
+/* pipeline diagram */
+.pipe{margin:24px 0;background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:16px;overflow-x:auto}
+.pipe svg{min-width:760px;display:block}
+.pipe text{font-family:var(--sans);font-size:12px;fill:var(--ink)}
+.pipe .lane{font-family:var(--serif);font-weight:800;font-size:13px;fill:var(--ink-2)}
+.pipe rect.job{fill:var(--paper-2);stroke:var(--rule)}
+.pipe rect.job.g{fill:var(--teal-soft);stroke:var(--teal)}
+.pipe rect.job.a{fill:var(--amber-soft);stroke:var(--amber)}
+.pipe rect.job.n{fill:var(--navy-soft);stroke:var(--navy)}
+.pipe rect.job.r{fill:var(--red-soft);stroke:var(--red)}
+.pipe path{fill:none;stroke:var(--ink-2);stroke-width:1.3}
+.pipe .sep{stroke:var(--rule);stroke-dasharray:4 4}
+
+/* roadmap */
+.road{list-style:none;padding:0;margin:24px 0;counter-reset:r;max-width:760px}
+.road li{position:relative;padding:0 0 26px 58px;border-left:2px solid var(--rule);margin-left:18px}
+.road li:last-child{border-left-color:transparent}
+.road li::before{counter-increment:r;content:counter(r);position:absolute;left:-19px;top:-2px;width:36px;height:36px;border-radius:50%;background:var(--ink);color:var(--paper);display:grid;place-items:center;font-family:var(--serif);font-weight:800}
+.road h4{margin:0 0 .3em;font-family:var(--serif);font-size:1.08rem}
+.road p{margin:0;font-size:.93rem;color:var(--ink-2)}
+
+details.faq{border-bottom:1px solid var(--rule);padding:.7em 0;max-width:760px}
+details.faq summary{cursor:pointer;font-weight:700;list-style:none;display:flex;gap:.6em}
+details.faq summary::before{content:"+";font-family:var(--mono);color:var(--teal);width:1em}
+details.faq[open] summary::before{content:"−"}
+details.faq div{padding:.6em 0 0 1.6em;font-size:.94rem;color:var(--ink-2)}
+
+.checklist{columns:2 300px;column-gap:32px;margin:20px 0;padding:0;list-style:none;font-size:.93rem}
+.checklist li{break-inside:avoid;padding:.35em 0 .35em 1.7em;position:relative}
+.checklist li::before{content:"";position:absolute;left:0;top:.75em;width:12px;height:12px;border:2px solid var(--teal);border-radius:3px}
+
+footer{border-top:1px solid var(--rule);margin-top:40px;padding-top:24px;font-size:.82rem;color:var(--ink-2)}
+.theme-toggle{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:5;background:var(--card);color:var(--ink);border:1px solid var(--rule);border-radius:999px;padding:.4em .9em;font:inherit;font-size:.82rem;cursor:pointer}
+</style>
+</head>
+<body>
+<button class="theme-toggle" id="themeBtn" type="button">表示テーマ切替</button>
+<div class="shell">
+<nav class="toc" aria-label="目次">
+  <p>目次</p>
+  <ol>
+    <li><a href="#why">AIが生む失敗の形</a></li>
+    <li><a href="#flow">全体フロー：七枚の網</a></li>
+    <li><a href="#e2e">E2Eの守備範囲</a></li>
+    <li><a href="#unit">単体テストでの補填</a></li>
+    <li><a href="#mutation">ミューテーションテスト</a></li>
+    <li><a href="#contract">契約テスト</a></li>
+    <li><a href="#others">そのほかのテスト</a></li>
+    <li><a href="#guard">テストを守るガードレール</a></li>
+    <li><a href="#pipeline">Screwdriverでの流れ</a></li>
+    <li><a href="#roadmap">導入の順番</a></li>
+    <li><a href="#faq">よくある迷い</a></li>
+  </ol>
+</nav>
+
+<main>
+<header class="hero">
+  <div>
+    <h1>AIが書いたコードを、七枚の網で受け止める</h1>
+    <p class="lede">E2Eだけでは拾えないバグがある。単体テストだけでは配線の誤りが見えない。そしてAIが書いたテストは、テスト自体が空振りしていることがある。各層が何を捕まえ、何を取り逃がすのかを整理し、層を重ねて信頼性を上げるための設計指針をまとめました。</p>
+    <ul class="premise" aria-label="このページの前提">
+      <li>Java＋PHP</li>
+      <li>マイクロサービス構成</li>
+      <li>PIT／Infection</li>
+      <li>Screwdriver CI</li>
+      <li>設計方針・判断基準中心</li>
+    </ul>
+  </div>
+  <figure class="net-wrap" style="margin:0">
+    <svg viewBox="0 0 360 470" role="img" aria-label="上から落ちてくるバグが、静的解析から本番監視までの七層の網でそれぞれ捕まる図">
+      <g class="band"><line x1="20" x2="250" y1="70" y2="70"/><text x="258" y="74"><tspan class="n">1</tspan> 静的解析</text></g>
+      <g class="band"><line x1="20" x2="250" y1="128" y2="128"/><text x="258" y="132"><tspan class="n">2</tspan> 単体</text></g>
+      <g class="band"><line x1="20" x2="250" y1="186" y2="186"/><text x="258" y="190"><tspan class="n">3</tspan> ミューテーション</text></g>
+      <g class="band"><line x1="20" x2="250" y1="244" y2="244"/><text x="258" y="248"><tspan class="n">4</tspan> 契約</text></g>
+      <g class="band"><line x1="20" x2="250" y1="302" y2="302"/><text x="258" y="306"><tspan class="n">5</tspan> 統合</text></g>
+      <g class="band"><line x1="20" x2="250" y1="360" y2="360"/><text x="258" y="364"><tspan class="n">6</tspan> E2E</text></g>
+      <g class="band"><line x1="20" x2="250" y1="418" y2="418"/><text x="258" y="422"><tspan class="n">7</tspan> 本番監視</text></g>
+      <!-- bugs: start y=20, stop just above their band -->
+      <circle class="bug caught" cx="40"  cy="20" r="6" style="--y:44px;animation-delay:.1s"/>
+      <circle class="bug caught" cx="70"  cy="20" r="6" style="--y:44px;animation-delay:.25s"/>
+      <circle class="bug caught" cx="100" cy="20" r="6" style="--y:44px;animation-delay:.05s"/>
+      <circle class="bug caught" cx="130" cy="20" r="6" style="--y:102px;animation-delay:.35s"/>
+      <circle class="bug caught" cx="160" cy="20" r="6" style="--y:102px;animation-delay:.2s"/>
+      <circle class="bug caught" cx="190" cy="20" r="6" style="--y:102px;animation-delay:.45s"/>
+      <circle class="bug caught" cx="55"  cy="20" r="6" style="--y:160px;animation-delay:.5s"/>
+      <circle class="bug caught" cx="215" cy="20" r="6" style="--y:160px;animation-delay:.6s"/>
+      <circle class="bug caught" cx="85"  cy="20" r="6" style="--y:218px;animation-delay:.7s"/>
+      <circle class="bug caught" cx="145" cy="20" r="6" style="--y:276px;animation-delay:.8s"/>
+      <circle class="bug caught" cx="235" cy="20" r="6" style="--y:276px;animation-delay:.75s"/>
+      <circle class="bug caught" cx="115" cy="20" r="6" style="--y:334px;animation-delay:.9s"/>
+      <circle class="bug"        cx="175" cy="20" r="6" style="--y:392px;animation-delay:1s"/>
+    </svg>
+    <figcaption>どの網にも目の粗さがある。重ねることで、最後に残るバグを本番監視が拾う。</figcaption>
+  </figure>
+</header>
+
+<!-- ============ WHY ============ -->
+<section class="block" id="why">
+  <div class="prose">
+    <h2>AIコーディングが生む、特有の失敗の形</h2>
+    <p>人間が書いたコードとAIが書いたコードでは、バグの「出方」が違います。テスト戦略を組む前に、何を防ぎたいのかを具体的にしておくと、各テストの役割がはっきりします。</p>
+  </div>
+
+  <div class="talk">
+    <div class="say"><div class="who reimu">霊夢</div><div class="bubble"><span class="name">霊夢</span>AIが書いたコードでも、テストが全部通ってれば大丈夫なんじゃないの？</div></div>
+    <div class="say r"><div class="who marisa">魔理沙</div><div class="bubble"><span class="name">魔理沙</span>そこが落とし穴だぜ。AIは「テストを通す」ことが目的になりやすい。テストもAIが書いてたら、実装をそのまま写したテストが通ってるだけ、ってこともある。<strong>緑のCIが正しさの証明になってない</strong>んだ。</div></div>
+    <div class="say"><div class="who reimu">霊夢</div><div class="bubble"><span class="name">霊夢</span>じゃあ人間がテストを全部見るしかない？</div></div>
+    <div class="say r"><div class="who marisa">魔理沙</div><div class="bubble"><span class="name">魔理沙</span>それだと全PR自動マージなんて夢のまた夢だぜ。だから「テストがちゃんと効いてるか」を機械で確かめる仕組み、つまりミューテーションテストやテスト改変の検知を組み込むんだ。</div></div>
+  </div>
+
+  <div class="modes">
+    <div class="mode"><h4>もっともらしい誤り</h4><p>コンパイルも通り読みやすいが、仕様の境界条件（以上／超過、月末、空配列）を取り違えている。</p><span class="guard">主に効く網：単体（境界値・プロパティ）</span></div>
+    <div class="mode"><h4>同語反復テスト</h4><p>実装を読んでテストを書くため、実装のバグをそのまま期待値にしてしまう。アサーションが弱い・無い。</p><span class="guard">主に効く網：ミューテーション</span></div>
+    <div class="mode"><h4>テストへの迎合</h4><p>失敗したテストを直すために期待値を書き換える、<code>@Disabled</code>や<code>markTestSkipped</code>で黙らせる。</p><span class="guard">主に効く網：ガードレール</span></div>
+    <div class="mode"><h4>架空のAPI・契約違反</h4><p>他サービスのレスポンス項目名や型を推測で使う。自分側のモックは通るが、実物と噛み合わない。</p><span class="guard">主に効く網：契約</span></div>
+    <div class="mode"><h4>過剰なモック</h4><p>依存をすべてモックし、モックの振る舞いを検証しているだけのテストになる。DI設定やSQLの誤りが素通りする。</p><span class="guard">主に効く網：統合</span></div>
+    <div class="mode"><h4>局所最適な変更</h4><p>依存方向やレイヤー規約を無視して「近道」の呼び出しを追加する。動くが、設計が静かに崩れる。</p><span class="guard">主に効く網：静的解析（アーキテクチャ規約）</span></div>
+    <div class="mode"><h4>異常系の欠落</h4><p>正常系は丁寧だが、タイムアウト・部分失敗・リトライ・冪等性の考慮が抜ける。</p><span class="guard">主に効く網：単体＋統合（障害注入）</span></div>
+    <div class="mode"><h4>変更量の多さ</h4><p>一度に大量の差分を出すため、人間のレビューが追いつかず、見落としが構造的に起きる。</p><span class="guard">主に効く網：差分ベースの自動ゲート全般</span></div>
+  </div>
+</section>
+
+<!-- ============ FLOW ============ -->
+<section class="block" id="flow">
+  <div class="prose">
+    <h2>全体フロー：七枚の網</h2>
+    <p>速くて安い網を手前に、遅くて高い網を奥に並べます。原則は「<strong>捕まえられる一番手前の網で捕まえる</strong>」こと。E2Eで見つかったバグは、本来どの網で捕まえるべきだったかを振り返り、手前に網を追加していきます。</p>
+    <p>番号は実行順です。各段をクリックすると、狙い・対象・判断基準が表示されます。</p>
+  </div>
+
+  <div class="gates">
+    <ul class="gate-list" role="tablist" aria-label="テストの段">
+      <li><button role="tab" aria-selected="true" data-g="0"><span class="num">1</span><span>静的解析<small>型・規約・依存方向</small></span></button></li>
+      <li><button role="tab" aria-selected="false" data-g="1"><span class="num">2</span><span>単体テスト<small>ロジックの網羅</small></span></button></li>
+      <li><button role="tab" aria-selected="false" data-g="2"><span class="num">3</span><span>ミューテーション<small>テストのテスト</small></span></button></li>
+      <li><button role="tab" aria-selected="false" data-g="3"><span class="num">4</span><span>契約テスト<small>サービス間の約束</small></span></button></li>
+      <li><button role="tab" aria-selected="false" data-g="4"><span class="num">5</span><span>統合テスト<small>実DB・実ミドルウェア</small></span></button></li>
+      <li><button role="tab" aria-selected="false" data-g="5"><span class="num">6</span><span>E2Eテスト<small>ユーザー導線の通し</small></span></button></li>
+      <li><button role="tab" aria-selected="false" data-g="6"><span class="num">7</span><span>本番検証<small>カナリア・SLO監視</small></span></button></li>
+    </ul>
+    <div class="gate-panel" id="gatePanel" role="tabpanel" aria-live="polite"></div>
+  </div>
+
+  <div class="note idea"><b>時間予算の考え方</b><p>PRで回す段（1〜5）は合計で10〜15分程度に収めるのが一つの目安です。AIは修正→再実行のループを何度も回すため、フィードバックが遅いと試行回数そのものが減り、品質が下がります。重い処理は「差分だけ」「夜間にフル」の二段構えにします。</p></div>
+</section>
+
+<!-- ============ E2E ============ -->
+<section class="block" id="e2e">
+  <div class="prose">
+    <h2>E2Eテストの守備範囲</h2>
+    <p>E2Eの強みは「本物が全部つながった状態で動く」ことの確認です。逆に、条件の組み合わせを網羅したり、異常を意図的に起こしたりするのは苦手です。E2Eには<strong>広さではなく、通しでしか確かめられないこと</strong>を担わせます。</p>
+  </div>
+
+  <div class="talk">
+    <div class="say"><div class="who reimu">霊夢</div><div class="bubble"><span class="name">霊夢</span>E2Eって一番本番に近いんだから、全部E2Eで確かめればいいじゃない。</div></div>
+    <div class="say r"><div class="who marisa">魔理沙</div><div class="bubble"><span class="name">魔理沙</span>遅い、不安定、落ちても原因がわからない、の三重苦だぜ。割引率の境界値を20パターン試すのにブラウザを20回起動するのは割に合わない。E2Eは「つながってるか」の確認役、細かい正しさは手前の網の仕事だ。</div></div>
+  </div>
+
+  <div class="tabs" role="tablist" aria-label="E2Eの守備範囲">
+    <button role="tab" aria-selected="true" aria-controls="e2e-can" id="t-can">担保すべき項目</button>
+    <button role="tab" aria-selected="false" aria-controls="e2e-cannot" id="t-cannot">担保できない・難しい項目</button>
+  </div>
+  <div class="tabpanel" id="e2e-can" role="tabpanel" aria-labelledby="t-can">
+    <div class="scroll"><table>
+      <thead><tr><th>項目</th><th>E2Eで確かめる理由</th><th>設計のポイント</th></tr></thead>
+      <tbody>
+        <tr><td>クリティカルユーザージャーニー</td><td>登録→ログイン→主要操作→結果確認のように、売上や業務に直結する導線は「通しで動く」こと自体に価値がある。</td><td>5〜15本程度に絞る。「この導線が止まったら障害扱い」という基準で選ぶ。</td></tr>
+        <tr><td>サービス間の実配線</td><td>サービスディスカバリ、ルーティング、ゲートウェイ設定、TLS、タイムアウト設定など、構成要素がそろって初めて見える誤り。</td><td>契約テストで「形」は保証済みの前提で、実際に届くかを見る。</td></tr>
+        <tr><td>認証・認可の通しフロー</td><td>トークン発行、伝播、各サービスでの検証、権限による表示・操作の出し分けは複数サービスをまたぐ。</td><td>ロールごとに代表的な1導線ずつ。権限の組み合わせ網羅は単体側で。</td></tr>
+        <tr><td>設定・DI・環境変数の結線</td><td>Springのプロファイル、PHPのコンテナ設定、フィーチャーフラグなど、単体テストでは差し替えてしまう部分。</td><td>本番と同じ設定の組み立て方でデプロイした環境で実行する。</td></tr>
+        <tr><td>DBマイグレーション後の動作</td><td>スキーマ変更が実際のアプリから正しく使えるか。</td><td>マイグレーション適用済みの環境で主要導線を1周。</td></tr>
+        <tr><td>非同期処理の最終到達</td><td>イベント発行→メッセージング→別サービスでの処理→結果反映、が最終的に完了するか。</td><td>固定sleepではなく、条件を満たすまでポーリング（上限付き）。</td></tr>
+        <tr><td>デプロイ直後のスモーク</td><td>ステージング・本番カナリアで「最低限動いている」ことの確認。</td><td>読み取り中心・副作用なしの短いセットを別に用意する。</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+  <div class="tabpanel" id="e2e-cannot" role="tabpanel" aria-labelledby="t-cannot" hidden>
+    <div class="scroll"><table>
+      <thead><tr><th>項目</th><th>困難度</th><th>なぜE2Eでは難しいか</th><th>補填先</th></tr></thead>
+      <tbody>
+        <tr><td>境界値・組み合わせの網羅</td><td class="lvl x">不可</td><td>パターン数が爆発し、1件あたりのコストが高すぎる。</td><td><a class="chip u" href="#unit">単体（境界値）</a><a class="chip u" href="#unit">プロパティベース</a></td></tr>
+        <tr><td>異常系（タイムアウト・部分失敗・5xx）</td><td class="lvl x">不可</td><td>本物の依存先を意図的に壊すのが難しく、再現性もない。</td><td><a class="chip u" href="#unit">単体（テストダブル）</a><a class="chip i" href="#others">統合（障害注入）</a></td></tr>
+        <tr><td>リトライ・冪等性</td><td class="lvl t">困難</td><td>「2回届いたとき」「途中で落ちたとき」を狙って起こせない。</td><td><a class="chip u" href="#unit">単体</a><a class="chip i" href="#others">統合</a></td></tr>
+        <tr><td>時刻依存（月末・うるう年・TZ・夏時間）</td><td class="lvl x">不可</td><td>環境の時刻を自由に動かせない。</td><td><a class="chip u" href="#unit">単体（Clock注入）</a></td></tr>
+        <tr><td>並行性・競合状態</td><td class="lvl t">困難</td><td>タイミング依存で再現しない。通っても安全の証明にならない。</td><td><a class="chip i" href="#others">統合（並行実行・ロック検証）</a><a class="chip o" href="#others">ストレス／jcstress</a></td></tr>
+        <tr><td>サービス間の項目・型の整合</td><td class="lvl t">困難</td><td>全組み合わせのバージョンをそろえて起動する必要があり、どの変更が壊したか特定しにくい。</td><td><a class="chip c" href="#contract">契約テスト</a></td></tr>
+        <tr><td>権限・入力値の網羅的な検証</td><td class="lvl t">困難</td><td>ロール×操作×リソースの組み合わせが多い。</td><td><a class="chip u" href="#unit">単体（ポリシー判定）</a></td></tr>
+        <tr><td>性能・大量データ</td><td class="lvl t">困難</td><td>E2E環境は小さく、性能の再現性がない。</td><td><a class="chip o" href="#others">負荷テスト</a><a class="chip o" href="#others">本番監視</a></td></tr>
+        <tr><td>外部SaaS・決済・メール送信</td><td class="lvl t">困難</td><td>サンドボックスの制約、課金、レート制限、到達確認の難しさ。</td><td><a class="chip c" href="#contract">契約（プロバイダ仕様）</a><a class="chip i" href="#others">統合（スタブサーバ）</a></td></tr>
+        <tr><td>セキュリティ上の欠陥</td><td class="lvl t">困難</td><td>正常な導線を通るだけでは脆弱性は見えない。</td><td><a class="chip o" href="#others">SAST・依存スキャン</a><a class="chip u" href="#unit">単体（入力検証）</a></td></tr>
+        <tr><td>障害箇所の特定</td><td class="lvl x">不可</td><td>E2Eは「どこかが壊れた」しか言えない。</td><td><a class="chip u" href="#unit">下位層すべて</a><a class="chip o" href="#others">OTelトレース</a></td></tr>
+        <tr><td>本番固有のデータ・トラフィック</td><td class="lvl x">不可</td><td>本番データの偏りや実ユーザーの操作は再現できない。</td><td><a class="chip o" href="#others">カナリア＋SLO監視</a></td></tr>
+      </tbody>
+    </table></div>
+  </div>
+
+  <h3>E2Eを「信頼できる少数精鋭」に保つ原則</h3>
+  <div class="two">
+    <div class="panel"><h4>安定性</h4><ul>
+      <li>テストごとにデータを作り、他テストと共有しない（並列実行の前提）。</li>
+      <li>固定の待ち時間を使わず、状態が整うまで待つ。</li>
+      <li>自動リトライは「フレーク検出」の目的に限定し、リトライで通ったものは記録して別途対処する。</li>
+      <li>不安定なテストは隔離（クォランティン）枠へ移し、期限を決めて直すか消す。</li>
+    </ul></div>
+    <div class="panel"><h4>AIとの付き合い方</h4><ul>
+      <li>E2EシナリオはAIに増やさせない。追加は人間が合意したジャーニーのみ。</li>
+      <li>E2Eが落ちたら「どの手前の網で捕まえるべきだったか」をAIに分析させ、下位テストを追加させる。</li>
+      <li>E2Eの期待値変更は必ず人間レビュー対象にする。</li>
+      <li>失敗時はトレースID・スクリーンショット・ログを成果物として残し、AIが原因調査に使えるようにする。</li>
+    </ul></div>
+  </div>
+</section>
+
+<!-- ============ UNIT ============ -->
+<section class="block" id="unit">
+  <div class="prose">
+    <h2>単体テストで、E2Eの穴を埋める</h2>
+    <p>E2Eで「難しい」とした項目の多くは、単体テストなら安く・速く・確実に確かめられます。ポイントは、<strong>外から制御できない要素（時刻・乱数・外部I/O）を注入可能にする設計</strong>と、<strong>仕様から期待値を導くこと</strong>です。</p>
+  </div>
+
+  <div class="talk">
+    <div class="say"><div class="who reimu">霊夢</div><div class="bubble"><span class="name">霊夢</span>AIに「このクラスの単体テスト書いて」って頼めば済む話じゃないの？</div></div>
+    <div class="say r"><div class="who marisa">魔理沙</div><div class="bubble"><span class="name">魔理沙</span>それをやると、AIは実装を読んで「今こう動いてる」をテストにする。バグも一緒に固定されるぜ。頼むなら<strong>仕様（受け入れ条件や境界の一覧）を先に渡して、実装を見せる前にテストを書かせる</strong>のがコツだ。</div></div>
+  </div>
+
+  <h3>E2Eの弱点と、単体テストでの補い方</h3>
+  <div class="scroll" style="background:var(--card);border:1px solid var(--rule);border-radius:10px"><table>
+    <thead><tr><th>E2Eの弱点</th><th>単体での手法</th><th>Java</th><th>PHP</th></tr></thead>
+    <tbody>
+      <tr><td>境界値・同値クラス</td><td>仕様から境界の表を作り、パラメータ化テストで全件流す。</td><td>JUnit 5 <code>@ParameterizedTest</code></td><td>PHPUnit <code>#[DataProvider]</code></td></tr>
+      <tr><td>組み合わせ爆発</td><td>プロパティベーステスト：「どんな入力でも成り立つ性質」（例：合計は常に非負、往復変換で元に戻る）をランダム入力で検証。</td><td>jqwik</td><td>Eris</td></tr>
+      <tr><td>時刻依存</td><td>現在時刻を直接取らず、時計を注入する。月末・年またぎ・TZを固定値で検証。</td><td><code>java.time.Clock</code></td><td>PSR-20 <code>ClockInterface</code></td></tr>
+      <tr><td>異常系</td><td>依存先をテストダブルにし、例外・タイムアウト・不正レスポンスを返させて、呼び出し側の振る舞いを検証。</td><td>Mockito</td><td>PHPUnit Mock／Prophecy</td></tr>
+      <tr><td>リトライ・冪等性</td><td>「1回目失敗→2回目成功」「同じ要求が2回」を明示的に再現。リトライ回数・間隔も検証。</td><td>Resilience4j設定の単体検証</td><td>自前リトライ層の単体検証</td></tr>
+      <tr><td>状態遷移</td><td>状態×イベントの遷移表を作り、許可されない遷移がすべて拒否されることを確認。</td><td colspan="2">遷移表をデータとして持ち、パラメータ化テストで全セル検証</td></tr>
+      <tr><td>認可ルール</td><td>権限判定をポリシーオブジェクトに切り出し、ロール×操作×所有者の組み合わせを表で検証。</td><td>Spring Security の判定ロジック分離</td><td>Voter／Policy クラス</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>AI時代の単体テスト設計ルール</h3>
+  <div class="two">
+    <div class="panel"><h4>書き方</h4><ul>
+      <li>1テスト1振る舞い。テスト名で仕様が読める（「会員ランクがゴールドなら送料無料」）。</li>
+      <li>期待値はリテラルで書く。実装と同じ計算式で期待値を作らない。</li>
+      <li>モックはプロセス境界（DB・HTTP・キュー・時計）だけ。自分のドメインオブジェクトはモックしない。</li>
+      <li>「例外が出ないこと」だけのテストを禁止し、結果の状態まで検証する。</li>
+    </ul></div>
+    <div class="panel"><h4>AIへの渡し方</h4><ul>
+      <li>仕様→境界一覧→テスト→実装の順で進めさせる。</li>
+      <li>テスト作成と実装を別の指示（できれば別セッション）に分けると、実装に引きずられにくい。</li>
+      <li>既存テストの期待値を変える場合は、仕様変更の根拠を説明させる。</li>
+      <li>カバレッジの数字ではなく、次節のミューテーションスコアで評価する。</li>
+    </ul></div>
+  </div>
+
+  <div class="note"><b>カバレッジは「通った」、ミューテーションは「効いた」</b><p>行カバレッジ100%でも、アサーションが1つも無ければバグは見逃されます。カバレッジは下限の目安として残しつつ、品質の判定はミューテーションテストに寄せるのがAI時代の組み合わせ方です。</p></div>
+</section>
+
+<!-- ============ MUTATION ============ -->
+<section class="block" id="mutation">
+  <div class="prose">
+    <h2>ミューテーションテスト：テストをテストする</h2>
+    <p>本番コードにわざと小さなバグ（ミュータント）を埋め込み、テストがそれを検出して失敗するかを確かめます。テストが失敗すればミュータントは「殺された」、通ってしまえば「生き残った」。生き残りは、テストの穴を正確に指し示します。</p>
+  </div>
+
+  <div class="mut">
+    <div class="panel">
+      <div class="cap">元のコード</div>
+<pre class="code" style="margin:0;border-radius:0"><span class="k">if</span> (amount <span class="d">&gt;=</span> 5000) {
+  <span class="k">return</span> 0; <span class="c">// 送料無料</span>
+}
+<span class="k">return</span> 500;</pre>
+      <div class="res">仕様：5,000円以上で送料無料</div>
+    </div>
+    <div class="panel">
+      <div class="cap">ミュータント：<code>&gt;=</code> を <code>&gt;</code> に</div>
+<pre class="code" style="margin:0;border-radius:0"><span class="k">if</span> (amount <span class="d">&gt;</span> 5000) {
+  <span class="k">return</span> 0;
+}
+<span class="k">return</span> 500;</pre>
+      <div class="res bad">6,000円と3,000円しか試していないテスト → 生き残る</div>
+    </div>
+    <div class="panel">
+      <div class="cap">テストを追加</div>
+<pre class="code" style="margin:0;border-radius:0">assertEquals(0,   fee(5000));
+assertEquals(500, fee(4999));</pre>
+      <div class="res good">境界ちょうどを検証 → ミュータントを殺せる</div>
+    </div>
+  </div>
+
+  <div class="talk">
+    <div class="say"><div class="who reimu">霊夢</div><div class="bubble"><span class="name">霊夢</span>なるほど、AIが書いた「なんとなく通るテスト」を見破れるのね。でも重そう…。</div></div>
+    <div class="say r"><div class="who marisa">魔理沙</div><div class="bubble"><span class="name">魔理沙</span>全体を毎回回すと重い。だから<strong>PRでは変更箇所だけ、夜間にフル</strong>だ。そして生き残ったミュータントの一覧は、AIにとって最高の「次に書くべきテスト」リストになるぜ。</div></div>
+  </div>
+
+  <h3>運用設計</h3>
+  <div class="scroll" style="background:var(--card);border:1px solid var(--rule);border-radius:10px"><table>
+    <thead><tr><th>観点</th><th>方針</th><th>PIT（Java）</th><th>Infection（PHP）</th></tr></thead>
+    <tbody>
+      <tr><td>PRでの対象</td><td>変更された行・クラスに限定</td><td>git diffから変更クラスを抽出して <code>targetClasses</code> に渡す。インクリメンタル分析（history）で再計算を減らす。</td><td><code>--git-diff-lines</code> と <code>--git-diff-base</code> で変更行に限定。</td></tr>
+      <tr><td>合否の指標</td><td>「テストで実行された範囲のうち、殺せた割合」を使う。未カバー分はカバレッジ側で見る。</td><td>mutation threshold／test strength</td><td><code>--min-covered-msi</code></td></tr>
+      <tr><td>閾値の決め方</td><td>現状値から始めて<strong>下げない（ラチェット）</strong>。新規・変更コードには高めの基準を適用。</td><td colspan="2">例：差分のカバー済みスコア80%以上から開始し、四半期ごとに見直す</td></tr>
+      <tr><td>等価ミュータント</td><td>意味が変わらないミュータントは除外設定に理由付きで記録。除外の追加は人間レビュー対象。</td><td>excludedMethods／除外設定</td><td><code>infection.json5</code> の ignore</td></tr>
+      <tr><td>対象外にするもの</td><td>ログ出力、生成コード、単純なDTO・設定クラス。</td><td colspan="2">対象を絞るほど速く、指標の意味も明確になる</td></tr>
+      <tr><td>夜間フル実行</td><td>全体スコアの推移を記録し、低い領域をテスト強化の候補にする。</td><td colspan="2">結果をGrafanaなどで可視化し、傾向を追う</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>AIとの改善ループ</h3>
+  <ol class="road" style="margin-top:18px">
+    <li><h4>生き残ったミュータントを抽出</h4><p>ファイル・行・変異内容（例：境界条件の変更、戻り値の置換）の一覧を機械可読な形式で出力する。</p></li>
+    <li><h4>AIに「テストだけ」を追加させる</h4><p>指示は「本番コードを変更せずに、このミュータントを殺すテストを追加せよ」。本番コードの変更が混ざったら差し戻す。</p></li>
+    <li><h4>殺せない場合は理由を説明させる</h4><p>等価ミュータントなのか、設計上テストしにくい（=設計の見直しが必要）なのかを分類させ、人間が判断する。</p></li>
+    <li><h4>再実行してスコアを確認</h4><p>スコアが上がったことをCIで確認し、ラチェットの基準値を更新する。</p></li>
+  </ol>
+
+  <div class="note warn"><b>やってはいけない最適化</b><p>AIがミュータントを殺すために、アサーションを実装の内部状態に密結合させる（privateな値をリフレクションで検証する等）ことがあります。スコアは上がりますがリファクタリング耐性を失います。「公開された振る舞いで検証する」をルールに明記しておきます。</p></div>
+</section>
+
+<!-- ============ CONTRACT ============ -->
+<section class="block" id="contract">
+  <div class="prose">
+    <h2>契約テスト：マイクロサービスでは必要性が高い</h2>
+    <p>マイクロサービス構成では、あるサービスの変更が別サービスを壊す事故が最も起きやすく、しかもE2Eまで気づけません。契約テストは「呼ぶ側が期待している形」と「呼ばれる側が返す形」を、<strong>相手を起動せずに</strong>、それぞれのパイプラインで検証します。</p>
+  </div>
+
+  <div class="talk">
+    <div class="say"><div class="who reimu">霊夢</div><div class="bubble"><span class="name">霊夢</span>OpenAPIの定義があれば十分じゃない？</div></div>
+    <div class="say r"><div class="who marisa">魔理沙</div><div class="bubble"><span class="name">魔理沙</span>OpenAPIは「提供者が出せるもの全部」の定義だぜ。契約テスト（特に消費者駆動）は「<strong>消費者が実際に使っている部分</strong>」を記録する。だから「この項目、誰も使ってないから消しても安全」まで判断できるんだ。AIがAPIをリファクタリングするとき、この安全判定がすごく効く。</div></div>
+  </div>
+
+  <div class="two">
+    <div class="panel"><h4>消費者駆動契約（Pact）</h4><ul>
+      <li>呼ぶ側の単体テストで「このリクエストにこう返ってくる前提」を記録し、契約ファイルを生成。</li>
+      <li>契約をPact Brokerに登録し、提供側パイプラインで実装を検証。</li>
+      <li><code>can-i-deploy</code> で「本番の相手バージョンと互換か」をデプロイ前に判定。</li>
+      <li>Java：Pact JVM、PHP：pact-php。メッセージ（非同期イベント）の契約も扱える。</li>
+    </ul></div>
+    <div class="panel"><h4>提供者主導（スキーマ互換性）</h4><ul>
+      <li>OpenAPI／イベントスキーマを正とし、実装がスキーマ通りかを検証。</li>
+      <li>スキーマ差分から後方互換性を壊す変更（必須項目追加、項目削除、型変更）を自動検出。</li>
+      <li>消費者が社外・不特定多数の公開APIに向く。</li>
+      <li>導入コストが低く、まず始めるならこちら。</li>
+    </ul></div>
+  </div>
+
+  <div class="checker" id="checker">
+    <h4>このAPIに契約テストは必要？</h4>
+    <label><input type="checkbox" data-w="3"><span>提供側と消費側が別のリポジトリ・別のパイプラインでデプロイされる</span></label>
+    <label><input type="checkbox" data-w="3"><span>消費者が2つ以上ある、または今後増える予定</span></label>
+    <label><input type="checkbox" data-w="2"><span>担当チームが異なる（変更の調整にコミュニケーションが必要）</span></label>
+    <label><input type="checkbox" data-w="2"><span>非同期メッセージ（イベント）でつながっている</span></label>
+    <label><input type="checkbox" data-w="2"><span>AIエージェントがAPIの実装を変更することがある</span></label>
+    <label><input type="checkbox" data-w="1"><span>過去にサービス間の不整合で障害やE2E失敗が起きた</span></label>
+    <label><input type="checkbox" data-w="-3"><span>同じデプロイ単位（モジュラーモノリス内のモジュール間など）での呼び出しである</span></label>
+    <div class="verdict" aria-live="polite">
+      <div class="meter"><span id="meter"></span></div>
+      <b id="vTitle">項目を選んでください</b>
+      <p id="vBody" style="margin:.3em 0 0">当てはまるものにチェックすると、推奨する契約テストの形が表示されます。</p>
+    </div>
+  </div>
+
+  <h3>導入時の判断基準</h3>
+  <div class="scroll" style="background:var(--card);border:1px solid var(--rule);border-radius:10px"><table>
+    <thead><tr><th>状況</th><th>推奨</th><th>理由</th></tr></thead>
+    <tbody>
+      <tr><td>社内サービス間の同期API（REST／gRPC）</td><td>消費者駆動契約＋<code>can-i-deploy</code></td><td>独立デプロイの安全性を、E2Eを待たずに判定できる。</td></tr>
+      <tr><td>イベント駆動（Kafka等）</td><td>メッセージ契約＋スキーマレジストリの互換性チェック</td><td>非同期はE2Eで最も検証しにくく、壊れても気づくのが遅い。</td></tr>
+      <tr><td>公開API・外部向け</td><td>スキーマ互換性チェック</td><td>消費者が不特定で、消費者側の契約を集められない。</td></tr>
+      <tr><td>外部SaaSを呼ぶ側</td><td>提供元仕様に基づくスタブ＋定期的な実環境スモーク</td><td>相手のパイプラインに検証を組み込めない。</td></tr>
+      <tr><td>同一デプロイ単位の内部呼び出し</td><td>不要（型システムと統合テストで十分）</td><td>コンパイラが契約を守らせてくれる。</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="note"><b>E2Eとの役割分担</b><p>契約テストで「形の整合」を保証できると、E2Eは「実際に届くか・つながるか」だけに集中でき、本数を減らせます。契約テスト導入の最大の効果は、実はE2Eの縮小と安定化です。</p></div>
+</section>
+
+<!-- ============ OTHERS ============ -->
+<section class="block" id="others">
+  <div class="prose">
+    <h2>そのほかに組み込むべきテスト</h2>
+    <p>単体・E2E・ミューテーション・契約の4本柱に加えて、AIコーディング特有のリスクに効くものを選んで追加します。</p>
+  </div>
+
+  <div class="two">
+    <div class="panel"><h4>静的解析・アーキテクチャテスト</h4><ul>
+      <li>型・null安全：Error Prone／NullAway、PHPStan・Psalm（レベルはラチェットで上げる）。</li>
+      <li>依存方向・レイヤー規約：ArchUnit（Java）、Deptrac（PHP）。AIの「近道」を機械的に止める。</li>
+      <li>最速で安く、AIへの即時フィードバックとして最も費用対効果が高い。</li>
+    </ul></div>
+    <div class="panel"><h4>統合テスト（コンポーネントテスト）</h4><ul>
+      <li>Testcontainersで実DB・実キュー・実キャッシュを起動し、1サービス単位で検証。</li>
+      <li>SQL・ORMマッピング・トランザクション境界・DI設定の誤りを捕まえる。</li>
+      <li>Toxiproxy等で遅延・切断を注入し、タイムアウトとリトライを実際の通信で確認。</li>
+    </ul></div>
+    <div class="panel"><h4>特性化テスト（承認テスト）</h4><ul>
+      <li>既存コードをAIにリファクタリングさせる前に、現在の出力をスナップショットとして固定。</li>
+      <li>「振る舞いを変えていない」ことを大量の入力で確認できる。</li>
+      <li>スナップショットの更新は人間の承認を必須にする。</li>
+    </ul></div>
+    <div class="panel"><h4>セキュリティ</h4><ul>
+      <li>SAST（Semgrep・CodeQL等）、依存ライブラリの脆弱性スキャン、シークレット混入検知。</li>
+      <li>AIが古い・存在しないライブラリを提案する問題への対策として、依存の追加自体をレビュー対象にする。</li>
+    </ul></div>
+    <div class="panel"><h4>DBマイグレーション検証</h4><ul>
+      <li>マイグレーションを空DBと本番相当スナップショットの両方に適用。</li>
+      <li>旧バージョンのアプリが新スキーマで動くか（ローリングデプロイ時の後方互換）を確認。</li>
+    </ul></div>
+    <div class="panel"><h4>性能・負荷</h4><ul>
+      <li>クリティカルパスのみ、応答時間とクエリ数の上限をテストで固定（N+1の混入検知）。</li>
+      <li>本格的な負荷試験は夜間やリリース前に分離。</li>
+    </ul></div>
+    <div class="panel"><h4>フレーク検出</h4><ul>
+      <li>新規・変更テストを複数回連続実行し、結果が揺れないか確認。</li>
+      <li>AIが書いたテストは時刻・順序・乱数依存を含みやすいので特に有効。</li>
+    </ul></div>
+    <div class="panel"><h4>本番検証（デプロイ後）</h4><ul>
+      <li>カナリアリリース中のエラー率・レイテンシをOpenTelemetry→Grafanaで監視し、SLO逸脱で自動ロールバック。</li>
+      <li>合成監視で主要導線を定期実行。</li>
+      <li>「テストをすり抜けても被害を小さくする」最後の網。</li>
+    </ul></div>
+  </div>
+</section>
+
+<!-- ============ GUARD ============ -->
+<section class="block" id="guard">
+  <div class="prose">
+    <h2>テスト自体を守るガードレール</h2>
+    <p>AIが「テストを通す」最短経路は、テストを弱くすることです。どれだけ網を重ねても、網そのものを切られたら意味がありません。テストコードの変更を特別扱いする仕組みを入れます。</p>
+  </div>
+
+  <div class="talk">
+    <div class="say"><div class="who reimu">霊夢</div><div class="bubble"><span class="name">霊夢</span>さすがにAIがテストを消したりはしないでしょ？</div></div>
+    <div class="say r"><div class="who marisa">魔理沙</div><div class="bubble"><span class="name">魔理沙</span>悪気なくやるぜ。「このテストは古い仕様に基づいているため更新しました」ってな。理由がもっともらしいから、レビューでも通りがちだ。だから<strong>人の注意力に頼らず、機械的に検知する</strong>んだ。</div></div>
+  </div>
+
+  <ul class="checklist">
+    <li>テストの削除・スキップ注釈（<code>@Disabled</code>、<code>markTestSkipped</code>、<code>#[Group('skip')]</code>等）の追加を検知し、自動マージ対象外にする</li>
+    <li>既存テストの期待値変更を検知し、仕様変更の根拠（チケット）とのひも付けを必須にする</li>
+    <li>アサーション数の減少を差分で検知する</li>
+    <li>カバレッジとミューテーションスコアの低下を禁止する（ラチェット）</li>
+    <li>静的解析のベースライン・除外設定の追加をレビュー必須にする</li>
+    <li>同一PRで「本番コード」と「そのテストの期待値」を同時に変更した場合を要注意として扱う</li>
+    <li>E2Eシナリオ・契約ファイル・スナップショットの変更は人間の承認を必須にする</li>
+    <li>CI設定・テスト設定ファイル（閾値・対象範囲）の変更はコードオーナー承認にする</li>
+  </ul>
+
+  <div class="note idea"><b>自動マージの条件を「減点なし」で定義する</b><p>全PR自動マージを目指すなら、「全テストが通った」だけでなく「どの指標も下がっていない・網が一枚も外されていない」ことを条件にします。上のチェックに一つでも該当したPRは、人間のレビューへ振り分けます。</p></div>
+</section>
+
+<!-- ============ PIPELINE ============ -->
+<section class="block" id="pipeline">
+  <div class="prose">
+    <h2>Screwdriver CIでの流れ</h2>
+    <p>PRで回す網（速い）、マージ後に回す網（遅い・環境が必要）、デプロイ後に回す網（本番）の三段に分けます。Screwdriverでは <code>requires</code> に複数ジョブを並べるとすべての完了を待つ合流になり、PR上で後続ジョブまで連鎖させるには chainPR の設定を使います。</p>
+  </div>
+
+  <div class="pipe">
+    <svg viewBox="0 0 900 400" role="img" aria-label="PR、マージ後、デプロイ後の三段に分かれたScrewdriverのジョブの流れ図">
+      <text class="lane" x="10" y="28">PR（~pr）</text>
+      <text class="lane" x="10" y="188">マージ後（~commit）</text>
+      <text class="lane" x="10" y="318">デプロイ後</text>
+      <line class="sep" x1="10" x2="890" y1="150" y2="150"/>
+      <line class="sep" x1="10" x2="890" y1="282" y2="282"/>
+
+      <rect class="job g" x="20" y="48" width="140" height="40" rx="6"/><text x="90" y="73" text-anchor="middle">静的解析</text>
+      <rect class="job g" x="20" y="98" width="140" height="40" rx="6"/><text x="90" y="123" text-anchor="middle">単体＋カバレッジ</text>
+      <rect class="job a" x="210" y="48" width="160" height="40" rx="6"/><text x="290" y="73" text-anchor="middle">差分ミューテーション</text>
+      <rect class="job n" x="210" y="98" width="160" height="40" rx="6"/><text x="290" y="123" text-anchor="middle">契約：生成・登録・検証</text>
+      <rect class="job g" x="420" y="73" width="150" height="40" rx="6"/><text x="495" y="98" text-anchor="middle">統合（Testcontainers）</text>
+      <rect class="job r" x="620" y="48" width="150" height="40" rx="6"/><text x="695" y="73" text-anchor="middle">テスト改変チェック</text>
+      <rect class="job" x="620" y="98" width="150" height="40" rx="6"/><text x="695" y="123" text-anchor="middle">自動マージ判定</text>
+      <path d="M160 68 H210"/><path d="M160 118 H185 V68 H210"/><path d="M160 118 H210"/>
+      <path d="M370 68 H395 V93 H420"/><path d="M370 118 H395 V93 H420"/>
+      <path d="M570 93 H595 V68 H620"/><path d="M695 88 V98"/>
+
+      <rect class="job n" x="20" y="200" width="160" height="40" rx="6"/><text x="100" y="225" text-anchor="middle">can-i-deploy（STG）</text>
+      <rect class="job" x="230" y="200" width="150" height="40" rx="6"/><text x="305" y="225" text-anchor="middle">ステージングへデプロイ</text>
+      <rect class="job g" x="430" y="200" width="150" height="40" rx="6"/><text x="505" y="225" text-anchor="middle">E2E（主要導線）</text>
+      <rect class="job n" x="630" y="200" width="160" height="40" rx="6"/><text x="710" y="225" text-anchor="middle">can-i-deploy（本番）</text>
+      <path d="M180 220 H230"/><path d="M380 220 H430"/><path d="M580 220 H630"/>
+
+      <rect class="job" x="20" y="300" width="160" height="40" rx="6"/><text x="100" y="325" text-anchor="middle">本番カナリア</text>
+      <rect class="job r" x="230" y="300" width="190" height="40" rx="6"/><text x="325" y="325" text-anchor="middle">SLO監視（OTel／Grafana）</text>
+      <rect class="job" x="470" y="300" width="130" height="40" rx="6"/><text x="535" y="325" text-anchor="middle">全面展開</text>
+      <rect class="job" x="470" y="350" width="130" height="40" rx="6"/><text x="535" y="375" text-anchor="middle">自動ロールバック</text>
+      <path d="M180 320 H230"/><path d="M420 320 H470"/><path d="M420 320 H445 V370 H470"/>
+      <text x="640" y="325" style="fill:var(--ink-2)">夜間：フルミューテーション</text>
+      <text x="640" y="345" style="fill:var(--ink-2)">　　　負荷テスト／フレーク検出</text>
+    </svg>
+  </div>
+
+  <p class="prose">以下は構成の骨格を示す概念スケッチです（コマンドやイメージは実環境に合わせて置き換えてください）。</p>
+<pre class="code"><span class="k">annotations</span>:
+  screwdriver.cd/chainPR: <span class="s">true</span>        <span class="c"># PR上で後続ジョブまで連鎖させる</span>
+
+<span class="k">jobs</span>:
+  static-analysis:
+    requires: [~pr, ~commit]
+  unit:
+    requires: [~pr, ~commit]
+  mutation-diff:
+    requires: [unit]                    <span class="c"># 差分のみ。閾値割れで失敗</span>
+  contract:
+    requires: [unit]                    <span class="c"># 消費者:契約を登録 / 提供者:検証</span>
+  integration:
+    requires: [static-analysis, unit]   <span class="c"># 両方の完了を待つ合流</span>
+  test-guard:
+    requires: [mutation-diff, contract, integration]
+                                        <span class="c"># 改変検知・指標ラチェット → 自動マージ可否</span>
+  <span class="c"># --- 以下は ~commit 起点（マージ後）で動く流れ ---</span>
+  can-i-deploy-stg:   { requires: [test-guard] }
+  deploy-stg:         { requires: [can-i-deploy-stg] }
+  e2e:                { requires: [deploy-stg] }
+  can-i-deploy-prod:  { requires: [e2e] }
+  canary:             { requires: [can-i-deploy-prod] }
+  slo-watch:          { requires: [canary] }   <span class="c"># 逸脱時はロールバック</span></pre>
+
+  <div class="note"><b>サービスをまたぐ検証の起動</b><p>消費者側で新しい契約が登録されたら、Pact Brokerのwebhookから提供者側パイプラインの検証ジョブを起動する構成にすると、両者のPRが揃うのを待たずに互換性を判定できます。</p></div>
+</section>
+
+<!-- ============ ROADMAP ============ -->
+<section class="block" id="roadmap">
+  <div class="prose">
+    <h2>導入の順番</h2>
+    <p>一度に全部入れると、CIが遅く・赤くなり、チームもAIも疲弊します。費用対効果の高い順に、指標を「下げない」仕組みとセットで入れていきます。</p>
+  </div>
+  <ol class="road">
+    <li><h4>静的解析とアーキテクチャ規約を固める</h4><p>最も安く、AIへの即時フィードバックとして効く。現状をベースラインにして、新規違反だけを止める。</p></li>
+    <li><h4>テスト改変のガードレールを入れる</h4><p>以降の網をAIに外されないための土台。スキップ注釈・テスト削除・期待値変更の検知から始める。</p></li>
+    <li><h4>差分ミューテーションをPRに組み込む</h4><p>最初は警告のみで計測し、数週間後に現状値を閾値としてラチェット化。生存ミュータントをAIに渡すループを整える。</p></li>
+    <li><h4>契約テストを重要な連携から導入</h4><p>障害が多い、または変更頻度の高いサービス間から。まずスキーマ互換性チェック、次に消費者駆動契約と can-i-deploy。</p></li>
+    <li><h4>統合テストを整え、E2Eを絞り込む</h4><p>Testcontainersでサービス単位の検証を厚くし、E2Eをクリティカルジャーニーだけに減らして安定化させる。</p></li>
+    <li><h4>カナリアとSLOによる自動ロールバック</h4><p>すり抜けたバグの影響を最小化する最後の網。これがあることで、手前の自動マージ判定を攻めた設定にできる。</p></li>
+  </ol>
+</section>
+
+<!-- ============ FAQ ============ -->
+<section class="block" id="faq">
+  <div class="prose"><h2>よくある迷い</h2></div>
+  <details class="faq"><summary>E2Eは何本くらいが適切？</summary><div>本数ではなく「止まったら障害扱いする導線」で決めます。多くの場合5〜15本程度に収まります。それ以上増えるなら、単体・契約・統合へ移せないかを検討します。</div></details>
+  <details class="faq"><summary>ミューテーションスコアは100%を目指すべき？</summary><div>目指しません。等価ミュータントや費用に見合わない箇所があるため、変更コードに対して一定以上を保ち、全体は下げないことが現実的です。重要なドメインロジックだけ高い基準を設ける、という濃淡の付け方も有効です。</div></details>
+  <details class="faq"><summary>契約テストとE2Eは両方必要？</summary><div>役割が違うので両方必要ですが、契約テストがあるとE2Eは大きく減らせます。契約は「形」、E2Eは「つながり」を見ます。</div></details>
+  <details class="faq"><summary>AIにテストを書かせるのは危険？</summary><div>書かせること自体は問題ありません。危険なのは「実装を見ながら書かせる」「書いたテストを評価しない」ことです。仕様を先に渡し、ミューテーションで効き目を測れば、AIは非常に優秀なテスト作成者になります。</div></details>
+  <details class="faq"><summary>既存コードにテストがほとんど無い場合は？</summary><div>先に特性化テストで現状の振る舞いを固定し、その上でAIにリファクタリングやテスト追加をさせます。いきなり単体テストを書かせると、現状の仕様が不明なまま期待値を推測することになります。</div></details>
+
+  <footer>
+    <p><a href="../">thinking トップに戻る</a></p>
+    このページは設計方針と判断基準をまとめたものです。ツール名・オプションはバージョンにより変わる可能性があるため、導入時は各公式ドキュメントで確認してください。
+  </footer>
+</section>
+</main>
+</div>
+
+<script>
+(function(){
+  /* theme */
+  var root=document.documentElement, btn=document.getElementById('themeBtn');
+  try{var t=localStorage.getItem('theme'); if(t) root.setAttribute('data-theme',t);}catch(e){}
+  btn.addEventListener('click',function(){
+    var cur=root.getAttribute('data-theme');
+    if(!cur){cur=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}
+    var next=cur==='dark'?'light':'dark';
+    root.setAttribute('data-theme',next);
+    try{localStorage.setItem('theme',next);}catch(e){}
+  });
+
+  /* gates */
+  var gates=[
+    {t:'静的解析',w:'PR／毎コミット・数十秒〜数分',
+     aim:'型の誤り、null安全、コーディング規約、依存方向の違反を実行前に止める。',
+     tgt:'全変更ファイル。アーキテクチャ規約（レイヤー、モジュール間依存）を含む。',
+     catch:'存在しないメソッド呼び出し、型不一致、禁止された依存、未使用コード。',
+     miss:'ロジックの誤り、仕様との不一致。',
+     crit:'新規違反ゼロ。既存違反はベースライン化し、減らす方向にのみ更新。'},
+    {t:'単体テスト',w:'PR／毎コミット・数分',
+     aim:'ドメインロジックの正しさを、境界値・異常系・時刻依存まで含めて網羅する。',
+     tgt:'ドメイン層、アプリケーションサービス、権限判定、状態遷移。',
+     catch:'境界条件の誤り、例外処理の欠落、計算誤り、状態遷移の誤り。',
+     miss:'配線・設定・SQL・サービス間の整合。',
+     crit:'全件成功。変更箇所のカバレッジが基準以上。フレーク判定で揺れがないこと。'},
+    {t:'ミューテーションテスト',w:'PRは差分のみ・数分／夜間フル',
+     aim:'テストが本当にバグを検出できるか（アサーションの強さ）を測る。',
+     tgt:'変更された本番コード（PR）、全体（夜間）。',
+     catch:'アサーションの欠如、境界の未検証、実装を写しただけのテスト。',
+     miss:'テストが存在しない領域（カバレッジで見る）、仕様そのものの誤り。',
+     crit:'差分のカバー済みスコアが閾値以上。全体スコアが前回を下回らない。'},
+    {t:'契約テスト',w:'PR・数分',
+     aim:'サービス間のリクエスト・レスポンス・イベントの形の整合を、相手を起動せずに保証する。',
+     tgt:'サービス境界のAPIクライアントとAPIハンドラ、メッセージの発行・購読。',
+     catch:'項目名・型の不一致、必須項目の削除、後方互換を壊す変更。',
+     miss:'ネットワーク・認証・性能・業務的な正しさ。',
+     crit:'全消費者の契約を検証成功。デプロイ前に can-i-deploy が互換と判定。'},
+    {t:'統合テスト',w:'PR・数分〜10分',
+     aim:'1サービスを実際のDB・キュー・キャッシュと組み合わせて動かす。',
+     tgt:'リポジトリ層、トランザクション、DI設定、メッセージング、外部HTTPクライアント（スタブ相手）。',
+     catch:'SQLの誤り、マッピング不備、トランザクション境界、タイムアウト・リトライ設定。',
+     miss:'他サービスとの実際の結線、本番規模の性能。',
+     crit:'全件成功。障害注入シナリオ（遅延・切断）でも期待した振る舞い。'},
+    {t:'E2Eテスト',w:'マージ後・ステージング・10分〜',
+     aim:'デプロイされた本物の構成で、クリティカルな導線が最後まで通ることを確認する。',
+     tgt:'合意済みのクリティカルユーザージャーニー（少数精鋭）。',
+     catch:'ルーティング・設定・認証伝播・環境差分による不具合。',
+     miss:'組み合わせ網羅、異常系、並行性、原因箇所の特定。',
+     crit:'全導線成功。リトライで通ったものは記録し、フレークとして別途対処。'},
+    {t:'本番検証',w:'デプロイ後・継続',
+     aim:'すり抜けたバグの影響範囲を最小にし、自動で戻す。',
+     tgt:'カナリアに流れる実トラフィック、合成監視の主要導線。',
+     catch:'本番データ・本番負荷でしか出ない問題、性能劣化。',
+     miss:'（最後の網。ここで見つけたものは手前の網へフィードバック）',
+     crit:'エラー率・レイテンシがSLO内。逸脱時は自動ロールバック。'}
+  ];
+  var panel=document.getElementById('gatePanel');
+  var tabs=[].slice.call(document.querySelectorAll('.gate-list button'));
+  function render(i){
+    var g=gates[i];
+    panel.innerHTML='<h3>'+(i+1)+'. '+g.t+'</h3><span class="when">'+g.w+'</span>'+
+      '<dl><dt>狙い</dt><dd>'+g.aim+'</dd><dt>対象</dt><dd>'+g.tgt+'</dd>'+
+      '<dt>捕まえるもの</dt><dd>'+g.catch+'</dd><dt>取り逃がすもの</dt><dd>'+g.miss+'</dd>'+
+      '<dt>通過基準</dt><dd>'+g.crit+'</dd></dl>';
+    tabs.forEach(function(b,j){b.setAttribute('aria-selected',j===i?'true':'false');b.tabIndex=j===i?0:-1;});
+  }
+  tabs.forEach(function(b,i){
+    b.addEventListener('click',function(){render(i);});
+    b.addEventListener('keydown',function(e){
+      var n=null;
+      if(e.key==='ArrowDown'||e.key==='ArrowRight') n=(i+1)%tabs.length;
+      if(e.key==='ArrowUp'||e.key==='ArrowLeft') n=(i-1+tabs.length)%tabs.length;
+      if(n!==null){e.preventDefault();render(n);tabs[n].focus();}
+    });
+  });
+  render(0);
+
+  /* e2e tabs */
+  var etabs=[].slice.call(document.querySelectorAll('.tabs button'));
+  etabs.forEach(function(b){
+    b.addEventListener('click',function(){
+      etabs.forEach(function(x){
+        var on=x===b; x.setAttribute('aria-selected',on?'true':'false');
+        document.getElementById(x.getAttribute('aria-controls')).hidden=!on;
+      });
+    });
+  });
+
+  /* contract checker */
+  var boxes=[].slice.call(document.querySelectorAll('#checker input'));
+  var meter=document.getElementById('meter'),vt=document.getElementById('vTitle'),vb=document.getElementById('vBody');
+  function judge(){
+    var s=0,any=false;
+    boxes.forEach(function(b){if(b.checked){any=true;s+=+b.dataset.w;}});
+    var pct=Math.max(0,Math.min(100,s/13*100));
+    meter.style.width=pct+'%';
+    if(!any){vt.textContent='項目を選んでください';vb.textContent='当てはまるものにチェックすると、推奨する契約テストの形が表示されます。';return;}
+    if(s<=1){vt.textContent='契約テストは不要です';vb.textContent='型システムと統合テストで整合を担保できます。サービス分割の予定が出た時点で再評価してください。';}
+    else if(s<=5){vt.textContent='まずはスキーマ互換性チェックから';vb.textContent='OpenAPI／イベントスキーマの差分で後方互換を壊す変更を検出する軽量な仕組みを先に入れ、消費者が増えたら消費者駆動契約に移行します。';}
+    else{vt.textContent='消費者駆動契約＋can-i-deployを推奨';vb.textContent='独立デプロイの安全性をE2Eに頼らず判定できる効果が大きい構成です。非同期連携があればメッセージ契約も併用してください。';}
+  }
+  boxes.forEach(function(b){b.addEventListener('change',judge);});
+
+  /* toc highlight */
+  var links=[].slice.call(document.querySelectorAll('nav.toc a'));
+  if('IntersectionObserver' in window){
+    var io=new IntersectionObserver(function(es){
+      es.forEach(function(e){
+        if(e.isIntersecting){
+          links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href')==='#'+e.target.id);});
+        }
+      });
+    },{rootMargin:'-40% 0px -55% 0px'});
+    document.querySelectorAll('section.block').forEach(function(s){io.observe(s);});
+  }
+})();
+</script>
+</body>
+</html>
