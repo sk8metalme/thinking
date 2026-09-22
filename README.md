@@ -1,31 +1,40 @@
 # thinking
 
-日々考えたことを、雑多な思考メモとして読める形で残していく場所です。
+AIコーディング、テスト戦略、開発プロセスについて考えたことを、読者が内容を追えるHTMLページとして残すリポジトリです。
 
 公開サイト: https://sk8metalme.github.io/thinking/
 
 ## 構成
 
 ```
-docs/                     GitHub Pages の公開ルート（main ブランチの /docs から配信）
-├── .nojekyll             Jekyll 処理を無効化し、HTML をそのまま配信する
-├── index.html            トップページ（各ページへの一覧）
-└── testing/              テスト戦略カテゴリ
+AGENTS.md                                      エージェント向けの執筆・検証規約
+.agents/skills/publish-github-pages/           記事作成・公開準備Skill
+.github/workflows/pages.yml                    PR検証とGitHub Pages公開
+docs/                                           Pagesに公開する静的HTML
+├── .nojekyll                                   Jekyll処理を無効化
+├── index.html                                  トップページと記事一覧
+└── testing/                                    テスト戦略カテゴリ
     ├── ai-coding-test-strategy.html
     └── jev-test-strategy.html
 ```
 
+公開は、PRでページ構成を検証したあと、`main`へのpushをきっかけにGitHub Actionsが`docs/`をデプロイします。記事の追加や公開準備では、リポジトリ内の `publish-github-pages` Skillを使います。
+
 ## ページの追加手順
 
-1. `docs/<カテゴリ>/<ページ名>.html` に単一ファイルの HTML を置く（CSS/JS はファイル内にインライン）
-2. ページのフッターに `<a href="../">thinking トップに戻る</a>` を入れる
-3. `docs/index.html` の該当カテゴリの `<ul class="pages">` に `<li>` を1件追加する（新カテゴリなら `<section>` ごと追加）
-4. main に push すると数分で公開サイトに反映される
+1. Skillを使い、想定読者・ページの目的・扱う範囲・不明点・方向性を確定する
+2. `docs/<カテゴリ>/<ページ名>.html` に単一ファイルのHTMLを置く（CSS/JSはファイル内にインライン）
+3. `docs/index.html` の該当カテゴリへ記事へのリンク、説明、日付、タグを追加する
+4. 比較は表、関係や工程は必要性を確認したうえで図にし、図だけでは伝わらない前提と説明を本文に書く
+5. ローカル確認とリンク・アクセシビリティ確認を行い、PRを作成する
+6. PRが通って`main`へ反映されるとActionsが公開する
+
+記事フッターには、配置階層に応じた相対パスで `thinking` トップへのリンクを置きます。
 
 ## 命名ルール
 
 - ファイル名・ディレクトリ名は小文字の英数字とハイフン（例: `ai-coding-test-strategy.html`）
-- 公開 URL が変わるとリンク切れになるため、公開後のファイル名変更は避ける
+- 公開URLが変わるとリンク切れになるため、公開後のファイル名変更は避ける
 
 ## ローカル確認
 
@@ -33,3 +42,5 @@ docs/                     GitHub Pages の公開ルート（main ブランチの
 python3 -m http.server -d docs 8000
 # http://localhost:8000/ を開く
 ```
+
+詳細な品質基準と公開前チェックは [AGENTS.md](AGENTS.md) と `publish-github-pages` Skillを参照してください。
