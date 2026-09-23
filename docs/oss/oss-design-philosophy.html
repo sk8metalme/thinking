@@ -1,0 +1,1729 @@
+<!DOCTYPE html>
+<html lang="ja"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>人気OSS 100の設計思想 — 何を約束し、何を断ってきたか</title>
+<meta name="description" content="9分野100の人気OSSが大事にしているポリシーと動機を整理し、14の傾向と自分のOSSに取り入れる手順・PHILOSOPHY.mdテンプレートにまとめたページ">
+<link rel="icon" href="data:image/svg+xml,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'&gt;&lt;text y='.9em' font-size='90'&gt;🧭&lt;/text&gt;&lt;/svg&gt;">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&amp;family=Noto+Serif+JP:wght@600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EDF0EC; --paper:#F8FAF6; --ink:#1C252E; --muted:#56626B; --line:#C7CFCA; --soft:#E2E7E2;
+  --accent:#2F4B7C; --verified:#8A5E08; --verified-bg:#F3E7C9;
+  --c-lang:#2F4B7C; --c-front:#23807F; --c-back:#7A4E8C; --c-tool:#557336; --c-cli:#98652A;
+  --c-infra:#3A68A8; --c-data:#9E4343; --c-ai:#B7841A; --c-app:#5A6770;
+  --reimu:#A83A3A; --marisa:#8A6A10;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN","Yu Mincho","MS PMincho",serif;
+  --sans:"Noto Sans JP","Hiragino Sans","Yu Gothic","Meiryo",system-ui,sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#141A1E; --paper:#1A2126; --ink:#E3E8E4; --muted:#9CA8AF; --line:#2F3A42; --soft:#222B31;
+    --accent:#93AEDD; --verified:#E2B85A; --verified-bg:#3A301A;
+    --c-lang:#7E9BD1; --c-front:#5BB8B6; --c-back:#B98ACB; --c-tool:#93B46F; --c-cli:#D39C5C;
+    --c-infra:#79A3DD; --c-data:#D98080; --c-ai:#E0B455; --c-app:#98A6AF;
+    --reimu:#E37F7F; --marisa:#E0BE5C;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#141A1E; --paper:#1A2126; --ink:#E3E8E4; --muted:#9CA8AF; --line:#2F3A42; --soft:#222B31;
+  --accent:#93AEDD; --verified:#E2B85A; --verified-bg:#3A301A;
+  --c-lang:#7E9BD1; --c-front:#5BB8B6; --c-back:#B98ACB; --c-tool:#93B46F; --c-cli:#D39C5C;
+  --c-infra:#79A3DD; --c-data:#D98080; --c-ai:#E0B455; --c-app:#98A6AF;
+  --reimu:#E37F7F; --marisa:#E0BE5C;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 56px);scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important;animation:none!important}}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.85;-webkit-text-size-adjust:100%}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+.prose{max-width:720px}
+h1,h2,h3{font-family:var(--serif);font-weight:700;line-height:1.35;letter-spacing:.01em}
+h2{font-size:clamp(1.5rem,3.4vw,2.05rem);margin:0 0 .6em}
+h3{font-size:1.18rem;margin:0 0 .4em}
+p{margin:0 0 1em}
+
+/* nav */
+.nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:color-mix(in srgb,var(--bg) 90%,transparent);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.nav .wrap{display:flex;gap:4px;align-items:center;overflow-x:auto;white-space:nowrap;height:48px}
+.nav a{font-size:.88rem;text-decoration:none;color:var(--muted);padding:6px 10px;border-radius:6px}
+.nav a:hover{color:var(--ink);background:var(--soft)}
+.nav .brand{font-family:var(--serif);font-weight:800;color:var(--ink);margin-right:6px}
+
+/* hero */
+.hero{padding:56px 0 40px}
+.hero-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:40px;align-items:start}
+.hero h1{font-size:clamp(1.8rem,4.6vw,2.9rem);font-weight:800;margin:0 0 .5em;line-height:1.25}
+.hero h1 .nb{display:inline-block}
+.hero .lead{font-size:1.06rem;color:var(--muted);max-width:34em}
+.board{display:grid;grid-template-columns:repeat(10,1fr);gap:4px;background:var(--paper);padding:10px;border:1px solid var(--line);border-radius:4px}
+.cell{aspect-ratio:1;border:0;padding:0;border-radius:2px;cursor:pointer;position:relative;background:var(--cc);opacity:.9}
+.cell:hover,.cell:focus-visible{opacity:1;transform:scale(1.12);z-index:2}
+.cell.v::after{content:"";position:absolute;right:3px;top:3px;width:5px;height:5px;border-radius:50%;background:var(--paper)}
+.board-cap{font-size:.82rem;color:var(--muted);margin-top:10px;line-height:1.6}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:10px;font-size:.8rem;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:10px;height:10px;border-radius:2px;background:var(--cc);display:inline-block}
+.tip{position:fixed;pointer-events:none;background:var(--ink);color:var(--paper);font-size:.8rem;padding:4px 8px;border-radius:4px;z-index:50;opacity:0;transition:opacity .12s}
+.facts{display:flex;gap:28px;flex-wrap:wrap;margin-top:22px;font-size:.9rem;color:var(--muted)}
+.facts b{font-family:var(--serif);font-size:1.4rem;color:var(--ink);margin-right:4px}
+
+section{padding:48px 0;border-top:1px solid var(--line)}
+
+/* dialogue */
+.talk{background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:18px 18px 8px;margin:8px 0 8px;max-width:760px}
+.talk .row{display:grid;grid-template-columns:3.4em 1fr;gap:10px;margin-bottom:12px}
+.talk .who{font-family:var(--serif);font-weight:800;font-size:.95rem;padding-top:1px}
+.talk .r .who{color:var(--reimu)}
+.talk .m .who{color:var(--marisa)}
+.talk .say{margin:0}
+.talk-title{font-size:.85rem;color:var(--muted);margin:0 0 10px}
+
+/* method */
+.method{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:20px}
+.method div{border-top:3px solid var(--accent);padding-top:10px}
+.method h3{font-size:1rem}
+.method p{font-size:.92rem;color:var(--muted)}
+
+/* themes */
+.themes{display:grid;grid-template-columns:1fr 1fr;gap:0 40px;margin-top:24px}
+.theme{padding:22px 0;border-bottom:1px solid var(--line)}
+.theme h3{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.theme .cnt{font-family:var(--sans);font-size:.78rem;font-weight:500;color:var(--muted)}
+.theme dl{margin:.4em 0 0;font-size:.93rem}
+.theme dt{font-weight:700;margin-top:.5em;font-size:.84rem;color:var(--muted)}
+.theme dd{margin:0}
+.ex{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.ex button,.chip{font:inherit;font-size:.8rem;border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:999px;padding:3px 11px;cursor:pointer}
+.ex button:hover,.chip:hover{border-color:var(--accent)}
+.ex .more{color:var(--accent);border-style:dashed}
+
+/* ranking */
+.rank{margin-top:22px;display:grid;gap:6px;max-width:760px}
+.rank .bar{display:grid;grid-template-columns:11em 1fr 2.5em;align-items:center;gap:10px;font-size:.88rem;border:0;background:none;color:var(--ink);padding:2px 0;cursor:pointer;text-align:left;font-family:inherit}
+.rank .track{height:12px;background:var(--soft);border-radius:2px;overflow:hidden}
+.rank .fill{height:100%;background:var(--accent)}
+.rank .bar:hover .fill{opacity:.8}
+.rank .num{text-align:right;color:var(--muted);font-variant-numeric:tabular-nums}
+
+/* filters */
+.filters{position:sticky;top:calc(env(safe-area-inset-top,0px) + 48px);z-index:10;background:var(--bg);padding:12px 0;border-bottom:1px solid var(--line);margin-bottom:18px}
+.frow{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;align-items:center}
+.frow + .frow{margin-top:6px}
+.frow .lbl{font-size:.78rem;color:var(--muted);min-width:3.2em;flex:none}
+.frow .chip{flex:none;white-space:nowrap}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.chip .dot{display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--cc);margin-right:6px;vertical-align:1px}
+.searchbar{display:flex;gap:10px;align-items:center;margin-top:8px;flex-wrap:wrap}
+.searchbar input[type=search]{flex:1;min-width:180px;font:inherit;font-size:.92rem;padding:7px 12px;border:1px solid var(--line);border-radius:6px;background:var(--paper);color:var(--ink)}
+.searchbar .count{font-size:.85rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.toggle{font-size:.85rem;display:inline-flex;gap:6px;align-items:center;cursor:pointer}
+.reset{font:inherit;font-size:.82rem;background:none;border:0;color:var(--accent);cursor:pointer;text-decoration:underline}
+
+/* entries */
+.entries{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.entry{overflow-wrap:anywhere;background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--cc);border-radius:3px;padding:16px 18px 12px;display:flex;flex-direction:column}
+.entry .head{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.entry h3{font-size:1.3rem;margin:0}
+.entry .cat{font-size:.76rem;color:var(--cc);white-space:nowrap;font-weight:700}
+.entry .tl{font-size:.92rem;color:var(--muted);margin:.2em 0 .6em}
+.entry ul{margin:0 0 .6em;padding-left:1.1em;font-size:.93rem}
+.entry li{margin-bottom:.3em}
+.entry .lesson{font-size:.92rem;background:var(--soft);padding:8px 12px;border-radius:3px;margin-bottom:8px}
+.entry .lesson b{font-weight:700;color:var(--accent);margin-right:.4em}
+.entry details{font-size:.88rem;color:var(--muted)}
+.entry summary{cursor:pointer;color:var(--ink);font-size:.85rem;padding:2px 0}
+.entry details p{margin:.4em 0}
+.entry .tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:auto;padding-top:8px}
+.entry .tags button{font:inherit;font-size:.72rem;border:0;background:none;color:var(--muted);padding:0 6px 0 0;cursor:pointer}
+.entry .tags button:hover{color:var(--accent);text-decoration:underline}
+.badge{font-size:.72rem;font-weight:700;padding:1px 8px;border-radius:3px;white-space:nowrap}
+.badge.v{background:var(--verified-bg);color:var(--verified)}
+.badge.k{background:var(--soft);color:var(--muted)}
+.empty{padding:30px;text-align:center;color:var(--muted);grid-column:1/-1}
+.flash{animation:flash 1.4s ease-out}
+@keyframes flash{0%{box-shadow:0 0 0 3px var(--accent)}100%{box-shadow:0 0 0 0 transparent}}
+
+/* apply */
+.apply{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-top:20px}
+.tpl{position:relative;min-width:0}
+.apply>*,.entries>*,.themes>*,.hero-grid>*{min-width:0}
+.tpl pre{background:var(--paper);border:1px solid var(--line);border-radius:4px;padding:16px;font-size:.82rem;line-height:1.65;overflow-x:auto;margin:0;white-space:pre}
+.copy{position:absolute;top:8px;right:8px;font:inherit;font-size:.78rem;padding:4px 10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:4px;cursor:pointer}
+.check{list-style:none;padding:0;margin:0}
+.check li{border-bottom:1px solid var(--line);padding:10px 0}
+.check label{display:grid;grid-template-columns:22px 1fr;gap:8px;cursor:pointer;font-size:.93rem}
+.check input{margin-top:6px;accent-color:var(--accent)}
+.check small{display:block;color:var(--muted);font-size:.8rem}
+.progress{font-size:.85rem;color:var(--muted);margin-bottom:6px}
+.steps{counter-reset:s;list-style:none;padding:0;margin:18px 0 0;max-width:760px}
+.steps li{counter-increment:s;padding:12px 0 12px 2.6em;position:relative;border-bottom:1px solid var(--line)}
+.steps li::before{content:counter(s);position:absolute;left:0;top:10px;font-family:var(--serif);font-weight:800;font-size:1.35rem;color:var(--accent)}
+
+.sources{columns:2;column-gap:32px;font-size:.85rem;padding-left:1.1em}
+.sources li{break-inside:avoid;margin-bottom:.5em;overflow-wrap:anywhere}
+.note{font-size:.85rem;color:var(--muted);max-width:760px}
+footer{padding:32px 0 48px;color:var(--muted);font-size:.82rem;border-top:1px solid var(--line)}
+
+@media (max-width:820px){
+  .hero-grid,.apply,.themes,.entries,.method{grid-template-columns:1fr}
+  .hero{padding-top:32px}
+  .sources{columns:1}
+  .filters{position:static}
+  .rank .bar{grid-template-columns:8.5em 1fr 2em}
+}
+</style>
+</head>
+<body>
+<div class="tip" id="tip" role="tooltip"></div>
+
+<nav class="nav" aria-label="目次"><div class="wrap">
+  <a class="brand" href="../index.html">thinking</a>
+  <a href="#intro">はじめに</a>
+  <a href="#patterns">14の傾向</a>
+  <a href="#catalog">100のOSS</a>
+  <a href="#apply">自分のOSSへ</a>
+  <a href="#sources">出典</a>
+</div></nav>
+
+<header class="hero"><div class="wrap hero-grid">
+  <div>
+    <h1><span class="nb">人気OSSは、</span><span class="nb">何を約束し、</span><span class="nb">何を断ってきたか</span></h1>
+    <p class="lead">言語、Web、開発ツール、インフラ、データ、AIまで9分野から100のOSSを選び、それぞれが大事にしているポリシーと、生まれたときの動機を読み解きました。機能の一覧ではなく「判断の軸」を集めた資料です。自分のOSSで迷ったときの参照先として使ってください。</p>
+    <div class="facts">
+      <span><b id="f-total">100</b>プロジェクト</span>
+      <span><b>9</b>分野</span>
+      <span><b>14</b>の横断的な傾向</span>
+      <span><b id="f-ver">28</b>件は公式文書などをWebで確認</span>
+    </div>
+  </div>
+  <div>
+    <div class="board" id="board" aria-label="100プロジェクトの一覧。押すとそのプロジェクトの項目へ移動します"><button class="cell" type="button" aria-label="Python（言語・ランタイム）" style="--cc: var(--c-lang);"></button><button class="cell v" type="button" aria-label="Go（言語・ランタイム）" style="--cc: var(--c-lang);"></button><button class="cell v" type="button" aria-label="Rust（言語・ランタイム）" style="--cc: var(--c-lang);"></button><button class="cell v" type="button" aria-label="TypeScript（言語・ランタイム）" style="--cc: var(--c-lang);"></button><button class="cell v" type="button" aria-label="Zig（言語・ランタイム）" style="--cc: var(--c-lang);"></button><button class="cell" type="button" aria-label="Ruby（言語・ランタイム）" style="--cc: var(--c-lang);"></button><button class="cell" type="button" aria-label="Kotlin（言語・ランタイム）" style="--cc: var(--c-lang);"></button><button class="cell" type="button" aria-label="Elixir（言語・ランタイム）" style="--cc: var(--c-lang);"></button><button class="cell" type="button" aria-label="Node.js（言語・ランタイム）" style="--cc: var(--c-lang);"></button><button class="cell" type="button" aria-label="Deno（言語・ランタイム）" style="--cc: var(--c-lang);"></button><button class="cell" type="button" aria-label="Bun（言語・ランタイム）" style="--cc: var(--c-lang);"></button><button class="cell" type="button" aria-label="React（Webフロントエンド）" style="--cc: var(--c-front);"></button><button class="cell v" type="button" aria-label="Vue（Webフロントエンド）" style="--cc: var(--c-front);"></button><button class="cell" type="button" aria-label="Svelte（Webフロントエンド）" style="--cc: var(--c-front);"></button><button class="cell" type="button" aria-label="Angular（Webフロントエンド）" style="--cc: var(--c-front);"></button><button class="cell" type="button" aria-label="Solid（Webフロントエンド）" style="--cc: var(--c-front);"></button><button class="cell" type="button" aria-label="Preact（Webフロントエンド）" style="--cc: var(--c-front);"></button><button class="cell v" type="button" aria-label="htmx（Webフロントエンド）" style="--cc: var(--c-front);"></button><button class="cell v" type="button" aria-label="Astro（Webフロントエンド）" style="--cc: var(--c-front);"></button><button class="cell" type="button" aria-label="Next.js（Webフロントエンド）" style="--cc: var(--c-front);"></button><button class="cell" type="button" aria-label="Tailwind CSS（Webフロントエンド）" style="--cc: var(--c-front);"></button><button class="cell" type="button" aria-label="Three.js（Webフロントエンド）" style="--cc: var(--c-front);"></button><button class="cell v" type="button" aria-label="Ruby on Rails（Webバックエンド）" style="--cc: var(--c-back);"></button><button class="cell v" type="button" aria-label="Django（Webバックエンド）" style="--cc: var(--c-back);"></button><button class="cell" type="button" aria-label="Laravel（Webバックエンド）" style="--cc: var(--c-back);"></button><button class="cell" type="button" aria-label="Flask（Webバックエンド）" style="--cc: var(--c-back);"></button><button class="cell" type="button" aria-label="FastAPI（Webバックエンド）" style="--cc: var(--c-back);"></button><button class="cell" type="button" aria-label="Express（Webバックエンド）" style="--cc: var(--c-back);"></button><button class="cell" type="button" aria-label="Spring Boot（Webバックエンド）" style="--cc: var(--c-back);"></button><button class="cell" type="button" aria-label="Phoenix（Webバックエンド）" style="--cc: var(--c-back);"></button><button class="cell" type="button" aria-label="NestJS（Webバックエンド）" style="--cc: var(--c-back);"></button><button class="cell v" type="button" aria-label="esbuild（ビルド・開発ツール）" style="--cc: var(--c-tool);"></button><button class="cell" type="button" aria-label="Vite（ビルド・開発ツール）" style="--cc: var(--c-tool);"></button><button class="cell" type="button" aria-label="webpack（ビルド・開発ツール）" style="--cc: var(--c-tool);"></button><button class="cell" type="button" aria-label="Babel（ビルド・開発ツール）" style="--cc: var(--c-tool);"></button><button class="cell v" type="button" aria-label="Prettier（ビルド・開発ツール）" style="--cc: var(--c-tool);"></button><button class="cell v" type="button" aria-label="Black（ビルド・開発ツール）" style="--cc: var(--c-tool);"></button><button class="cell v" type="button" aria-label="Biome（ビルド・開発ツール）" style="--cc: var(--c-tool);"></button><button class="cell" type="button" aria-label="ESLint（ビルド・開発ツール）" style="--cc: var(--c-tool);"></button><button class="cell" type="button" aria-label="Ruff（ビルド・開発ツール）" style="--cc: var(--c-tool);"></button><button class="cell" type="button" aria-label="uv（ビルド・開発ツール）" style="--cc: var(--c-tool);"></button><button class="cell" type="button" aria-label="Jest（ビルド・開発ツール）" style="--cc: var(--c-tool);"></button><button class="cell" type="button" aria-label="Playwright（ビルド・開発ツール）" style="--cc: var(--c-tool);"></button><button class="cell" type="button" aria-label="pnpm（ビルド・開発ツール）" style="--cc: var(--c-tool);"></button><button class="cell" type="button" aria-label="Git（ビルド・開発ツール）" style="--cc: var(--c-tool);"></button><button class="cell v" type="button" aria-label="Neovim（エディタ・CLI）" style="--cc: var(--c-cli);"></button><button class="cell" type="button" aria-label="Vim（エディタ・CLI）" style="--cc: var(--c-cli);"></button><button class="cell" type="button" aria-label="VS Code（エディタ・CLI）" style="--cc: var(--c-cli);"></button><button class="cell" type="button" aria-label="Helix（エディタ・CLI）" style="--cc: var(--c-cli);"></button><button class="cell" type="button" aria-label="Zed（エディタ・CLI）" style="--cc: var(--c-cli);"></button><button class="cell v" type="button" aria-label="Ghostty（エディタ・CLI）" style="--cc: var(--c-cli);"></button><button class="cell" type="button" aria-label="tmux（エディタ・CLI）" style="--cc: var(--c-cli);"></button><button class="cell" type="button" aria-label="fzf（エディタ・CLI）" style="--cc: var(--c-cli);"></button><button class="cell" type="button" aria-label="ripgrep（エディタ・CLI）" style="--cc: var(--c-cli);"></button><button class="cell" type="button" aria-label="jq（エディタ・CLI）" style="--cc: var(--c-cli);"></button><button class="cell" type="button" aria-label="Oh My Zsh（エディタ・CLI）" style="--cc: var(--c-cli);"></button><button class="cell v" type="button" aria-label="Homebrew（エディタ・CLI）" style="--cc: var(--c-cli);"></button><button class="cell v" type="button" aria-label="curl（エディタ・CLI）" style="--cc: var(--c-cli);"></button><button class="cell v" type="button" aria-label="Linux（インフラ・運用）" style="--cc: var(--c-infra);"></button><button class="cell" type="button" aria-label="Kubernetes（インフラ・運用）" style="--cc: var(--c-infra);"></button><button class="cell" type="button" aria-label="Docker（インフラ・運用）" style="--cc: var(--c-infra);"></button><button class="cell" type="button" aria-label="OpenTofu（インフラ・運用）" style="--cc: var(--c-infra);"></button><button class="cell" type="button" aria-label="Ansible（インフラ・運用）" style="--cc: var(--c-infra);"></button><button class="cell" type="button" aria-label="Nginx（インフラ・運用）" style="--cc: var(--c-infra);"></button><button class="cell" type="button" aria-label="Caddy（インフラ・運用）" style="--cc: var(--c-infra);"></button><button class="cell" type="button" aria-label="Prometheus（インフラ・運用）" style="--cc: var(--c-infra);"></button><button class="cell v" type="button" aria-label="Grafana（インフラ・運用）" style="--cc: var(--c-infra);"></button><button class="cell v" type="button" aria-label="OpenTelemetry（インフラ・運用）" style="--cc: var(--c-infra);"></button><button class="cell" type="button" aria-label="Nix（インフラ・運用）" style="--cc: var(--c-infra);"></button><button class="cell" type="button" aria-label="Envoy（インフラ・運用）" style="--cc: var(--c-infra);"></button><button class="cell" type="button" aria-label="PostgreSQL（データベース・データ）" style="--cc: var(--c-data);"></button><button class="cell v" type="button" aria-label="SQLite（データベース・データ）" style="--cc: var(--c-data);"></button><button class="cell v" type="button" aria-label="Redis（データベース・データ）" style="--cc: var(--c-data);"></button><button class="cell" type="button" aria-label="DuckDB（データベース・データ）" style="--cc: var(--c-data);"></button><button class="cell" type="button" aria-label="ClickHouse（データベース・データ）" style="--cc: var(--c-data);"></button><button class="cell" type="button" aria-label="Apache Kafka（データベース・データ）" style="--cc: var(--c-data);"></button><button class="cell" type="button" aria-label="Elasticsearch / OpenSearch（データベース・データ）" style="--cc: var(--c-data);"></button><button class="cell" type="button" aria-label="NumPy（データベース・データ）" style="--cc: var(--c-data);"></button><button class="cell" type="button" aria-label="pandas（データベース・データ）" style="--cc: var(--c-data);"></button><button class="cell" type="button" aria-label="Supabase（データベース・データ）" style="--cc: var(--c-data);"></button><button class="cell v" type="button" aria-label="PyTorch（AI・機械学習）" style="--cc: var(--c-ai);"></button><button class="cell" type="button" aria-label="TensorFlow（AI・機械学習）" style="--cc: var(--c-ai);"></button><button class="cell" type="button" aria-label="JAX（AI・機械学習）" style="--cc: var(--c-ai);"></button><button class="cell v" type="button" aria-label="scikit-learn（AI・機械学習）" style="--cc: var(--c-ai);"></button><button class="cell v" type="button" aria-label="Transformers（AI・機械学習）" style="--cc: var(--c-ai);"></button><button class="cell v" type="button" aria-label="Diffusers（AI・機械学習）" style="--cc: var(--c-ai);"></button><button class="cell" type="button" aria-label="llama.cpp（AI・機械学習）" style="--cc: var(--c-ai);"></button><button class="cell" type="button" aria-label="Ollama（AI・機械学習）" style="--cc: var(--c-ai);"></button><button class="cell" type="button" aria-label="vLLM（AI・機械学習）" style="--cc: var(--c-ai);"></button><button class="cell" type="button" aria-label="LangChain（AI・機械学習）" style="--cc: var(--c-ai);"></button><button class="cell" type="button" aria-label="ComfyUI（AI・機械学習）" style="--cc: var(--c-ai);"></button><button class="cell" type="button" aria-label="Open WebUI（AI・機械学習）" style="--cc: var(--c-ai);"></button><button class="cell v" type="button" aria-label="Home Assistant（アプリ・プラットフォーム）" style="--cc: var(--c-app);"></button><button class="cell v" type="button" aria-label="Godot（アプリ・プラットフォーム）" style="--cc: var(--c-app);"></button><button class="cell" type="button" aria-label="Blender（アプリ・プラットフォーム）" style="--cc: var(--c-app);"></button><button class="cell" type="button" aria-label="Excalidraw（アプリ・プラットフォーム）" style="--cc: var(--c-app);"></button><button class="cell" type="button" aria-label="Mastodon（アプリ・プラットフォーム）" style="--cc: var(--c-app);"></button><button class="cell" type="button" aria-label="Tauri（アプリ・プラットフォーム）" style="--cc: var(--c-app);"></button><button class="cell" type="button" aria-label="Flutter（アプリ・プラットフォーム）" style="--cc: var(--c-app);"></button><button class="cell" type="button" aria-label="Electron（アプリ・プラットフォーム）" style="--cc: var(--c-app);"></button></div>
+    <p class="board-cap">1マス＝1プロジェクト。色は分野、右上の点はWebで一次情報を確認済みの印です。マスを押すと、その項目に移動します。</p>
+    <div class="legend" id="legend"><span style="--cc:var(--c-lang)"><i></i>言語・ランタイム</span><span style="--cc:var(--c-front)"><i></i>Webフロントエンド</span><span style="--cc:var(--c-back)"><i></i>Webバックエンド</span><span style="--cc:var(--c-tool)"><i></i>ビルド・開発ツール</span><span style="--cc:var(--c-cli)"><i></i>エディタ・CLI</span><span style="--cc:var(--c-infra)"><i></i>インフラ・運用</span><span style="--cc:var(--c-data)"><i></i>データベース・データ</span><span style="--cc:var(--c-ai)"><i></i>AI・機械学習</span><span style="--cc:var(--c-app)"><i></i>アプリ・プラットフォーム</span></div>
+  </div>
+</div></header>
+
+<section id="intro"><div class="wrap">
+  <h2>はじめに：なぜ「思想」を集めるのか</h2>
+  <div class="talk">
+    <div class="row r"><span class="who">霊夢</span><p class="say">100個もOSSを並べて、何がわかるのよ。人気が出る機能のパターンとか？</p></div>
+    <div class="row m"><span class="who">魔理沙</span><p class="say">逆だぜ。人気のOSSほど「何を作るか」より「何を作らないか」をはっきり書いてるんだ。Prettierは設定オプションをもう増やさないと宣言してるし、SQLiteは外部からのパッチを原則受け付けない。それでも世界中で使われてる。</p></div>
+    <div class="row r"><span class="who">霊夢</span><p class="say">断る勇気、ってこと？</p></div>
+    <div class="row m"><span class="who">魔理沙</span><p class="say">正確には「断る理由を先に書いておく」ことだな。Redisの作者は、機能要望や「なぜこうなってるの？」という質問にどう答えればいいか困ったから、マニフェストを書いたと言ってる。哲学の文書は、飾りじゃなくて運営の道具なんだ。</p></div>
+    <div class="row r"><span class="who">霊夢</span><p class="say">じゃあ、自分のOSSでも「判断の軸」を先に決めておけばいいわけね。</p></div>
+    <div class="row m"><span class="who">魔理沙</span><p class="say">そういうこと。この資料では、100個のOSSからその軸を抜き出して、14の傾向にまとめたぜ。</p></div>
+  </div>
+
+  <div class="method">
+    <div><h3>選び方</h3><p>スター数だけで選ぶと特定分野に偏るため、9分野にバランスよく配分しました。どれも各分野で広く使われている代表的なプロジェクトです。</p></div>
+    <div><h3>読み方</h3><p>各項目は「原則」「動機・起源」「やらないこと」「あなたのOSSへの学び」で構成しています。傾向タグから横断的に絞り込めます。</p></div>
+    <div><h3>根拠の区別</h3><p><span class="badge v">Web確認済み</span>は公式文書や作者の記事などを今回確認したもの、<span class="badge k">知識ベース</span>は一般に知られた情報に基づく整理です。後者は一次情報で確かめてから引用してください。</p></div>
+  </div>
+</div></section>
+
+<section id="patterns"><div class="wrap">
+  <h2>100のOSSに共通する14の傾向</h2>
+  <p class="prose">各プロジェクトが大事にしていることを分類すると、14の傾向に集約できました。下のグラフは各傾向に該当するプロジェクト数です。棒や例のプロジェクト名を押すと、下のカタログがその条件で絞り込まれます。</p>
+  <div class="rank" id="rank"><button class="bar" data-t="interop" type="button"><span>段階的採用と相互運用</span><span class="track"><span class="fill" style="width:100%"></span></span><span class="num">32</span></button><button class="bar" data-t="phil" type="button"><span>哲学を明文化する</span><span class="track"><span class="fill" style="width:90.625%"></span></span><span class="num">29</span></button><button class="bar" data-t="dx" type="button"><span>開発者の幸福を中心に置く</span><span class="track"><span class="fill" style="width:87.5%"></span></span><span class="num">28</span></button><button class="bar" data-t="sustain" type="button"><span>持続性・統治・ライセンス</span><span class="track"><span class="fill" style="width:81.25%"></span></span><span class="num">26</span></button><button class="bar" data-t="origin" type="button"><span>個人の痒みから始まる</span><span class="track"><span class="fill" style="width:78.125%"></span></span><span class="num">25</span></button><button class="bar" data-t="simple" type="button"><span>単純さと明示性を優先する</span><span class="track"><span class="fill" style="width:75%"></span></span><span class="num">24</span></button><button class="bar" data-t="perf" type="button"><span>速さをアイデンティティにする</span><span class="track"><span class="fill" style="width:68.75%"></span></span><span class="num">22</span></button><button class="bar" data-t="compat" type="button"><span>互換性を約束する</span><span class="track"><span class="fill" style="width:59.375%"></span></span><span class="num">19</span></button><button class="bar" data-t="opinion" type="button"><span>意見のある既定値を選ぶ</span><span class="track"><span class="fill" style="width:59.375%"></span></span><span class="num">19</span></button><button class="bar" data-t="scope" type="button"><span>問題起点でスコープを守る</span><span class="track"><span class="fill" style="width:46.875%"></span></span><span class="num">15</span></button><button class="bar" data-t="user" type="button"><span>ユーザー主権を守る</span><span class="track"><span class="fill" style="width:46.875%"></span></span><span class="num">15</span></button><button class="bar" data-t="nongoal" type="button"><span>やらないことを宣言する</span><span class="track"><span class="fill" style="width:34.375%"></span></span><span class="num">11</span></button><button class="bar" data-t="contrib" type="button"><span>貢献モデルを設計する</span><span class="track"><span class="fill" style="width:31.25%"></span></span><span class="num">10</span></button><button class="bar" data-t="read" type="button"><span>読み手と局所性を重視する</span><span class="track"><span class="fill" style="width:18.75%"></span></span><span class="num">6</span></button></div>
+  <div class="themes" id="themes"><article class="theme"><h3>段階的採用と相互運用<span class="cnt">32件</span></h3>
+  <p style="margin:0">既存の標準・ツール・競合とつながり、少しずつ導入できるようにする。</p>
+  <dl><dt>なぜ効くか</dt><dd>乗り換えコストが低く、採用のハードルが下がる。</dd><dt>落とし穴</dt><dd>互換対応の範囲が広がりすぎると保守が重くなる。</dd><dt>取り入れ方</dt><dd>入出力を標準形式に合わせ、既存ツールとの併用手順を書く。</dd></dl>
+  <div class="ex"><button type="button" data-id="p3">TypeScript</button><button type="button" data-id="p12">Vue</button><button type="button" data-id="p18">Astro</button><button type="button" data-id="p37">Biome</button><button type="button" data-id="p66">Grafana</button><button type="button" data-id="p67">OpenTelemetry</button><button type="button" class="more" data-t="interop">32件すべて</button></div></article><article class="theme"><h3>哲学を明文化する<span class="cnt">29件</span></h3>
+  <p style="margin:0">設計原則・マニフェスト・Doctrineなどを文書として公開し、判断の根拠を共有する。</p>
+  <dl><dt>なぜ効くか</dt><dd>要望や議論への答えが個人の好みではなく方針になる。新しい貢献者が判断基準を学べる。</dd><dt>落とし穴</dt><dd>抽象的すぎると使えない。具体例とトレードオフを添える。</dd><dt>取り入れ方</dt><dd>「解く問題」「原則」「やらないこと」の3節から始める。</dd></dl>
+  <div class="ex"><button type="button" data-id="p2">Rust</button><button type="button" data-id="p3">TypeScript</button><button type="button" data-id="p4">Zig</button><button type="button" data-id="p17">htmx</button><button type="button" data-id="p18">Astro</button><button type="button" data-id="p22">Ruby on Rails</button><button type="button" class="more" data-t="phil">29件すべて</button></div></article><article class="theme"><h3>開発者の幸福を中心に置く<span class="cnt">28件</span></h3>
+  <p style="margin:0">使っていて楽しい・気持ちいい体験を明確な目標にする。</p>
+  <dl><dt>なぜ効くか</dt><dd>感情的な愛着が生まれ、口コミで広がる。</dd><dt>落とし穴</dt><dd>主観的になりやすいので、具体的な体験（待ち時間、エラー文）に落とす。</dd><dt>取り入れ方</dt><dd>最初の5分の体験（インストールから最初の成功まで）を磨く。</dd></dl>
+  <div class="ex"><button type="button" data-id="p12">Vue</button><button type="button" data-id="p22">Ruby on Rails</button><button type="button" data-id="p80">PyTorch</button><button type="button" data-id="p5">Ruby</button><button type="button" data-id="p6">Kotlin</button><button type="button" data-id="p7">Elixir</button><button type="button" class="more" data-t="dx">28件すべて</button></div></article><article class="theme"><h3>持続性・統治・ライセンス<span class="cnt">26件</span></h3>
+  <p style="margin:0">財団、非営利化、資金モデル、ライセンス選択などで長期存続を設計する。</p>
+  <dl><dt>なぜ効くか</dt><dd>「突然消える・変わる」不安を減らし、企業も採用しやすくなる。</dd><dt>落とし穴</dt><dd>ライセンスの一方的変更はフォークと信頼低下を招く。</dd><dt>取り入れ方</dt><dd>作者が関われなくなった場合にどうするかを一度考えて書いておく。</dd></dl>
+  <div class="ex"><button type="button" data-id="p2">Rust</button><button type="button" data-id="p4">Zig</button><button type="button" data-id="p12">Vue</button><button type="button" data-id="p23">Django</button><button type="button" data-id="p37">Biome</button><button type="button" data-id="p50">Ghostty</button><button type="button" class="more" data-t="sustain">26件すべて</button></div></article><article class="theme"><h3>個人の痒みから始まる<span class="cnt">25件</span></h3>
+  <p style="margin:0">作者自身の具体的な不満や必要が出発点になっている。</p>
+  <dl><dt>なぜ効くか</dt><dd>要件が現実的で、作者が最大のユーザーとして品質を保てる。</dd><dt>落とし穴</dt><dd>自分以外の用途を見落としやすい。</dd><dt>取り入れ方</dt><dd>READMEの冒頭に「なぜ作ったか」を自分の言葉で書く。</dd></dl>
+  <div class="ex"><button type="button" data-id="p12">Vue</button><button type="button" data-id="p22">Ruby on Rails</button><button type="button" data-id="p23">Django</button><button type="button" data-id="p50">Ghostty</button><button type="button" data-id="p57">curl</button><button type="button" data-id="p58">Linux</button><button type="button" class="more" data-t="origin">25件すべて</button></div></article><article class="theme"><h3>単純さと明示性を優先する<span class="cnt">24件</span></h3>
+  <p style="margin:0">暗黙の便利さより、理解しやすく予測可能な振る舞いを選ぶ。</p>
+  <dl><dt>なぜ効くか</dt><dd>デバッグしやすく、長期の保守コストが下がる。</dd><dt>落とし穴</dt><dd>初心者にとっての「手軽さ」を失いすぎないように。</dd><dt>取り入れ方</dt><dd>「魔法」を入れるときは、それなしでは得られない大きな利便性があるか確認する。</dd></dl>
+  <div class="ex"><button type="button" data-id="p1">Go</button><button type="button" data-id="p4">Zig</button><button type="button" data-id="p17">htmx</button><button type="button" data-id="p23">Django</button><button type="button" data-id="p80">PyTorch</button><button type="button" data-id="p83">scikit-learn</button><button type="button" class="more" data-t="simple">24件すべて</button></div></article><article class="theme"><h3>速さをアイデンティティにする<span class="cnt">22件</span></h3>
+  <p style="margin:0">性能を最優先の価値として掲げ、他の判断基準にする。</p>
+  <dl><dt>なぜ効くか</dt><dd>違いが数字で伝わり、機能要望を断る基準も明確になる。</dd><dt>落とし穴</dt><dd>速さだけでは乗り換えない。互換性や導入しやすさと組み合わせる。</dd><dt>取り入れ方</dt><dd>ベンチマークの方法と結果を公開し、性能劣化をCIで検出する。</dd></dl>
+  <div class="ex"><button type="button" data-id="p18">Astro</button><button type="button" data-id="p31">esbuild</button><button type="button" data-id="p37">Biome</button><button type="button" data-id="p50">Ghostty</button><button type="button" data-id="p10">Bun</button><button type="button" data-id="p13">Svelte</button><button type="button" class="more" data-t="perf">22件すべて</button></div></article><article class="theme"><h3>互換性を約束する<span class="cnt">19件</span></h3>
+  <p style="margin:0">既存ユーザーのコードや運用を壊さないことを明文化し、約束の範囲も示す。</p>
+  <dl><dt>なぜ効くか</dt><dd>安心して依存でき、エコシステムが育つ。</dd><dt>落とし穴</dt><dd>範囲の広すぎる約束は守れない。守る境界を小さく明確に。</dd><dt>取り入れ方</dt><dd>公開APIの境界（接頭辞・ディレクトリ）を決め、そこだけ守ると約束する。</dd></dl>
+  <div class="ex"><button type="button" data-id="p1">Go</button><button type="button" data-id="p2">Rust</button><button type="button" data-id="p3">TypeScript</button><button type="button" data-id="p36">Black</button><button type="button" data-id="p45">Neovim</button><button type="button" data-id="p57">curl</button><button type="button" class="more" data-t="compat">19件すべて</button></div></article><article class="theme"><h3>意見のある既定値を選ぶ<span class="cnt">19件</span></h3>
+  <p style="margin:0">設定を増やさず、最良と考える既定値や規約を提供する。</p>
+  <dl><dt>なぜ効くか</dt><dd>導入が速く、スタイル論争がなくなる。</dd><dt>落とし穴</dt><dd>上書きの逃げ道がないと大規模利用で困る。</dd><dt>取り入れ方</dt><dd>新しいオプションの要望には、まず既定値の改善で解けないか検討する。</dd></dl>
+  <div class="ex"><button type="button" data-id="p1">Go</button><button type="button" data-id="p22">Ruby on Rails</button><button type="button" data-id="p35">Prettier</button><button type="button" data-id="p36">Black</button><button type="button" data-id="p37">Biome</button><button type="button" data-id="p83">scikit-learn</button><button type="button" class="more" data-t="opinion">19件すべて</button></div></article><article class="theme"><h3>問題起点でスコープを守る<span class="cnt">15件</span></h3>
+  <p style="margin:0">実在する問題だけを解き、受け入れ基準を明文化する。</p>
+  <dl><dt>なぜ効くか</dt><dd>保守対象が増えすぎず、プロジェクトが長生きする。</dd><dt>落とし穴</dt><dd>基準が曖昧だと「あれは入れたのに」という不公平感を生む。</dd><dt>取り入れ方</dt><dd>PRテンプレートで「どんな実在の問題を解くか」を最初に書いてもらう。</dd></dl>
+  <div class="ex"><button type="button" data-id="p31">esbuild</button><button type="button" data-id="p56">Homebrew</button><button type="button" data-id="p72">Redis</button><button type="button" data-id="p93">Godot</button><button type="button" data-id="p7">Elixir</button><button type="button" data-id="p8">Node.js</button><button type="button" class="more" data-t="scope">15件すべて</button></div></article><article class="theme"><h3>ユーザー主権を守る<span class="cnt">15件</span></h3>
+  <p style="margin:0">ローカル動作、データの持ち出し、ベンダーロックイン回避、プライバシーを重視する。</p>
+  <dl><dt>なぜ効くか</dt><dd>長期的な信頼と、熱心な支持者を得られる。</dd><dt>落とし穴</dt><dd>利便性（クラウド連携など）とのバランスが必要。</dd><dt>取り入れ方</dt><dd>「ユーザーのデータはどこにあり、どう持ち出せるか」を明記する。</dd></dl>
+  <div class="ex"><button type="button" data-id="p66">Grafana</button><button type="button" data-id="p67">OpenTelemetry</button><button type="button" data-id="p92">Home Assistant</button><button type="button" data-id="p9">Deno</button><button type="button" data-id="p61">OpenTofu</button><button type="button" data-id="p64">Caddy</button><button type="button" class="more" data-t="user">15件すべて</button></div></article><article class="theme"><h3>やらないことを宣言する<span class="cnt">11件</span></h3>
+  <p style="margin:0">Non-goals、向いていない用途、追加しない機能を明記する。</p>
+  <dl><dt>なぜ効くか</dt><dd>断る判断が一貫し、同じ議論の繰り返しが減る。誤った期待を持つユーザーを早めに減らせる。</dd><dt>落とし穴</dt><dd>理由のない拒否は反発を招く。代替手段とセットで書く。</dd><dt>取り入れ方</dt><dd>要望を3回断ったら、その理由をNon-goalsに追記する。</dd></dl>
+  <div class="ex"><button type="button" data-id="p3">TypeScript</button><button type="button" data-id="p18">Astro</button><button type="button" data-id="p31">esbuild</button><button type="button" data-id="p35">Prettier</button><button type="button" data-id="p36">Black</button><button type="button" data-id="p45">Neovim</button><button type="button" class="more" data-t="nongoal">11件すべて</button></div></article><article class="theme"><h3>貢献モデルを設計する<span class="cnt">10件</span></h3>
+  <p style="margin:0">誰から・どんな貢献を・どう受けるかを意図して決める（受けない選択も含む）。</p>
+  <dl><dt>なぜ効くか</dt><dd>メンテナの負担と品質をコントロールできる。</dd><dt>落とし穴</dt><dd>方針を書かずに断ると、閉鎖的だと受け取られる。</dd><dt>取り入れ方</dt><dd>CONTRIBUTINGに「歓迎するもの」「受け入れにくいもの」を両方書く。</dd></dl>
+  <div class="ex"><button type="button" data-id="p45">Neovim</button><button type="button" data-id="p56">Homebrew</button><button type="button" data-id="p58">Linux</button><button type="button" data-id="p71">SQLite</button><button type="button" data-id="p84">Transformers</button><button type="button" data-id="p85">Diffusers</button><button type="button" class="more" data-t="contrib">10件すべて</button></div></article><article class="theme"><h3>読み手と局所性を重視する<span class="cnt">6件</span></h3>
+  <p style="margin:0">コードや振る舞いが、その場所を見るだけで理解できるようにする。</p>
+  <dl><dt>なぜ効くか</dt><dd>改造・貢献のハードルが下がる。</dd><dt>落とし穴</dt><dd>重複が増えるので、同期の仕組みを用意する。</dd><dt>取り入れ方</dt><dd>主要な処理は1ファイルで上から下まで読めるかを基準にする。</dd></dl>
+  <div class="ex"><button type="button" data-id="p4">Zig</button><button type="button" data-id="p17">htmx</button><button type="button" data-id="p84">Transformers</button><button type="button" data-id="p85">Diffusers</button><button type="button" data-id="p0">Python</button><button type="button" data-id="p90">ComfyUI</button><button type="button" class="more" data-t="read">6件すべて</button></div></article></div>
+
+  <div class="talk" style="margin-top:32px">
+    <p class="talk-title">傾向を読んだあとの会話</p>
+    <div class="row r"><span class="who">霊夢</span><p class="say">「互換性を約束する」って、LinuxとかGoみたいな大きいプロジェクトだからできるんじゃないの？</p></div>
+    <div class="row m"><span class="who">魔理沙</span><p class="say">範囲を絞れば個人でもできるぜ。Goは約束を「ソースコードの互換」に限定して、バイナリ互換や性能までは保証しないと書いてる。curlは公開関数にだけ「curl_」の接頭辞をつけて、守るべき境界を見えるようにした。</p></div>
+    <div class="row r"><span class="who">霊夢</span><p class="say">守る範囲を小さく、はっきりさせる。そうすれば守れる約束になるのね。</p></div>
+    <div class="row m"><span class="who">魔理沙</span><p class="say">もう一つ大事なのは、どの傾向も「トレードオフの宣言」だってことだ。PyTorchは性能より使いやすさ、Transformersは有名なDRY原則より読みやすさを取った。何かを取るなら何かを捨てる。その捨てたものを書くのが哲学なんだぜ。</p></div>
+  </div>
+</div></section>
+
+<section id="catalog"><div class="wrap">
+  <h2>100のOSS カタログ</h2>
+  <div class="talk">
+    <div class="row r"><span class="who">霊夢</span><p class="say">100個全部読むのは大変よ。どこから見ればいい？</p></div>
+    <div class="row m"><span class="who">魔理沙</span><p class="say">まずは自分が普段使ってるツールからだな。次に「Web確認済み」だけに絞ると、公式に明文化された哲学が並ぶから、書き方の見本になるぜ。各項目の最後にある「学び」だけ拾い読みするのもおすすめだ。</p></div>
+  </div>
+
+  <div class="filters" id="filters">
+    <div class="frow" id="f-cat"><span class="lbl">分野</span><button type="button" class="chip" data-key="cat" data-val="" aria-pressed="true">すべて</button><button type="button" class="chip" data-key="cat" data-val="lang" aria-pressed="false"><span class="dot" style="--cc:var(--c-lang)"></span>言語・ランタイム</button><button type="button" class="chip" data-key="cat" data-val="front" aria-pressed="false"><span class="dot" style="--cc:var(--c-front)"></span>Webフロントエンド</button><button type="button" class="chip" data-key="cat" data-val="back" aria-pressed="false"><span class="dot" style="--cc:var(--c-back)"></span>Webバックエンド</button><button type="button" class="chip" data-key="cat" data-val="tool" aria-pressed="false"><span class="dot" style="--cc:var(--c-tool)"></span>ビルド・開発ツール</button><button type="button" class="chip" data-key="cat" data-val="cli" aria-pressed="false"><span class="dot" style="--cc:var(--c-cli)"></span>エディタ・CLI</button><button type="button" class="chip" data-key="cat" data-val="infra" aria-pressed="false"><span class="dot" style="--cc:var(--c-infra)"></span>インフラ・運用</button><button type="button" class="chip" data-key="cat" data-val="data" aria-pressed="false"><span class="dot" style="--cc:var(--c-data)"></span>データベース・データ</button><button type="button" class="chip" data-key="cat" data-val="ai" aria-pressed="false"><span class="dot" style="--cc:var(--c-ai)"></span>AI・機械学習</button><button type="button" class="chip" data-key="cat" data-val="app" aria-pressed="false"><span class="dot" style="--cc:var(--c-app)"></span>アプリ・プラットフォーム</button></div>
+    <div class="frow" id="f-theme"><span class="lbl">傾向</span><button type="button" class="chip" data-key="theme" data-val="" aria-pressed="true">すべて</button><button type="button" class="chip" data-key="theme" data-val="interop" aria-pressed="false">段階的採用と相互運用</button><button type="button" class="chip" data-key="theme" data-val="phil" aria-pressed="false">哲学を明文化する</button><button type="button" class="chip" data-key="theme" data-val="dx" aria-pressed="false">開発者の幸福を中心に置く</button><button type="button" class="chip" data-key="theme" data-val="sustain" aria-pressed="false">持続性・統治・ライセンス</button><button type="button" class="chip" data-key="theme" data-val="origin" aria-pressed="false">個人の痒みから始まる</button><button type="button" class="chip" data-key="theme" data-val="simple" aria-pressed="false">単純さと明示性を優先する</button><button type="button" class="chip" data-key="theme" data-val="perf" aria-pressed="false">速さをアイデンティティにする</button><button type="button" class="chip" data-key="theme" data-val="compat" aria-pressed="false">互換性を約束する</button><button type="button" class="chip" data-key="theme" data-val="opinion" aria-pressed="false">意見のある既定値を選ぶ</button><button type="button" class="chip" data-key="theme" data-val="scope" aria-pressed="false">問題起点でスコープを守る</button><button type="button" class="chip" data-key="theme" data-val="user" aria-pressed="false">ユーザー主権を守る</button><button type="button" class="chip" data-key="theme" data-val="nongoal" aria-pressed="false">やらないことを宣言する</button><button type="button" class="chip" data-key="theme" data-val="contrib" aria-pressed="false">貢献モデルを設計する</button><button type="button" class="chip" data-key="theme" data-val="read" aria-pressed="false">読み手と局所性を重視する</button></div>
+    <div class="searchbar">
+      <input type="search" id="q" placeholder="名前やキーワードで検索（例：互換、ライセンス、Rust）" aria-label="検索">
+      <label class="toggle"><input type="checkbox" id="onlyV"> Web確認済みのみ</label>
+      <span class="count" id="count">100 / 100 件</span>
+      <button class="reset" id="reset" type="button">条件をクリア</button>
+    </div>
+  </div>
+  <div class="entries" id="entries"><article class="entry" id="p0" style="--cc:var(--c-lang)">
+  <div class="head"><h3>Python</h3><span class="cat">言語・ランタイム</span></div>
+  <p class="tl">読みやすさを言語の中心に置いた汎用言語</p>
+  <ul><li>PEP 20『The Zen of Python』で美学を短い格言として明文化（暗黙より明示、など）</li><li>変更はPEP（提案文書）で議論し、決定の理由を記録として残す</li><li>創始者の引退後はSteering Councilによる合議制へ移行</li></ul>
+  <p class="lesson"><b>学び</b>格言レベルの短い原則は、議論の共通言語として何十年も効き続ける</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>Guido van Rossumが年末休暇の趣味として始めたプロジェクト</p>
+   <p><b>やらないこと・トレードオフ：</b>同じことをする明白な方法は一つであるべき、とし表現の自由度より一貫性を取る</p>
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="phil">#哲学を明文化する</button><button type="button" data-t="simple">#単純さと明示性を優先する</button><button type="button" data-t="read">#読み手と局所性を重視する</button></div>
+  </article><article class="entry" id="p1" style="--cc:var(--c-lang)">
+  <div class="head"><h3>Go</h3><span class="cat">言語・ランタイム</span></div>
+  <p class="tl">大規模開発のための、退屈で速い言語</p>
+  <ul><li>Go 1互換性の約束：Go 1仕様に沿って書かれたコードは将来も変更なしで動き続けることを意図</li><li>gofmtで書式を1つに固定し、スタイル論争そのものをなくした</li><li>提案プロセスでは、互換性の約束を破らないことが前提条件</li></ul>
+  <p class="lesson"><b>学び</b>約束の『範囲』まで書くと、約束は守れるものになる</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>Google社内の遅いビルドと複雑さへの不満から設計された</p>
+   <p><b>やらないこと・トレードオフ：</b>約束は『ソースレベル』の互換であり、バイナリ互換や性能は保証しないと範囲を明記</p>
+   <p>出典：<a href="https://go.dev/doc/go1compat" target="_blank" rel="noopener">go.dev</a></p>
+  </details>
+  <div class="tags"><span class="badge v">Web確認済み</span><button type="button" data-t="compat">#互換性を約束する</button><button type="button" data-t="opinion">#意見のある既定値を選ぶ</button><button type="button" data-t="simple">#単純さと明示性を優先する</button></div>
+  </article><article class="entry" id="p2" style="--cc:var(--c-lang)">
+  <div class="head"><h3>Rust</h3><span class="cat">言語・ランタイム</span></div>
+  <p class="tl">安全性と性能を両立させるシステム言語</p>
+  <ul><li>1.0以降『stability without stagnation（停滞なき安定）』を中核の約束に</li><li>非互換な変更は、クレート単位でオプトインするEditionにまとめて導入</li><li>異なるEditionのクレート同士がシームレスに連携できることを最重要ルールに</li></ul>
+  <p class="lesson"><b>学び</b>破壊的変更を『いつ採用するか』はユーザーに選ばせると受け入れられやすい</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>Graydon Hoareの個人プロジェクトとして始まり、Mozillaの支援で本格化</p>
+   <p><b>やらないこと・トレードオフ：</b>Editionで変えるのは表層的な部分に限り、エコシステムを分断しない</p>
+   <p>出典：<a href="https://doc.Rust-lang.org/edition-guide/editions/index.html" target="_blank" rel="noopener">doc.rust-lang.org</a></p>
+  </details>
+  <div class="tags"><span class="badge v">Web確認済み</span><button type="button" data-t="compat">#互換性を約束する</button><button type="button" data-t="phil">#哲学を明文化する</button><button type="button" data-t="sustain">#持続性・統治・ライセンス</button></div>
+  </article><article class="entry" id="p3" style="--cc:var(--c-lang)">
+  <div class="head"><h3>TypeScript</h3><span class="cat">言語・ランタイム</span></div>
+  <p class="tl">JavaScriptに型を足すだけ、に徹する言語</p>
+  <ul><li>公式WikiにDesign Goalsと並べて『Non-goals』を明記</li><li>型は完全に消去可能。実行時の挙動を変えず、読みやすいJavaScriptを出力</li><li>健全（sound）な型システムより、正しさと生産性のバランスを選ぶ</li></ul>
+  <p class="lesson"><b>学び</b>Non-goalsの一覧は、機能要望を断るときの最強の根拠になる</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>大規模なJavaScript開発を支えるためにMicrosoftが開発</p>
+   <p><b>やらないこと・トレードオフ：</b>実行時型情報の付与、独自ランタイムライブラリ、エンドツーエンドのビルドパイプラインは提供しない</p>
+   <p>出典：<a href="https://github.com/microsoft/TypeScript/wiki/TypeScript-Design-Goals" target="_blank" rel="noopener">github.com</a></p>
+  </details>
+  <div class="tags"><span class="badge v">Web確認済み</span><button type="button" data-t="nongoal">#やらないことを宣言する</button><button type="button" data-t="phil">#哲学を明文化する</button><button type="button" data-t="compat">#互換性を約束する</button><button type="button" data-t="interop">#段階的採用と相互運用</button></div>
+  </article><article class="entry" id="p4" style="--cc:var(--c-lang)">
+  <div class="head"><h3>Zig</h3><span class="cat">言語・ランタイム</span></div>
+  <p class="tl">隠れた処理のない、Cの現代的な代替</p>
+  <ul><li>zig zenコマンドで原則を表示：意図を正確に伝える、エッジケースは重要、書くより読むことを優先…</li><li>隠れた制御フローも隠れたメモリ割り当てもない（見えないものは起きない）</li><li>非営利財団で開発を支える体制</li></ul>
+  <p class="lesson"><b>学び</b>原則をツール自体に埋め込む（CLIで表示する）と、文化として定着する</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>Andrew Kelleyが既存言語の暗黙の挙動に不満を持ち開始</p>
+   <p><b>やらないこと・トレードオフ：</b>演算子オーバーロードや例外など、読み手に見えない振る舞いを持ち込まない</p>
+   <p>出典：<a href="https://www.luisllamas.es/en/the-zen-of-zig/" target="_blank" rel="noopener">www.luisllamas.es</a></p>
+  </details>
+  <div class="tags"><span class="badge v">Web確認済み</span><button type="button" data-t="phil">#哲学を明文化する</button><button type="button" data-t="simple">#単純さと明示性を優先する</button><button type="button" data-t="read">#読み手と局所性を重視する</button><button type="button" data-t="sustain">#持続性・統治・ライセンス</button></div>
+  </article><article class="entry" id="p5" style="--cc:var(--c-lang)">
+  <div class="head"><h3>Ruby</h3><span class="cat">言語・ランタイム</span></div>
+  <p class="tl">プログラマーの幸せのための言語</p>
+  <ul><li>まつもとゆきひろ氏が、機械の効率より『楽しく書けること』を優先して設計</li><li>同じことを複数の書き方で表現できる表現力を尊重</li><li>Railsの思想（プログラマーの幸福）の源流になった</li></ul>
+  <p class="lesson"><b>学び</b>『誰を幸せにするか』を1行で言えるプロダクトは強い</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>1993年に日本で誕生。自分が好きになれる言語が欲しいという個人的動機</p>
+   <p><b>やらないこと・トレードオフ：</b>唯一の正解より表現の豊かさを取り、書き手ごとの流儀の差を許容する</p>
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="dx">#開発者の幸福を中心に置く</button><button type="button" data-t="origin">#個人の痒みから始まる</button><button type="button" data-t="phil">#哲学を明文化する</button></div>
+  </article><article class="entry" id="p6" style="--cc:var(--c-lang)">
+  <div class="head"><h3>Kotlin</h3><span class="cat">言語・ランタイム</span></div>
+  <p class="tl">実用主義のJVM言語</p>
+  <ul><li>Javaとの相互運用を重視し、既存資産を捨てずに段階的に移行できる</li><li>null安全など、実務で痛い問題から優先して解決</li><li>JetBrains自身が自社IDE開発で使う（ドッグフーディング）</li></ul>
+  <p class="lesson"><b>学び</b>自分が毎日使うことで、優先順位が自然に正しくなる</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>JetBrainsが自社の大規模Javaコードの生産性を上げたかった</p>
+   <p><b>やらないこと・トレードオフ：</b>学術的な新しさより、現場の実用性を優先</p>
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="interop">#段階的採用と相互運用</button><button type="button" data-t="dx">#開発者の幸福を中心に置く</button><button type="button" data-t="origin">#個人の痒みから始まる</button></div>
+  </article><article class="entry" id="p7" style="--cc:var(--c-lang)">
+  <div class="head"><h3>Elixir</h3><span class="cat">言語・ランタイム</span></div>
+  <p class="tl">Erlang VM上の生産性重視言語</p>
+  <ul><li>Erlang/OTPの堅牢さに、開発者の生産性と拡張性を足す</li><li>マクロによる拡張性で、言語本体を大きくせずエコシステム側で進化</li><li>言語の主要な目標は達成したとして、大規模な破壊的変更に慎重な姿勢を示した</li></ul>
+  <p class="lesson"><b>学び</b>コアの『完成』を宣言して小さく保つ、という選択肢もある</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>José ValimがRailsでの経験から、並行性に強い生産的な言語を求めた</p>
+   <p><b>やらないこと・トレードオフ：</b>言語本体に機能を積み増さず、ライブラリへ委ねる</p>
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="compat">#互換性を約束する</button><button type="button" data-t="scope">#問題起点でスコープを守る</button><button type="button" data-t="dx">#開発者の幸福を中心に置く</button></div>
+  </article><article class="entry" id="p8" style="--cc:var(--c-lang)">
+  <div class="head"><h3>Node.js</h3><span class="cat">言語・ランタイム</span></div>
+  <p class="tl">ノンブロッキングI/OのJavaScriptランタイム</p>
+  <ul><li>『小さなコア』思想：多くの機能をnpmエコシステムに委ねる</li><li>イベント駆動・非同期I/Oを一貫したモデルで提供</li><li>財団配下で、技術運営委員会（TSC）による合議制</li></ul>
+  <p class="lesson"><b>学び</b>小さなコアは成長を加速させるが、依存の品質という別の責任を生む</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>Ryan Dahlが、アップロード進捗の表示のような単純なことが難しい既存サーバーに不満を持ったこと</p>
+   <p><b>やらないこと・トレードオフ：</b>標準ライブラリを肥大化させない（その結果、依存の多さという新しい問題も生んだ）</p>
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="scope">#問題起点でスコープを守る</button><button type="button" data-t="sustain">#持続性・統治・ライセンス</button><button type="button" data-t="origin">#個人の痒みから始まる</button></div>
+  </article><article class="entry" id="p9" style="--cc:var(--c-lang)">
+  <div class="head"><h3>Deno</h3><span class="cat">言語・ランタイム</span></div>
+  <p class="tl">Node.jsの反省から生まれたランタイム</p>
+  <ul><li>作者自身がNodeの設計上の後悔を講演で公に語り、それを設計に反映</li><li>デフォルトで安全：ファイルやネットワークへのアクセスは明示的な許可が必要</li><li>独自APIよりWeb標準APIを優先し、TypeScriptをそのまま実行</li></ul>
+  <p class="lesson"><b>学び</b>過去の自分の失敗を公開で振り返ることは、次のプロダクトの最良の設計書になる</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>Ryan Dahlの講演『Nodeについて後悔している10のこと』</p>
+   <p><b>やらないこと・トレードオフ：</b>独自API・暗黙の全権限付与</p>
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="phil">#哲学を明文化する</button><button type="button" data-t="user">#ユーザー主権を守る</button><button type="button" data-t="origin">#個人の痒みから始まる</button></div>
+  </article><article class="entry" id="p10" style="--cc:var(--c-lang)">
+  <div class="head"><h3>Bun</h3><span class="cat">言語・ランタイム</span></div>
+  <p class="tl">速さを核にしたオールインワンJSツールキット</p>
+  <ul><li>ランタイム・パッケージマネージャ・バンドラ・テストランナーを1つに統合</li><li>速度をプロダクトのアイデンティティに</li><li>Node.js互換を重視し、乗り換えコストを下げる</li></ul>
+  <p class="lesson"><b>学び</b>『遅い』『バラバラ』という共通の痛みは、それ自体がコンセプトになる</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>JavaScriptツールチェーンの遅さと断片化への不満</p>
+
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="perf">#速さをアイデンティティにする</button><button type="button" data-t="interop">#段階的採用と相互運用</button><button type="button" data-t="dx">#開発者の幸福を中心に置く</button></div>
+  </article><article class="entry" id="p11" style="--cc:var(--c-front)">
+  <div class="head"><h3>React</h3><span class="cat">Webフロントエンド</span></div>
+  <p class="tl">宣言的UIのためのコンポーネントライブラリ</p>
+  <ul><li>UIを状態の関数として宣言的に記述する</li><li>開発元の社内で大量のコンポーネントに使い続けること（ドッグフーディング）が安定性を担保</li><li>非推奨化は警告と自動移行ツール（codemod）で段階的に進める</li></ul>
+  <p class="lesson"><b>学び</b>自分が最大のユーザーであることは、互換性を守る強い動機になる</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>Facebookの複雑なUIの状態管理を解決するため</p>
+   <p><b>やらないこと・トレードオフ：</b>長くビュー層に集中し、ルーティングなどはコア外に置いた</p>
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="compat">#互換性を約束する</button><button type="button" data-t="dx">#開発者の幸福を中心に置く</button><button type="button" data-t="origin">#個人の痒みから始まる</button></div>
+  </article><article class="entry" id="p12" style="--cc:var(--c-front)">
+  <div class="head"><h3>Vue</h3><span class="cat">Webフロントエンド</span></div>
+  <p class="tl">段階的に採用できるプログレッシブ・フレームワーク</p>
+  <ul><li>『Progressive』：ビュー層だけのコアから始め、必要に応じてルーターや状態管理を足せる</li><li>既存プロジェクトへ部分導入できることを最初からの設計目標に</li><li>スポンサー支援による独立したプロジェクト運営</li></ul>
+  <p class="lesson"><b>学び</b>『小さく始めて大きく育てられる』導入曲線は、それ自体が採用理由になる</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>Evan YouがAngularJSでの経験から、重い構成や部分導入の難しさを感じたこと</p>
+   <p><b>やらないこと・トレードオフ：</b>最初から全部を押しつけない</p>
+   <p>出典：<a href="https://www.noze.it/en/insights/vuejs-open-source/" target="_blank" rel="noopener">www.noze.it</a></p>
+  </details>
+  <div class="tags"><span class="badge v">Web確認済み</span><button type="button" data-t="interop">#段階的採用と相互運用</button><button type="button" data-t="dx">#開発者の幸福を中心に置く</button><button type="button" data-t="sustain">#持続性・統治・ライセンス</button><button type="button" data-t="origin">#個人の痒みから始まる</button></div>
+  </article><article class="entry" id="p13" style="--cc:var(--c-front)">
+  <div class="head"><h3>Svelte</h3><span class="cat">Webフロントエンド</span></div>
+  <p class="tl">消えるフレームワーク：コンパイラとしてのUI</p>
+  <ul><li>仕事をブラウザでの実行時ではなく、ビルド時のコンパイラで行う</li><li>書くコード量を減らすことを重視</li><li>リアクティビティを言語のように自然に扱うことを追求</li></ul>
+  <p class="lesson"><b>学び</b>『どこで仕事をするか』を変えるだけで、新しいカテゴリーが生まれる</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>Rich Harrisがニュースのインタラクティブ表現で、軽さと表現力の両立を求めた</p>
+   <p><b>やらないこと・トレードオフ：</b>実行時ランタイムに依存する仮想DOM方式を採らない</p>
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="perf">#速さをアイデンティティにする</button><button type="button" data-t="simple">#単純さと明示性を優先する</button><button type="button" data-t="dx">#開発者の幸福を中心に置く</button></div>
+  </article><article class="entry" id="p14" style="--cc:var(--c-front)">
+  <div class="head"><h3>Angular</h3><span class="cat">Webフロントエンド</span></div>
+  <p class="tl">大規模開発のための全部入りプラットフォーム</p>
+  <ul><li>ルーター・フォーム・HTTP・テストまで公式に揃えた一体型</li><li>予測可能なリリース周期と明文化された非推奨ポリシー</li><li>AngularJSからの非互換な全面刷新は大きな反発を招き、以後は移行性を重視</li></ul>
+  <p class="lesson"><b>学び</b>全面書き直しの代償は大きい。移行パスは機能と同じくらい重要</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>Googleの大規模アプリ開発の需要</p>
+
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="compat">#互換性を約束する</button><button type="button" data-t="opinion">#意見のある既定値を選ぶ</button><button type="button" data-t="sustain">#持続性・統治・ライセンス</button></div>
+  </article><article class="entry" id="p15" style="--cc:var(--c-front)">
+  <div class="head"><h3>Solid</h3><span class="cat">Webフロントエンド</span></div>
+  <p class="tl">仮想DOMなしの細粒度リアクティビティ</p>
+  <ul><li>状態変化を必要な箇所だけに伝える細粒度の更新</li><li>Reactに近い書き味で学習コストを下げる</li><li>ベンチマークを公開し、主張を数字で示す</li></ul>
+  <p class="lesson"><b>学び</b>既存の書き味を借りて中身だけ変えると、乗り換えの心理的障壁が下がる</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>Ryan Carniatoのリアクティビティ研究</p>
+   <p><b>やらないこと・トレードオフ：</b>仮想DOMを使わない</p>
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="perf">#速さをアイデンティティにする</button><button type="button" data-t="interop">#段階的採用と相互運用</button></div>
+  </article><article class="entry" id="p16" style="--cc:var(--c-front)">
+  <div class="head"><h3>Preact</h3><span class="cat">Webフロントエンド</span></div>
+  <p class="tl">ほぼ同じAPIで極小サイズ</p>
+  <ul><li>Reactとほぼ互換のAPIを保ちつつ、サイズを極小に保つ</li><li>サイズ予算そのものが設計制約であり、機能追加の判断基準</li><li>互換レイヤーで既存資産を活かせる</li></ul>
+  <p class="lesson"><b>学び</b>数値の制約（サイズ・速度）は、スコープを守る最も分かりやすい盾</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>軽量なReact代替の必要性</p>
+   <p><b>やらないこと・トレードオフ：</b>サイズを大きく増やす機能は入れない</p>
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="scope">#問題起点でスコープを守る</button><button type="button" data-t="perf">#速さをアイデンティティにする</button><button type="button" data-t="interop">#段階的採用と相互運用</button></div>
+  </article><article class="entry" id="p17" style="--cc:var(--c-front)">
+  <div class="head"><h3>htmx</h3><span class="cat">Webフロントエンド</span></div>
+  <p class="tl">HTMLに立ち返るハイパーメディア志向</p>
+  <ul><li>Locality of Behaviour：コードの振る舞いは、その場所を見ただけで分かるべき</li><li>ビルドステップを持たない理由などをエッセイで説明し続ける</li><li>自分たちへの批判（『htmx sucks』）までエッセイ一覧に並べる率直さ</li></ul>
+  <p class="lesson"><b>学び</b>エッセイで『なぜ』を発信し続けると、機能より思想でファンがつく</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>前身intercooler.jsから続く、SPA偏重のWebへの問題提起</p>
+   <p><b>やらないこと・トレードオフ：</b>ビルド工程や独自の状態管理を持ち込まない</p>
+   <p>出典：<a href="https://htmx.org/essays/all" target="_blank" rel="noopener">htmx.org</a></p>
+  </details>
+  <div class="tags"><span class="badge v">Web確認済み</span><button type="button" data-t="phil">#哲学を明文化する</button><button type="button" data-t="read">#読み手と局所性を重視する</button><button type="button" data-t="simple">#単純さと明示性を優先する</button></div>
+  </article><article class="entry" id="p18" style="--cc:var(--c-front)">
+  <div class="head"><h3>Astro</h3><span class="cat">Webフロントエンド</span></div>
+  <p class="tl">コンテンツ中心サイトのためのWebフレームワーク</p>
+  <ul><li>5つの設計原則：コンテンツ駆動・サーバーファースト・デフォルトで速い・使いやすい・開発者志向</li><li>遅いサイトを作るのが不可能であることを目指す</li><li>特定のUIフレームワークに縛られない（React・Vue・Svelteなどを併用可）</li></ul>
+  <p class="lesson"><b>学び</b>『誰向けではないか』を言うと、得意領域で圧倒的になれる</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>JavaScriptを出しすぎる現代的フレームワークへの反省</p>
+   <p><b>やらないこと・トレードオフ：</b>アプリ特化型フレームワークとは違う、コンテンツ重視のトレードオフを明示</p>
+   <p>出典：<a href="https://v4.docs.astro.build/en/concepts/why-astro/" target="_blank" rel="noopener">v4.docs.astro.build</a></p>
+  </details>
+  <div class="tags"><span class="badge v">Web確認済み</span><button type="button" data-t="phil">#哲学を明文化する</button><button type="button" data-t="nongoal">#やらないことを宣言する</button><button type="button" data-t="perf">#速さをアイデンティティにする</button><button type="button" data-t="interop">#段階的採用と相互運用</button></div>
+  </article><article class="entry" id="p19" style="--cc:var(--c-front)">
+  <div class="head"><h3>Next.js</h3><span class="cat">Webフロントエンド</span></div>
+  <p class="tl">規約で動くReactフルスタックフレームワーク</p>
+  <ul><li>ファイル配置がそのままルーティングになる規約ベース</li><li>ゼロコンフィグで始められることを重視</li><li>ホスティング企業が開発を主導し、事業とOSSが一体</li></ul>
+  <p class="lesson"><b>学び</b>企業主導OSSは速く進むが、中立性への信頼をどう担保するかが課題になる</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>Reactアプリの本番構成の煩雑さを解消</p>
+
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="opinion">#意見のある既定値を選ぶ</button><button type="button" data-t="dx">#開発者の幸福を中心に置く</button><button type="button" data-t="sustain">#持続性・統治・ライセンス</button></div>
+  </article><article class="entry" id="p20" style="--cc:var(--c-front)">
+  <div class="head"><h3>Tailwind CSS</h3><span class="cat">Webフロントエンド</span></div>
+  <p class="tl">ユーティリティ・ファーストのCSS</p>
+  <ul><li>小さなユーティリティクラスの組み合わせで設計する</li><li>作者のエッセイで『関心の分離』の常識に正面から異論を述べた</li><li>有料のUIキット販売でOSS本体の開発資金をまかなう</li></ul>
+  <p class="lesson"><b>学び</b>常識への異論は、理由を長文で書けば支持に変わる</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>Adam WathanがCSSの再利用と保守の難しさに悩んだ経験</p>
+
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="phil">#哲学を明文化する</button><button type="button" data-t="opinion">#意見のある既定値を選ぶ</button><button type="button" data-t="sustain">#持続性・統治・ライセンス</button></div>
+  </article><article class="entry" id="p21" style="--cc:var(--c-front)">
+  <div class="head"><h3>Three.js</h3><span class="cat">Webフロントエンド</span></div>
+  <p class="tl">WebGLを誰でも使える3Dライブラリ</p>
+  <ul><li>低レベルなWebGLを簡潔なAPIで包む</li><li>豊富な公式サンプルが最大のドキュメント</li><li>長期にわたる小さな継続的改善</li></ul>
+  <p class="lesson"><b>学び</b>動くサンプル集は、どんな説明文よりも採用を後押しする</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>Web上の3D表現を身近にしたいという作者の動機</p>
+
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="dx">#開発者の幸福を中心に置く</button><button type="button" data-t="origin">#個人の痒みから始まる</button></div>
+  </article><article class="entry" id="p22" style="--cc:var(--c-back)">
+  <div class="head"><h3>Ruby on Rails</h3><span class="cat">Webバックエンド</span></div>
+  <p class="tl">設定より規約、のWebフレームワーク</p>
+  <ul><li>Rails Doctrineで9つの柱を明文化（プログラマーの幸福、設定より規約、メニューはおまかせ…）</li><li>『鋭利なナイフを提供する』：ユーザーを信頼して強力な機能を渡す</li><li>『安定より進歩』を柱の一つとして明言</li></ul>
+  <p class="lesson"><b>学び</b>価値観の優先順位（安定より進歩、など）まで書くと判断がぶれない</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>DHHがBasecampの開発から抽出したフレームワーク</p>
+   <p><b>やらないこと・トレードオフ：</b>万人向けの中立的な道具箱ではなく、意見の詰まった一式を出す</p>
+   <p>出典：<a href="https://rubyonrails.org/doctrine" target="_blank" rel="noopener">rubyonrails.org</a></p>
+  </details>
+  <div class="tags"><span class="badge v">Web確認済み</span><button type="button" data-t="phil">#哲学を明文化する</button><button type="button" data-t="opinion">#意見のある既定値を選ぶ</button><button type="button" data-t="dx">#開発者の幸福を中心に置く</button><button type="button" data-t="origin">#個人の痒みから始まる</button></div>
+  </article><article class="entry" id="p23" style="--cc:var(--c-back)">
+  <div class="head"><h3>Django</h3><span class="cat">Webバックエンド</span></div>
+  <p class="tl">締め切りのある完璧主義者のためのフレームワーク</p>
+  <ul><li>設計哲学を公式ドキュメント化：疎結合、少ないコード、DRY、暗黙より明示、一貫性</li><li>『魔法』は大きな利便性がある時だけ、学習者を混乱させない形でのみ使う</li><li>非営利財団が商標と運営を支える</li></ul>
+  <p class="lesson"><b>学び</b>設計哲学の目的を『過去を説明し、未来を導く』と定義すると書きやすい</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>新聞社の締め切りに追われるWeb開発の現場から誕生</p>
+   <p><b>やらないこと・トレードオフ：</b>理由のない魔法は入れない</p>
+   <p>出典：<a href="https://docs.djangoproject.com/en/stable/misc/design-philosophies/" target="_blank" rel="noopener">docs.djangoproject.com</a></p>
+  </details>
+  <div class="tags"><span class="badge v">Web確認済み</span><button type="button" data-t="phil">#哲学を明文化する</button><button type="button" data-t="simple">#単純さと明示性を優先する</button><button type="button" data-t="sustain">#持続性・統治・ライセンス</button><button type="button" data-t="origin">#個人の痒みから始まる</button></div>
+  </article><article class="entry" id="p24" style="--cc:var(--c-back)">
+  <div class="head"><h3>Laravel</h3><span class="cat">Webバックエンド</span></div>
+  <p class="tl">Web職人のためのPHPフレームワーク</p>
+  <ul><li>美しく表現力のある構文と開発者体験を重視</li><li>周辺の公式有料サービスで持続性を確保</li><li>規約と一体化したツール群</li></ul>
+  <p class="lesson"><b>学び</b>周辺の有料サービスで本体を無料に保つモデルは、個人発OSSでも現実的</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>Taylor OtwellがPHPで快適に書ける環境を求めた</p>
+
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="dx">#開発者の幸福を中心に置く</button><button type="button" data-t="opinion">#意見のある既定値を選ぶ</button><button type="button" data-t="sustain">#持続性・統治・ライセンス</button></div>
+  </article><article class="entry" id="p25" style="--cc:var(--c-back)">
+  <div class="head"><h3>Flask</h3><span class="cat">Webバックエンド</span></div>
+  <p class="tl">マイクロフレームワーク</p>
+  <ul><li>コアは小さくシンプルに、拡張で広げる</li><li>DBやフォームなど多くの決定をユーザーに委ねる</li><li>明快なドキュメントと読みやすいコード</li></ul>
+  <p class="lesson"><b>学び</b>軽い試作の公開が、そのまま需要検証になることがある</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>エイプリルフールのジョークとして公開したものが、本物の需要を掘り当てた</p>
+   <p><b>やらないこと・トレードオフ：</b>フルスタックの一体型にはならない</p>
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="scope">#問題起点でスコープを守る</button><button type="button" data-t="simple">#単純さと明示性を優先する</button><button type="button" data-t="origin">#個人の痒みから始まる</button></div>
+  </article><article class="entry" id="p26" style="--cc:var(--c-back)">
+  <div class="head"><h3>FastAPI</h3><span class="cat">Webバックエンド</span></div>
+  <p class="tl">型ヒントと標準に乗るPython API</p>
+  <ul><li>OpenAPIやJSON Schemaなど既存の標準の上に構築</li><li>Pythonの型ヒントでエディタ補完と入力検証を同時に得る</li><li>ドキュメントで設計の根拠や代替案との比較を丁寧に説明</li></ul>
+  <p class="lesson"><b>学び</b>標準に乗ると、エコシステムの力を丸ごと借りられる</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>作者が既存フレームワークの良い点を組み合わせたかった</p>
+   <p><b>やらないこと・トレードオフ：</b>独自仕様を発明しない</p>
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="interop">#段階的採用と相互運用</button><button type="button" data-t="dx">#開発者の幸福を中心に置く</button><button type="button" data-t="phil">#哲学を明文化する</button></div>
+  </article><article class="entry" id="p27" style="--cc:var(--c-back)">
+  <div class="head"><h3>Express</h3><span class="cat">Webバックエンド</span></div>
+  <p class="tl">高速・非独断・ミニマルなWebフレームワーク</p>
+  <ul><li>最小限の機能とミドルウェアの組み合わせ</li><li>構造を押しつけない（unopinionated）設計</li><li>長期にわたる安定したAPI</li></ul>
+  <p class="lesson"><b>学び</b>『意見を持たない』も明確な方針。ただし構成の自由度の代償は利用者が払う</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>Node初期のWeb開発の基盤として</p>
+   <p><b>やらないこと・トレードオフ：</b>構造やディレクトリ規約を強制しない</p>
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="simple">#単純さと明示性を優先する</button><button type="button" data-t="scope">#問題起点でスコープを守る</button><button type="button" data-t="compat">#互換性を約束する</button></div>
+  </article><article class="entry" id="p28" style="--cc:var(--c-back)">
+  <div class="head"><h3>Spring Boot</h3><span class="cat">Webバックエンド</span></div>
+  <p class="tl">意見のある既定値ですぐ動くJava</p>
+  <ul><li>意見のある既定値（opinionated defaults）で設定を最小化</li><li>スターター依存で必要な構成をまとめて提供</li><li>既定値を後から上書きできる逃げ道も用意</li></ul>
+  <p class="lesson"><b>学び</b>既定値に意見を込めつつ、上書きの道を残すのが大規模利用の鍵</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>Springの設定の重さへの反省</p>
+
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="opinion">#意見のある既定値を選ぶ</button><button type="button" data-t="dx">#開発者の幸福を中心に置く</button></div>
+  </article><article class="entry" id="p29" style="--cc:var(--c-back)">
+  <div class="head"><h3>Phoenix</h3><span class="cat">Webバックエンド</span></div>
+  <p class="tl">生産性と性能を両立するElixirのWebフレームワーク</p>
+  <ul><li>生産性を犠牲にせず、リアルタイム性と高い性能を実現</li><li>LiveViewでサーバー中心のインタラクティブUI</li><li>Erlang VMの特性を活かした設計</li></ul>
+  <p class="lesson"><b>学び</b>基盤技術の強みを前面に出すと、差別化が明確になる</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>Chris McCordのリアルタイムWebへの関心</p>
+
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="perf">#速さをアイデンティティにする</button><button type="button" data-t="dx">#開発者の幸福を中心に置く</button></div>
+  </article><article class="entry" id="p30" style="--cc:var(--c-back)">
+  <div class="head"><h3>NestJS</h3><span class="cat">Webバックエンド</span></div>
+  <p class="tl">構造を持ったNode.jsサーバーフレームワーク</p>
+  <ul><li>Angularに着想を得たモジュール・DI構造</li><li>TypeScriptファースト</li><li>大規模チームでの保守性を重視</li></ul>
+  <p class="lesson"><b>学び</b>他分野の成功パターンを輸入するのは有効な差別化</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>Nodeのサーバー開発に足りない『アーキテクチャ』を補う</p>
+
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="opinion">#意見のある既定値を選ぶ</button><button type="button" data-t="interop">#段階的採用と相互運用</button></div>
+  </article><article class="entry" id="p31" style="--cc:var(--c-tool)">
+  <div class="head"><h3>esbuild</h3><span class="cat">ビルド・開発ツール</span></div>
+  <p class="tl">極端に速いJSバンドラー</p>
+  <ul><li>READMEで、既存ツールは本来より10〜100倍遅いと問題提起し、ビルド性能の新時代を主目標に</li><li>FAQで『なぜ速いか』を詳細に説明</li><li>性能を損なう機能追加には慎重</li></ul>
+  <p class="lesson"><b>学び</b>一つの指標（速さ）に振り切ると、機能要望を断る基準も明確になる</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>Evan Wallaceがビルドツールの遅さに問題意識を持った</p>
+   <p><b>やらないこと・トレードオフ：</b>何でもできる万能バンドラーは目指さない</p>
+   <p>出典：<a href="https://esbuild.github.io/faq" target="_blank" rel="noopener">esbuild.github.io</a></p>
+  </details>
+  <div class="tags"><span class="badge v">Web確認済み</span><button type="button" data-t="perf">#速さをアイデンティティにする</button><button type="button" data-t="scope">#問題起点でスコープを守る</button><button type="button" data-t="nongoal">#やらないことを宣言する</button></div>
+  </article><article class="entry" id="p32" style="--cc:var(--c-tool)">
+  <div class="head"><h3>Vite</h3><span class="cat">ビルド・開発ツール</span></div>
+  <p class="tl">次世代フロントエンドツーリング</p>
+  <ul><li>開発時はネイティブESMでバンドルせず即起動</li><li>本番ビルドは実績あるツールに任せる実用主義</li><li>フレームワーク非依存で、多くのフレームワークの基盤に</li></ul>
+  <p class="lesson"><b>学び</b>開発体験の『待ち時間』は、最も説得力のある改善対象</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>Evan Youが開発サーバーの起動待ちに不満を持ったこと</p>
+
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="perf">#速さをアイデンティティにする</button><button type="button" data-t="dx">#開発者の幸福を中心に置く</button><button type="button" data-t="interop">#段階的採用と相互運用</button></div>
+  </article><article class="entry" id="p33" style="--cc:var(--c-tool)">
+  <div class="head"><h3>webpack</h3><span class="cat">ビルド・開発ツール</span></div>
+  <p class="tl">すべてをモジュールとして扱うバンドラー</p>
+  <ul><li>ローダーとプラグインで何でも組み込める拡張性</li><li>柔軟さを最大化した結果、設定の複雑さが課題に</li><li>後続ツールが『ゼロコンフィグ』を掲げるきっかけにもなった</li></ul>
+  <p class="lesson"><b>学び</b>柔軟性は強みだが、既定値がないと導入障壁になる（反面教師としても学べる）</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>大規模フロントエンドの依存管理</p>
+
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="interop">#段階的採用と相互運用</button><button type="button" data-t="opinion">#意見のある既定値を選ぶ</button></div>
+  </article><article class="entry" id="p34" style="--cc:var(--c-tool)">
+  <div class="head"><h3>Babel</h3><span class="cat">ビルド・開発ツール</span></div>
+  <p class="tl">次世代のJavaScriptを今日使うためのコンパイラ</p>
+  <ul><li>プラグイン構造で新しい構文を段階的に試せる</li><li>言語標準化の実験場として機能</li><li>膨大な利用に対して資金が不足していることを公開ブログで訴えた</li></ul>
+  <p class="lesson"><b>学び</b>利用者数と資金は比例しない。持続性は早めに設計すべき</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>新しいJS構文を古い環境で使いたいという需要</p>
+
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="sustain">#持続性・統治・ライセンス</button><button type="button" data-t="interop">#段階的採用と相互運用</button></div>
+  </article><article class="entry" id="p35" style="--cc:var(--c-tool)">
+  <div class="head"><h3>Prettier</h3><span class="cat">ビルド・開発ツール</span></div>
+  <p class="tl">議論を終わらせるためのコードフォーマッター</p>
+  <ul><li>Option Philosophy：既存オプションは歴史的経緯であり、今後は増やさないと宣言</li><li>オプションが増えるほど、スタイル論争がオプション論争に移るだけだと説明</li><li>GitHubの反応数は声なきユーザーを代表しないと気づいた経緯も記録</li></ul>
+  <p class="lesson"><b>学び</b>『なぜ要望を受けないか』を文書化すると、同じ議論を繰り返さずに済む</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>コードスタイルをめぐる終わりのない議論を止めたかった</p>
+   <p><b>やらないこと・トレードオフ：</b>何でも好みどおりに整形する万能ツールにはならない</p>
+   <p>出典：<a href="https://prettier.io/docs/option-philosophy" target="_blank" rel="noopener">prettier.io</a></p>
+  </details>
+  <div class="tags"><span class="badge v">Web確認済み</span><button type="button" data-t="nongoal">#やらないことを宣言する</button><button type="button" data-t="opinion">#意見のある既定値を選ぶ</button><button type="button" data-t="phil">#哲学を明文化する</button></div>
+  </article><article class="entry" id="p36" style="--cc:var(--c-tool)">
+  <div class="head"><h3>Black</h3><span class="cat">ビルド・開発ツール</span></div>
+  <p class="tl">妥協しないPythonフォーマッター</p>
+  <ul><li>手作業の整形の細部を委ねる代わりに、速さ・決定性・議論からの自由を得る、という取引を提示</li><li>設定項目は意図的に限定し、めったに増やさない</li><li>整形前後でコードの意味が変わらないことをASTで確認する安全策</li></ul>
+  <p class="lesson"><b>学び</b>ユーザーに『何を手放し、何を得るか』を1文で示すと受け入れられやすい</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>スタイル議論の時間を、より重要な作業に回すため</p>
+   <p><b>やらないこと・トレードオフ：</b>柔軟なスタイル設定</p>
+   <p>出典：<a href="https://github.com/psf/black/blob/7e4c6bf71fffc36ead970afde46a726144515e87/README.md" target="_blank" rel="noopener">github.com</a></p>
+  </details>
+  <div class="tags"><span class="badge v">Web確認済み</span><button type="button" data-t="opinion">#意見のある既定値を選ぶ</button><button type="button" data-t="nongoal">#やらないことを宣言する</button><button type="button" data-t="compat">#互換性を約束する</button></div>
+  </article><article class="entry" id="p37" style="--cc:var(--c-tool)">
+  <div class="head"><h3>Biome</h3><span class="cat">ビルド・開発ツール</span></div>
+  <p class="tl">高速なWebツールチェーン（フォーマッター＋リンター）</p>
+  <ul><li>フォーマッターはPrettierと同じOption Philosophyに従うと明言</li><li>Prettierとの高い互換性で乗り換えコストを下げる</li><li>Rustによる高速化</li></ul>
+  <p class="lesson"><b>学び</b>他プロジェクトの哲学を『採用します』と宣言するのも立派な方針</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>前身Romeの運営会社が解散した後、コミュニティがフォークして継続</p>
+   <p><b>やらないこと・トレードオフ：</b>新しいフォーマットオプションは基本的に追加しない</p>
+   <p>出典：<a href="https://v1.biomejs.dev/formatter/option-philosophy" target="_blank" rel="noopener">v1.biomejs.dev</a></p>
+  </details>
+  <div class="tags"><span class="badge v">Web確認済み</span><button type="button" data-t="opinion">#意見のある既定値を選ぶ</button><button type="button" data-t="interop">#段階的採用と相互運用</button><button type="button" data-t="perf">#速さをアイデンティティにする</button><button type="button" data-t="sustain">#持続性・統治・ライセンス</button></div>
+  </article><article class="entry" id="p38" style="--cc:var(--c-tool)">
+  <div class="head"><h3>ESLint</h3><span class="cat">ビルド・開発ツール</span></div>
+  <p class="tl">すべてがプラガブルなリンター</p>
+  <ul><li>すべてのルールは独立していて、どれもオフにできる</li><li>特定のコーディングスタイルに依存しない</li><li>ルール・パーサー・設定をプラグインで拡張可能</li></ul>
+  <p class="lesson"><b>学び</b>意見を持つか、器になるか。どちらかに振り切ると役割が明確になる</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>既存リンターの拡張性不足を補うため</p>
+   <p><b>やらないこと・トレードオフ：</b>特定のスタイルを強制しない（Prettierと対照的）</p>
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="interop">#段階的採用と相互運用</button><button type="button" data-t="phil">#哲学を明文化する</button></div>
+  </article><article class="entry" id="p39" style="--cc:var(--c-tool)">
+  <div class="head"><h3>Ruff</h3><span class="cat">ビルド・開発ツール</span></div>
+  <p class="tl">極速のPythonリンター兼フォーマッター</p>
+  <ul><li>桁違いの速度を掲げる</li><li>多数の既存ツールの役割を1つで置き換える</li><li>既存ツールとのルール互換で移行を容易に</li></ul>
+  <p class="lesson"><b>学び</b>既存ツールとの互換性は、速さと同じくらい強い採用理由になる</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>大規模コードベースでのリンターの遅さ</p>
+
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="perf">#速さをアイデンティティにする</button><button type="button" data-t="interop">#段階的採用と相互運用</button></div>
+  </article><article class="entry" id="p40" style="--cc:var(--c-tool)">
+  <div class="head"><h3>uv</h3><span class="cat">ビルド・開発ツール</span></div>
+  <p class="tl">Pythonのパッケージとプロジェクト管理を1つに</p>
+  <ul><li>pip・virtualenv・pyenvなど複数ツールの役割を統合</li><li>圧倒的な速さ</li><li>既存のpipワークフローに近い互換インターフェース</li></ul>
+  <p class="lesson"><b>学び</b>断片化した道具を一本化することは、明確な価値提案になる</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>Python環境構築の断片化と遅さ</p>
+
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="perf">#速さをアイデンティティにする</button><button type="button" data-t="interop">#段階的採用と相互運用</button><button type="button" data-t="dx">#開発者の幸福を中心に置く</button></div>
+  </article><article class="entry" id="p41" style="--cc:var(--c-tool)">
+  <div class="head"><h3>Jest</h3><span class="cat">ビルド・開発ツール</span></div>
+  <p class="tl">楽しいJavaScriptテスト</p>
+  <ul><li>ゼロコンフィグで始められる</li><li>スナップショットテストなど実務に即した機能</li><li>分かりやすいエラーメッセージ</li></ul>
+  <p class="lesson"><b>学び</b>『楽しい』のような感情語もプロダクト原則になり得る</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>社内のテスト体験の改善</p>
+
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="dx">#開発者の幸福を中心に置く</button><button type="button" data-t="opinion">#意見のある既定値を選ぶ</button></div>
+  </article><article class="entry" id="p42" style="--cc:var(--c-tool)">
+  <div class="head"><h3>Playwright</h3><span class="cat">ビルド・開発ツール</span></div>
+  <p class="tl">信頼できるE2Eテスト</p>
+  <ul><li>自動待機で不安定（flaky）なテストを減らす</li><li>主要ブラウザエンジンを一貫したAPIで扱う</li><li>失敗調査を支えるトレース機能</li></ul>
+  <p class="lesson"><b>学び</b>ユーザーの最大の痛み（不安定さ）を名指しで解決すると伝わりやすい</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>Puppeteerを開発したメンバーが新たに構築</p>
+
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="dx">#開発者の幸福を中心に置く</button><button type="button" data-t="origin">#個人の痒みから始まる</button></div>
+  </article><article class="entry" id="p43" style="--cc:var(--c-tool)">
+  <div class="head"><h3>pnpm</h3><span class="cat">ビルド・開発ツール</span></div>
+  <p class="tl">速く、ディスク効率の良いパッケージマネージャ</p>
+  <ul><li>コンテンツアドレス型ストアで依存を重複保存しない</li><li>宣言していない依存にはアクセスできない厳格さ</li><li>モノレポ対応</li></ul>
+  <p class="lesson"><b>学び</b>『厳しさ』は短期的には不便でも、長期的な信頼になる</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>npmのディスク浪費と『幽霊依存』問題</p>
+   <p><b>やらないこと・トレードオフ：</b>緩い依存解決による便利さより、正しさを優先</p>
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="perf">#速さをアイデンティティにする</button><button type="button" data-t="opinion">#意見のある既定値を選ぶ</button></div>
+  </article><article class="entry" id="p44" style="--cc:var(--c-tool)">
+  <div class="head"><h3>Git</h3><span class="cat">ビルド・開発ツール</span></div>
+  <p class="tl">速く、分散した版管理</p>
+  <ul><li>速度・分散・データ完全性（ハッシュによる改ざん検知）を中核に</li><li>単純なデータモデルの上に多様なワークフローを載せる</li><li>Linuxカーネル開発という巨大な実利用から要件を決めた</li></ul>
+  <p class="lesson"><b>学び</b>実在する最大のユーザー（自分たち）の要件から逆算した設計は強い</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>カーネル開発で使っていた商用ツールが使えなくなり、Linusが短期間で作った</p>
+
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="perf">#速さをアイデンティティにする</button><button type="button" data-t="origin">#個人の痒みから始まる</button><button type="button" data-t="simple">#単純さと明示性を優先する</button></div>
+  </article><article class="entry" id="p45" style="--cc:var(--c-cli)">
+  <div class="head"><h3>Neovim</h3><span class="cat">エディタ・CLI</span></div>
+  <p class="tl">拡張性と使いやすさに振ったVimの継承者</p>
+  <ul><li>公式Charterに目標と『Non-goals』を明記（VimをIDEにする、POSIX viに準拠する、などはしない）</li><li>新しい貢献者の参入障壁を取り除くことを目標に</li><li>好みが割れる点は伝統・互換性を優先。ただし利益が極めて大きければ使いやすさを取る</li></ul>
+  <p class="lesson"><b>学び</b>判断が割れた時のタイブレーク規則まで書くと、運営が楽になる</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>Vimの保守性と拡張性の限界を超えるための大規模リファクタリングとして開始</p>
+   <p><b>やらないこと・トレードオフ：</b>Vim9scriptのサポート、VimのIDE化</p>
+   <p>出典：<a href="https://www.github.com/neovim/neovim.github.io/blob/master/charter.html" target="_blank" rel="noopener">www.github.com</a></p>
+  </details>
+  <div class="tags"><span class="badge v">Web確認済み</span><button type="button" data-t="nongoal">#やらないことを宣言する</button><button type="button" data-t="phil">#哲学を明文化する</button><button type="button" data-t="contrib">#貢献モデルを設計する</button><button type="button" data-t="compat">#互換性を約束する</button></div>
+  </article><article class="entry" id="p46" style="--cc:var(--c-cli)">
+  <div class="head"><h3>Vim</h3><span class="cat">エディタ・CLI</span></div>
+  <p class="tl">どこにでもあるモーダルエディタ</p>
+  <ul><li>長期にわたる後方互換性の重視</li><li>チャリティウェア：寄付をウガンダの子どもたちの支援へ</li><li>作者の逝去後はコミュニティが保守を継承</li></ul>
+  <p class="lesson"><b>学び</b>一人の作者に依存する体制の継承計画は、元気なうちに考えておく</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>viクローンの改良から始まった</p>
+
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="compat">#互換性を約束する</button><button type="button" data-t="sustain">#持続性・統治・ライセンス</button></div>
+  </article><article class="entry" id="p47" style="--cc:var(--c-cli)">
+  <div class="head"><h3>VS Code</h3><span class="cat">エディタ・CLI</span></div>
+  <p class="tl">軽量なコアと拡張で広がるエディタ</p>
+  <ul><li>拡張機能を別プロセスで動かし、本体の応答性を守る</li><li>言語サポートをLSPという標準プロトコルで外部化</li><li>予測可能な定期リリース</li></ul>
+  <p class="lesson"><b>学び</b>拡張の仕組みを『本体を守る境界』として設計すると品質を保てる</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>クロスプラットフォームの軽量エディタを目指した</p>
+   <p><b>やらないこと・トレードオフ：</b>コアに全言語サポートを入れない</p>
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="interop">#段階的採用と相互運用</button><button type="button" data-t="perf">#速さをアイデンティティにする</button><button type="button" data-t="scope">#問題起点でスコープを守る</button></div>
+  </article><article class="entry" id="p48" style="--cc:var(--c-cli)">
+  <div class="head"><h3>Helix</h3><span class="cat">エディタ・CLI</span></div>
+  <p class="tl">最初から全部入りのモーダルエディタ</p>
+  <ul><li>LSPやTree-sitterを標準搭載し、設定なしで高機能</li><li>『選択してから操作』という編集モデル</li><li>プラグイン機構は拙速に入れず、設計を慎重に進める</li></ul>
+  <p class="lesson"><b>学び</b>急いで公開したAPIは、永遠に互換性の負債になる</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>Vim系エディタの設定の重さへの反発</p>
+   <p><b>やらないこと・トレードオフ：</b>未成熟なプラグインAPIを先に公開しない</p>
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="opinion">#意見のある既定値を選ぶ</button><button type="button" data-t="scope">#問題起点でスコープを守る</button><button type="button" data-t="dx">#開発者の幸福を中心に置く</button></div>
+  </article><article class="entry" id="p49" style="--cc:var(--c-cli)">
+  <div class="head"><h3>Zed</h3><span class="cat">エディタ・CLI</span></div>
+  <p class="tl">速さと共同編集のためのエディタ</p>
+  <ul><li>GPUレンダリングとRustで高い応答性</li><li>共同編集を最初から設計に組み込む</li><li>前作（Atom）の開発者たちが、その教訓から再出発</li></ul>
+  <p class="lesson"><b>学び</b>前作の限界を認めて作り直すストーリーは信頼を生む</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>Electron時代のエディタの性能の限界</p>
+
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="perf">#速さをアイデンティティにする</button><button type="button" data-t="origin">#個人の痒みから始まる</button></div>
+  </article><article class="entry" id="p50" style="--cc:var(--c-cli)">
+  <div class="head"><h3>Ghostty</h3><span class="cat">エディタ・CLI</span></div>
+  <p class="tl">速さ・機能・ネイティブUIを全部取るターミナル</p>
+  <ul><li>既存ターミナルは速さ・機能・ネイティブUIのうち最大2つしか選べない、という問題設定</li><li>作者の余暇の情熱プロジェクトであることを明記し、その前提での接し方を求める</li><li>非営利の財政スポンサー下に移行し、売却や方針転換（rug pull）が起きない構造に</li></ul>
+  <p class="lesson"><b>学び</b>『これは趣味の情熱プロジェクトです』と明記するのは、燃え尽きを防ぐ境界線になる</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>Mitchell Hashimotoが個人で始めたプロジェクト</p>
+   <p><b>やらないこと・トレードオフ：</b>最低限の共通UIやラッパーでの妥協</p>
+   <p>出典：<a href="https://mitchellh.com/writing/ghostty-non-profit" target="_blank" rel="noopener">mitchellh.com</a></p>
+  </details>
+  <div class="tags"><span class="badge v">Web確認済み</span><button type="button" data-t="phil">#哲学を明文化する</button><button type="button" data-t="perf">#速さをアイデンティティにする</button><button type="button" data-t="sustain">#持続性・統治・ライセンス</button><button type="button" data-t="origin">#個人の痒みから始まる</button></div>
+  </article><article class="entry" id="p51" style="--cc:var(--c-cli)">
+  <div class="head"><h3>tmux</h3><span class="cat">エディタ・CLI</span></div>
+  <p class="tl">ターミナルマルチプレクサ</p>
+  <ul><li>セッションの永続化という一点の価値</li><li>スクリプトから操作できる一貫したコマンド体系</li><li>長期にわたる安定した挙動</li></ul>
+  <p class="lesson"><b>学び</b>一つの確かな価値を長く提供し続けるだけで、インフラになる</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>既存のマルチプレクサの代替として</p>
+
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="scope">#問題起点でスコープを守る</button><button type="button" data-t="compat">#互換性を約束する</button></div>
+  </article><article class="entry" id="p52" style="--cc:var(--c-cli)">
+  <div class="head"><h3>fzf</h3><span class="cat">エディタ・CLI</span></div>
+  <p class="tl">汎用のファジーファインダー</p>
+  <ul><li>標準入力を受けて標準出力へ返すUnix的な合成性</li><li>どんなリストにも使える汎用性</li><li>単一バイナリで導入が簡単</li></ul>
+  <p class="lesson"><b>学び</b>入出力を標準に合わせると、他者が想像以上の使い方をしてくれる</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>作者が自分のワークフローのために作った</p>
+   <p><b>やらないこと・トレードオフ：</b>特定用途専用にしない</p>
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="interop">#段階的採用と相互運用</button><button type="button" data-t="simple">#単純さと明示性を優先する</button><button type="button" data-t="origin">#個人の痒みから始まる</button></div>
+  </article><article class="entry" id="p53" style="--cc:var(--c-cli)">
+  <div class="head"><h3>ripgrep</h3><span class="cat">エディタ・CLI</span></div>
+  <p class="tl">速く、賢い既定値のgrep</p>
+  <ul><li>既定で.gitignoreを尊重し、隠しファイルやバイナリを飛ばす</li><li>速度を最優先</li><li>POSIX grepの完全な置き換えではないと明言</li></ul>
+  <p class="lesson"><b>学び</b>『何の代替ではないか』を言うと、誤った期待を防げる</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>作者の正規表現エンジン研究から</p>
+   <p><b>やらないこと・トレードオフ：</b>grepとの完全互換</p>
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="perf">#速さをアイデンティティにする</button><button type="button" data-t="opinion">#意見のある既定値を選ぶ</button><button type="button" data-t="nongoal">#やらないことを宣言する</button></div>
+  </article><article class="entry" id="p54" style="--cc:var(--c-cli)">
+  <div class="head"><h3>jq</h3><span class="cat">エディタ・CLI</span></div>
+  <p class="tl">JSONのためのsed</p>
+  <ul><li>小さなフィルタ言語で合成可能</li><li>依存の少ない単一バイナリ</li><li>パイプラインに溶け込む</li></ul>
+  <p class="lesson"><b>学び</b>既存の道具の比喩（〇〇のためのsed）は一瞬で価値を伝える</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>コマンドラインでJSONを扱う不便さ</p>
+
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="simple">#単純さと明示性を優先する</button><button type="button" data-t="interop">#段階的採用と相互運用</button></div>
+  </article><article class="entry" id="p55" style="--cc:var(--c-cli)">
+  <div class="head"><h3>Oh My Zsh</h3><span class="cat">エディタ・CLI</span></div>
+  <p class="tl">楽しい、コミュニティ主導のzsh設定フレームワーク</p>
+  <ul><li>初心者が『ターミナルが楽しい』と感じる体験を重視</li><li>膨大なプラグインとテーマをコミュニティが供給</li><li>気軽な貢献を歓迎する文化</li></ul>
+  <p class="lesson"><b>学び</b>最初の成功体験（楽しさ）は、機能より強い入口になる</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>作者が自分のzsh設定を共有したこと</p>
+
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="dx">#開発者の幸福を中心に置く</button><button type="button" data-t="contrib">#貢献モデルを設計する</button><button type="button" data-t="origin">#個人の痒みから始まる</button></div>
+  </article><article class="entry" id="p56" style="--cc:var(--c-cli)">
+  <div class="head"><h3>Homebrew</h3><span class="cat">エディタ・CLI</span></div>
+  <p class="tl">macOS（とLinux）のパッケージマネージャ</p>
+  <ul><li>受け入れ基準を明文化：保守されている・知られている・安定・使われている・ホームページがある</li><li>無名すぎるものは保守されないため断る。作者本人による自作の登録は、よほど人気がない限り歓迎しない</li><li>『自分のtapを持てばいい』という逃げ道を示して断る</li></ul>
+  <p class="lesson"><b>学び</b>断る基準と『代わりにこうすればいい』をセットで書くと、拒否が建設的になる</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>既存のパッケージ管理への不満から開始</p>
+   <p><b>やらないこと・トレードオフ：</b>バージョンタグのないソフトウェア、バイナリのみのもの（Caskへ）</p>
+   <p>出典：<a href="https://github.com/Homebrew/brew/blob/bd6fb88ddc72a0de4c27f65e60a82790a5d87f3f/docs/Acceptable-Formulae.md" target="_blank" rel="noopener">github.com</a></p>
+  </details>
+  <div class="tags"><span class="badge v">Web確認済み</span><button type="button" data-t="scope">#問題起点でスコープを守る</button><button type="button" data-t="nongoal">#やらないことを宣言する</button><button type="button" data-t="contrib">#貢献モデルを設計する</button></div>
+  </article><article class="entry" id="p57" style="--cc:var(--c-cli)">
+  <div class="head"><h3>curl</h3><span class="cat">エディタ・CLI</span></div>
+  <p class="tl">URLでデータを転送するツールとライブラリ</p>
+  <ul><li>libcurlのアップグレードはABIや文書化された挙動を壊さない、と文書で約束</li><li>公開関数だけに『curl_』接頭辞をつけ、互換性を守る境界を一目で分かるように</li><li>IRCボットで為替レートを取得する小さなツールから始まった</li></ul>
+  <p class="lesson"><b>学び</b>『守るべき境界』を命名規則で可視化すると、互換性の維持が仕組みになる</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>Daniel Stenbergの小さな個人ツールが、長い年月をかけて世界中の機器へ</p>
+   <p><b>やらないこと・トレードオフ：</b>互換性を壊す変更</p>
+   <p>出典：<a href="https://simonwillison.net/2025/Apr/8/writing-c-for-curl/" target="_blank" rel="noopener">simonwillison.net</a></p>
+  </details>
+  <div class="tags"><span class="badge v">Web確認済み</span><button type="button" data-t="compat">#互換性を約束する</button><button type="button" data-t="origin">#個人の痒みから始まる</button><button type="button" data-t="sustain">#持続性・統治・ライセンス</button></div>
+  </article><article class="entry" id="p58" style="--cc:var(--c-infra)">
+  <div class="head"><h3>Linux</h3><span class="cat">インフラ・運用</span></div>
+  <p class="tl">世界を動かすカーネル</p>
+  <ul><li>『ユーザー空間を壊さない』が最重要ルール：変更でユーザーのプログラムが壊れたらカーネル側のバグ</li><li>壊れたという報告があれば、変更を素早く差し戻す実利的な運用</li><li>メンテナ階層による大規模な分散レビュー</li></ul>
+  <p class="lesson"><b>学び</b>『壊れたらこちらのバグ』と責任の所在を明言すると、ユーザーは安心して依存できる</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>Linus Torvaldsの学生時代の趣味のプロジェクト</p>
+   <p><b>やらないこと・トレードオフ：</b>壊れた原因をユーザーのプログラムのせいにすること</p>
+   <p>出典：<a href="https://lwn.net/Articles/962435/" target="_blank" rel="noopener">lwn.net</a></p>
+  </details>
+  <div class="tags"><span class="badge v">Web確認済み</span><button type="button" data-t="compat">#互換性を約束する</button><button type="button" data-t="contrib">#貢献モデルを設計する</button><button type="button" data-t="origin">#個人の痒みから始まる</button></div>
+  </article><article class="entry" id="p59" style="--cc:var(--c-infra)">
+  <div class="head"><h3>Kubernetes</h3><span class="cat">インフラ・運用</span></div>
+  <p class="tl">宣言的なコンテナオーケストレーション</p>
+  <ul><li>望ましい状態を宣言し、コントローラーが現実を近づけ続ける調整ループ</li><li>カスタムリソースなどの拡張性で、コアを肥大化させず周辺で進化</li><li>社内の経験を元に、中立の財団（CNCF）へ寄贈</li></ul>
+  <p class="lesson"><b>学び</b>中立な財団への移管は、競合企業が参加できる土台になる</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>Google社内システムの教訓を外に出す</p>
+
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="interop">#段階的採用と相互運用</button><button type="button" data-t="sustain">#持続性・統治・ライセンス</button><button type="button" data-t="phil">#哲学を明文化する</button></div>
+  </article><article class="entry" id="p60" style="--cc:var(--c-infra)">
+  <div class="head"><h3>Docker</h3><span class="cat">インフラ・運用</span></div>
+  <p class="tl">コンテナを誰でも使えるものにした</p>
+  <ul><li>『ビルド・シップ・ラン』の単純な体験</li><li>Dockerfileという読みやすい宣言形式</li><li>中核部品を独立したプロジェクトや財団へ切り出した</li></ul>
+  <p class="lesson"><b>学び</b>既存技術（Linuxのコンテナ機能）でも、体験を磨けば革命になる</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>PaaS企業の社内技術の公開</p>
+
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="dx">#開発者の幸福を中心に置く</button><button type="button" data-t="simple">#単純さと明示性を優先する</button><button type="button" data-t="sustain">#持続性・統治・ライセンス</button></div>
+  </article><article class="entry" id="p61" style="--cc:var(--c-infra)">
+  <div class="head"><h3>OpenTofu</h3><span class="cat">インフラ・運用</span></div>
+  <p class="tl">オープンなIaCを守るためのTerraformフォーク</p>
+  <ul><li>TerraformのライセンスがBSLに変更されたことを受け、オープンソースのまま続けるためにフォーク</li><li>Linux Foundation配下で中立的に運営</li><li>既存のTerraform構成との互換性を重視</li></ul>
+  <p class="lesson"><b>学び</b>ライセンスは技術と同じくらい、ユーザーの信頼を左右する</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>ライセンス変更への反発</p>
+   <p><b>やらないこと・トレードオフ：</b>特定企業によるライセンスの一方的変更</p>
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="sustain">#持続性・統治・ライセンス</button><button type="button" data-t="user">#ユーザー主権を守る</button><button type="button" data-t="compat">#互換性を約束する</button></div>
+  </article><article class="entry" id="p62" style="--cc:var(--c-infra)">
+  <div class="head"><h3>Ansible</h3><span class="cat">インフラ・運用</span></div>
+  <p class="tl">エージェントレスの構成管理</p>
+  <ul><li>管理対象にエージェントを入れず、SSHだけで動く</li><li>読みやすいYAMLで手順を記述</li><li>シンプルさを最優先の価値に</li></ul>
+  <p class="lesson"><b>学び</b>導入の前提条件を減らすこと自体が最大の機能になる</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>既存の構成管理ツールの複雑さへの不満</p>
+
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="simple">#単純さと明示性を優先する</button><button type="button" data-t="dx">#開発者の幸福を中心に置く</button></div>
+  </article><article class="entry" id="p63" style="--cc:var(--c-infra)">
+  <div class="head"><h3>Nginx</h3><span class="cat">インフラ・運用</span></div>
+  <p class="tl">イベント駆動の高性能Webサーバー</p>
+  <ul><li>少ないリソースで大量の同時接続を処理</li><li>一貫した構文の設定ファイル</li><li>リバースプロキシとしての汎用性</li></ul>
+  <p class="lesson"><b>学び</b>時代の具体的な技術課題を名指しで解決すると一気に広まる</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>大量同時接続（C10K問題）への対処</p>
+
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="perf">#速さをアイデンティティにする</button><button type="button" data-t="origin">#個人の痒みから始まる</button></div>
+  </article><article class="entry" id="p64" style="--cc:var(--c-infra)">
+  <div class="head"><h3>Caddy</h3><span class="cat">インフラ・運用</span></div>
+  <p class="tl">HTTPSが既定のWebサーバー</p>
+  <ul><li>証明書の取得・更新を自動化し、HTTPSを既定に</li><li>メモリ安全な言語で実装</li><li>簡潔な設定ファイル</li></ul>
+  <p class="lesson"><b>学び</b>安全な選択を『既定値』にすると、ユーザー全体の底上げになる</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>Webサーバーを安全に設定することの難しさ</p>
+
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="opinion">#意見のある既定値を選ぶ</button><button type="button" data-t="user">#ユーザー主権を守る</button><button type="button" data-t="dx">#開発者の幸福を中心に置く</button></div>
+  </article><article class="entry" id="p65" style="--cc:var(--c-infra)">
+  <div class="head"><h3>Prometheus</h3><span class="cat">インフラ・運用</span></div>
+  <p class="tl">運用が簡単な監視システム</p>
+  <ul><li>プル型の収集と多次元データモデル</li><li>単一サーバーで動き、分散ストレージに依存しない運用の簡単さ</li><li>請求計算のような100%の正確さが必要な用途には向かないと明記</li></ul>
+  <p class="lesson"><b>学び</b>『向いていない用途』を公式に書くことは、信頼の表明になる</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>SoundCloudでの監視課題</p>
+   <p><b>やらないこと・トレードオフ：</b>完全な正確さが必要な用途</p>
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="nongoal">#やらないことを宣言する</button><button type="button" data-t="simple">#単純さと明示性を優先する</button><button type="button" data-t="scope">#問題起点でスコープを守る</button></div>
+  </article><article class="entry" id="p66" style="--cc:var(--c-infra)">
+  <div class="head"><h3>Grafana</h3><span class="cat">インフラ・運用</span></div>
+  <p class="tl">データソースを選ばない可視化</p>
+  <ul><li>『ビッグテント』哲学：競合製品も含めた多数のデータソースと相互運用</li><li>データを一か所に集めさせず、各データソースのクエリ言語のまま可視化</li><li>プラグイン機構をコミュニティが拡張</li></ul>
+  <p class="lesson"><b>学び</b>競合と繋がることは、弱さではなく最大の差別化になり得る</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>Torkel Ödegaardのサイドプロジェクトから</p>
+   <p><b>やらないこと・トレードオフ：</b>ユーザーを単一ベンダーに閉じ込めること</p>
+   <p>出典：<a href="https://www.infoworld.com/article/3699258/how-grafana-made-observability-accessible.html" target="_blank" rel="noopener">www.infoworld.com</a></p>
+  </details>
+  <div class="tags"><span class="badge v">Web確認済み</span><button type="button" data-t="interop">#段階的採用と相互運用</button><button type="button" data-t="user">#ユーザー主権を守る</button><button type="button" data-t="origin">#個人の痒みから始まる</button></div>
+  </article><article class="entry" id="p67" style="--cc:var(--c-infra)">
+  <div class="head"><h3>OpenTelemetry</h3><span class="cat">インフラ・運用</span></div>
+  <p class="tl">ベンダー中立なテレメトリ標準</p>
+  <ul><li>ミッション・ビジョン・価値観を公開：高品質でポータブルなテレメトリを遍在させる</li><li>ベンダー中立と疎結合：必要な部品だけを選べる</li><li>中核の技術的価値は互換性・安定性・回復力・性能</li></ul>
+  <p class="lesson"><b>学び</b>ミッション→ビジョン→価値観の3層で書くと、抽象から実装判断まで一貫する</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>計装がベンダー固有のエージェントに縛られてきた歴史への反省</p>
+   <p><b>やらないこと・トレードオフ：</b>特定の勝者（ベンダー）を選ばない</p>
+   <p>出典：<a href="https://opentelemetry.io/community/mission/" target="_blank" rel="noopener">opentelemetry.io</a></p>
+  </details>
+  <div class="tags"><span class="badge v">Web確認済み</span><button type="button" data-t="phil">#哲学を明文化する</button><button type="button" data-t="interop">#段階的採用と相互運用</button><button type="button" data-t="user">#ユーザー主権を守る</button><button type="button" data-t="compat">#互換性を約束する</button></div>
+  </article><article class="entry" id="p68" style="--cc:var(--c-infra)">
+  <div class="head"><h3>Nix</h3><span class="cat">インフラ・運用</span></div>
+  <p class="tl">再現可能なパッケージ管理</p>
+  <ul><li>純粋関数的なビルドで、同じ入力なら同じ結果</li><li>宣言的なシステム構成</li><li>ロールバック可能な世代管理</li></ul>
+  <p class="lesson"><b>学び</b>原理から出発したOSSは、思想の一貫性が強みになる</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>作者の博士研究から</p>
+
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="phil">#哲学を明文化する</button><button type="button" data-t="compat">#互換性を約束する</button></div>
+  </article><article class="entry" id="p69" style="--cc:var(--c-infra)">
+  <div class="head"><h3>Envoy</h3><span class="cat">インフラ・運用</span></div>
+  <p class="tl">アプリから透過的なネットワークプロキシ</p>
+  <ul><li>ネットワークはアプリから透過的であるべき、という設計目標</li><li>可観測性を第一級の機能に</li><li>動的設定APIによる拡張</li></ul>
+  <p class="lesson"><b>学び</b>一文の設計目標が、アーキテクチャ全体を方向づける</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>マイクロサービス移行時のネットワークの課題</p>
+
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="phil">#哲学を明文化する</button><button type="button" data-t="interop">#段階的採用と相互運用</button></div>
+  </article><article class="entry" id="p70" style="--cc:var(--c-data)">
+  <div class="head"><h3>PostgreSQL</h3><span class="cat">データベース・データ</span></div>
+  <p class="tl">コミュニティが所有するRDBMS</p>
+  <ul><li>特定企業に支配されない、コミュニティ主導の開発体制</li><li>正しさと標準準拠を重視し、慎重に機能を追加</li><li>拡張機能で本体の外側に進化の余地を残す</li></ul>
+  <p class="lesson"><b>学び</b>『誰のものでもない』体制は、長期的な信頼の源になる</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>大学の研究プロジェクトが起源</p>
+   <p><b>やらないこと・トレードオフ：</b>データの正しさを犠牲にする近道</p>
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="contrib">#貢献モデルを設計する</button><button type="button" data-t="sustain">#持続性・統治・ライセンス</button><button type="button" data-t="interop">#段階的採用と相互運用</button></div>
+  </article><article class="entry" id="p71" style="--cc:var(--c-data)">
+  <div class="head"><h3>SQLite</h3><span class="cat">データベース・データ</span></div>
+  <p class="tl">Small. Fast. Reliable. Choose any three.</p>
+  <ul><li>『Open-Source, not Open-Contribution』：誰でも自由に使えるが、パッチは原則受け付けない</li><li>全コードをパブリックドメインに捧げ、出所を追跡可能に保つ</li><li>伽藍（cathedral）型の開発を公言</li></ul>
+  <p class="lesson"><b>学び</b>貢献の受け方は自由に選べる。受けないなら理由を明示すればよい</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>作者が軍艦向けソフトウェアのために、サーバー不要のDBを作ったことが起源</p>
+   <p><b>やらないこと・トレードオフ：</b>外部からのパッチ受け入れ</p>
+   <p>出典：<a href="https://www.sqlite.org/copyright.html" target="_blank" rel="noopener">www.sqlite.org</a></p>
+  </details>
+  <div class="tags"><span class="badge v">Web確認済み</span><button type="button" data-t="contrib">#貢献モデルを設計する</button><button type="button" data-t="nongoal">#やらないことを宣言する</button><button type="button" data-t="sustain">#持続性・統治・ライセンス</button><button type="button" data-t="phil">#哲学を明文化する</button></div>
+  </article><article class="entry" id="p72" style="--cc:var(--c-data)">
+  <div class="head"><h3>Redis</h3><span class="cat">データベース・データ</span></div>
+  <p class="tl">抽象データ型のためのDSL</p>
+  <ul><li>作者がマニフェストを書いた動機は、機能要望や『なぜこうなっているのか』という質問への答え方に困ったから</li><li>メモリ上のデータ構造と計算量こそが製品の本質</li><li>2024年のライセンス変更でコミュニティのフォーク（Valkey）が生まれた</li></ul>
+  <p class="lesson"><b>学び</b>哲学文書は、要望への『答え方』に困った時が書き時</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>antirezが自分のスタートアップのリアルタイム解析のために開発</p>
+   <p><b>やらないこと・トレードオフ：</b>ディスク中心のDBにはならない</p>
+   <p>出典：<a href="https://oldblog.antirez.com/post/redis-manifesto.html" target="_blank" rel="noopener">oldblog.antirez.com</a></p>
+  </details>
+  <div class="tags"><span class="badge v">Web確認済み</span><button type="button" data-t="phil">#哲学を明文化する</button><button type="button" data-t="scope">#問題起点でスコープを守る</button><button type="button" data-t="sustain">#持続性・統治・ライセンス</button></div>
+  </article><article class="entry" id="p73" style="--cc:var(--c-data)">
+  <div class="head"><h3>DuckDB</h3><span class="cat">データベース・データ</span></div>
+  <p class="tl">分析用のインプロセスDB</p>
+  <ul><li>サーバー不要で、アプリに埋め込んで使える分析DB</li><li>依存の少ない簡単なインストール</li><li>非営利財団が知的財産を保有し、オープンなライセンスを守る</li></ul>
+  <p class="lesson"><b>学び</b>IPを財団に置く設計は、利用者への『ずっとオープン』の保証になる</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>研究所の研究者が、分析用途の組み込みDBを目指した</p>
+
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="simple">#単純さと明示性を優先する</button><button type="button" data-t="sustain">#持続性・統治・ライセンス</button></div>
+  </article><article class="entry" id="p74" style="--cc:var(--c-data)">
+  <div class="head"><h3>ClickHouse</h3><span class="cat">データベース・データ</span></div>
+  <p class="tl">速さがすべての分析DB</p>
+  <ul><li>列指向ストレージと速度への徹底的なこだわり</li><li>実運用の大規模ワークロードから生まれた機能</li><li>性能ベンチマークを公開</li></ul>
+  <p class="lesson"><b>学び</b>社内の極端な要件は、外に出すと強い差別化になる</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>大規模なウェブ解析サービスのため</p>
+
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="perf">#速さをアイデンティティにする</button><button type="button" data-t="origin">#個人の痒みから始まる</button></div>
+  </article><article class="entry" id="p75" style="--cc:var(--c-data)">
+  <div class="head"><h3>Apache Kafka</h3><span class="cat">データベース・データ</span></div>
+  <p class="tl">ログを中心に据えたストリーミング基盤</p>
+  <ul><li>追記型ログという単純な抽象を、データ統合の中心に据える</li><li>作者によるエッセイでその思想を解説</li><li>企業内プロジェクトからApache財団へ</li></ul>
+  <p class="lesson"><b>学び</b>一つの抽象を深く説明するエッセイは、採用の強い後押しになる</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>LinkedIn内のデータパイプラインの乱立</p>
+
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="phil">#哲学を明文化する</button><button type="button" data-t="simple">#単純さと明示性を優先する</button></div>
+  </article><article class="entry" id="p76" style="--cc:var(--c-data)">
+  <div class="head"><h3>Elasticsearch / OpenSearch</h3><span class="cat">データベース・データ</span></div>
+  <p class="tl">ライセンスをめぐって分岐した検索エンジン</p>
+  <ul><li>Elasticsearchのライセンス変更を受け、OpenSearchがフォークとして誕生</li><li>OpenSearchはその後、中立的な財団の下へ</li><li>Elastic側も後にオープンソースライセンスを選択肢に戻した</li></ul>
+  <p class="lesson"><b>学び</b>ライセンス変更は、後で戻しても信頼の回復に時間がかかる</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>クラウド事業者によるただ乗りへの対抗</p>
+
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="sustain">#持続性・統治・ライセンス</button><button type="button" data-t="user">#ユーザー主権を守る</button></div>
+  </article><article class="entry" id="p77" style="--cc:var(--c-data)">
+  <div class="head"><h3>NumPy</h3><span class="cat">データベース・データ</span></div>
+  <p class="tl">Pythonの数値計算の共通語</p>
+  <ul><li>配列を科学計算エコシステムの共通インターフェースに</li><li>NEP（拡張提案）で設計判断を記録</li><li>非営利の財政スポンサーの下で運営</li></ul>
+  <p class="lesson"><b>学び</b>エコシステムの『共通語』になると、置き換えられない存在になる</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>分裂していた数値計算ライブラリの統合</p>
+
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="interop">#段階的採用と相互運用</button><button type="button" data-t="sustain">#持続性・統治・ライセンス</button><button type="button" data-t="phil">#哲学を明文化する</button></div>
+  </article><article class="entry" id="p78" style="--cc:var(--c-data)">
+  <div class="head"><h3>pandas</h3><span class="cat">データベース・データ</span></div>
+  <p class="tl">実用的なデータ分析ライブラリ</p>
+  <ul><li>現場のデータ分析作業から直接生まれたAPI</li><li>非営利の財政スポンサーの下で運営</li><li>破壊的変更は非推奨警告を経て段階的に</li></ul>
+  <p class="lesson"><b>学び</b>実務の具体的な痛みから生まれたAPIは、多少不格好でも広まる</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>作者が金融データ分析の業務で必要に迫られて</p>
+
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="origin">#個人の痒みから始まる</button><button type="button" data-t="compat">#互換性を約束する</button></div>
+  </article><article class="entry" id="p79" style="--cc:var(--c-data)">
+  <div class="head"><h3>Supabase</h3><span class="cat">データベース・データ</span></div>
+  <p class="tl">既存のOSSを組み合わせたBaaS</p>
+  <ul><li>車輪の再発明をせず、Postgresなど実績あるOSSの上に構築</li><li>可能な限り上流のOSSに貢献する</li><li>データはPostgresのまま持ち出せ、ロックインを避ける</li></ul>
+  <p class="lesson"><b>学び</b>『既存の良いものを組み合わせる』もまた明確な思想</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>オープンソースなFirebase代替を求めて</p>
+   <p><b>やらないこと・トレードオフ：</b>独自の新しいDBを作ること</p>
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="interop">#段階的採用と相互運用</button><button type="button" data-t="user">#ユーザー主権を守る</button></div>
+  </article><article class="entry" id="p80" style="--cc:var(--c-ai)">
+  <div class="head"><h3>PyTorch</h3><span class="cat">AI・機械学習</span></div>
+  <p class="tl">使いやすさを最優先するディープラーニング基盤</p>
+  <ul><li>原則1『性能より使いやすさ』：研究者の柔軟性を守ることを優先</li><li>原則2『EasyよりSimple』：暗黙の便利さより、明示的で理解・デバッグしやすい部品</li><li>設計哲学文書を、厳密な規則ではなく意見の相違を解決するための指針と位置づけ</li></ul>
+  <p class="lesson"><b>学び</b>原則は『規則』ではなく『トレードオフの判断指針』として書くと使える</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>研究者が試行錯誤しやすいフレームワークの必要性</p>
+   <p><b>やらないこと・トレードオフ：</b>制約先行（静的形状のみ等）の設計に安易に移ること</p>
+   <p>出典：<a href="https://docs.pytorch.org/docs/main/community/design.html" target="_blank" rel="noopener">docs.pytorch.org</a></p>
+  </details>
+  <div class="tags"><span class="badge v">Web確認済み</span><button type="button" data-t="phil">#哲学を明文化する</button><button type="button" data-t="simple">#単純さと明示性を優先する</button><button type="button" data-t="dx">#開発者の幸福を中心に置く</button></div>
+  </article><article class="entry" id="p81" style="--cc:var(--c-ai)">
+  <div class="head"><h3>TensorFlow</h3><span class="cat">AI・機械学習</span></div>
+  <p class="tl">本番規模の機械学習基盤</p>
+  <ul><li>大規模分散と本番運用を重視</li><li>2系で即時実行（Eager）を標準にし、ユーザーの声に合わせて大転換</li><li>1系から2系への移行コストは大きな教訓になった</li></ul>
+  <p class="lesson"><b>学び</b>方針転換が正しくても、移行の痛みを最小化する設計が不可欠</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>社内の機械学習基盤の公開</p>
+
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="compat">#互換性を約束する</button><button type="button" data-t="dx">#開発者の幸福を中心に置く</button></div>
+  </article><article class="entry" id="p82" style="--cc:var(--c-ai)">
+  <div class="head"><h3>JAX</h3><span class="cat">AI・機械学習</span></div>
+  <p class="tl">合成可能な関数変換</p>
+  <ul><li>grad・jit・vmapなどの変換を自由に組み合わせられる</li><li>NumPyに近いAPIで学習コストを下げる</li><li>小さなコアに強力な概念を集中</li></ul>
+  <p class="lesson"><b>学び</b>少数の直交した概念は、多数の機能より強い</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>研究用途の高速な数値計算</p>
+
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="simple">#単純さと明示性を優先する</button><button type="button" data-t="interop">#段階的採用と相互運用</button></div>
+  </article><article class="entry" id="p83" style="--cc:var(--c-ai)">
+  <div class="head"><h3>scikit-learn</h3><span class="cat">AI・機械学習</span></div>
+  <p class="tl">一貫したAPIの機械学習ライブラリ</p>
+  <ul><li>論文でAPI設計原則を公開：一貫性、内部状態の検査可能性、クラスの乱立を避ける、合成、賢い既定値</li><li>限られたメソッド（fit/predict/transform）をすべての推定器が共有</li><li>データはNumPy配列など標準形式のまま扱う</li></ul>
+  <p class="lesson"><b>学び</b>インターフェースの『一貫性』は、機能の数より長く効く資産</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>非専門家にも使える機械学習ツールの必要性</p>
+   <p><b>やらないこと・トレードオフ：</b>独自のデータ型を増やすこと</p>
+   <p>出典：<a href="https://ar5iv.labs.arxiv.org/html/1309.0238" target="_blank" rel="noopener">ar5iv.labs.arxiv.org</a></p>
+  </details>
+  <div class="tags"><span class="badge v">Web確認済み</span><button type="button" data-t="phil">#哲学を明文化する</button><button type="button" data-t="simple">#単純さと明示性を優先する</button><button type="button" data-t="opinion">#意見のある既定値を選ぶ</button><button type="button" data-t="interop">#段階的採用と相互運用</button></div>
+  </article><article class="entry" id="p84" style="--cc:var(--c-ai)">
+  <div class="head"><h3>Transformers</h3><span class="cat">AI・機械学習</span></div>
+  <p class="tl">あえてDRYに逆らうモデルライブラリ</p>
+  <ul><li>『1モデル1ファイル』方針：推論に必要なコードを1つのファイルに収める</li><li>共通部品の抽象化はあえて拒み、コピーを許容（読む人・改造する人のため）</li><li>公開APIを壊さず、追加的な標準化で進化する</li></ul>
+  <p class="lesson"><b>学び</b>有名な原則（DRY）に逆らう時も、『誰のためか』を説明すれば支持される</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>モデルを読み、改造するユーザーこそが主な顧客だという認識</p>
+   <p><b>やらないこと・トレードオフ：</b>注意機構などを中央集権的に抽象化すること</p>
+   <p>出典：<a href="https://huggingface.co/blog/transformers-design-philosophy" target="_blank" rel="noopener">huggingface.co</a></p>
+  </details>
+  <div class="tags"><span class="badge v">Web確認済み</span><button type="button" data-t="read">#読み手と局所性を重視する</button><button type="button" data-t="phil">#哲学を明文化する</button><button type="button" data-t="contrib">#貢献モデルを設計する</button><button type="button" data-t="compat">#互換性を約束する</button></div>
+  </article><article class="entry" id="p85" style="--cc:var(--c-ai)">
+  <div class="head"><h3>Diffusers</h3><span class="cat">AI・機械学習</span></div>
+  <p class="tl">拡散モデルのための道具箱</p>
+  <ul><li>性能より使いやすさ、EasyよりSimple（PyTorchの哲学を明示的に継承）</li><li>抽象化より、いじりやすく貢献しやすいコード</li><li>必須依存を最小限にした軽量パッケージ</li></ul>
+  <p class="lesson"><b>学び</b>上流の哲学を明示的に継承すると、エコシステム全体の一貫性が生まれる</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>拡散モデルを誰でも扱えるようにするため</p>
+   <p><b>やらないこと・トレードオフ：</b>凝縮された『魔法』のようなコード</p>
+   <p>出典：<a href="https://huggingface.co/docs/diffusers/en/conceptual/philosophy.md" target="_blank" rel="noopener">huggingface.co</a></p>
+  </details>
+  <div class="tags"><span class="badge v">Web確認済み</span><button type="button" data-t="simple">#単純さと明示性を優先する</button><button type="button" data-t="read">#読み手と局所性を重視する</button><button type="button" data-t="contrib">#貢献モデルを設計する</button></div>
+  </article><article class="entry" id="p86" style="--cc:var(--c-ai)">
+  <div class="head"><h3>llama.cpp</h3><span class="cat">AI・機械学習</span></div>
+  <p class="tl">手元のハードウェアでLLMを動かす</p>
+  <ul><li>最小限の依存で、素のC/C++で実装</li><li>一般消費者向けハードウェアでの推論を目標に</li><li>速い試行錯誤と頻繁なリリース</li></ul>
+  <p class="lesson"><b>学び</b>『自分の手元で動かしたい』という個人的欲求は、多くの人と共有されている</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>公開されたモデルを自分のMacで動かしたいという作者の欲求</p>
+   <p><b>やらないこと・トレードオフ：</b>重い依存やフレームワーク</p>
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="simple">#単純さと明示性を優先する</button><button type="button" data-t="user">#ユーザー主権を守る</button><button type="button" data-t="origin">#個人の痒みから始まる</button><button type="button" data-t="perf">#速さをアイデンティティにする</button></div>
+  </article><article class="entry" id="p87" style="--cc:var(--c-ai)">
+  <div class="head"><h3>Ollama</h3><span class="cat">AI・機械学習</span></div>
+  <p class="tl">ローカルLLMを一行で</p>
+  <ul><li>モデルの取得から実行までを一つのコマンドに</li><li>Dockerfileに着想を得たModelfile</li><li>ローカル実行でデータを手元に保つ</li></ul>
+  <p class="lesson"><b>学び</b>既知の体験（Docker）の比喩を借りると学習コストが下がる</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>ローカルLLMの導入の煩雑さ</p>
+
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="dx">#開発者の幸福を中心に置く</button><button type="button" data-t="user">#ユーザー主権を守る</button><button type="button" data-t="simple">#単純さと明示性を優先する</button></div>
+  </article><article class="entry" id="p88" style="--cc:var(--c-ai)">
+  <div class="head"><h3>vLLM</h3><span class="cat">AI・機械学習</span></div>
+  <p class="tl">高スループットなLLM推論サーバー</p>
+  <ul><li>PagedAttentionでGPUメモリを効率化</li><li>OpenAI互換APIで既存コードからそのまま移行</li><li>研究プロジェクトから生まれ、コミュニティで拡大</li></ul>
+  <p class="lesson"><b>学び</b>デファクトのAPIに合わせると、導入障壁がほぼゼロになる</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>LLM推論のコストとスループットの課題</p>
+
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="perf">#速さをアイデンティティにする</button><button type="button" data-t="interop">#段階的採用と相互運用</button></div>
+  </article><article class="entry" id="p89" style="--cc:var(--c-ai)">
+  <div class="head"><h3>LangChain</h3><span class="cat">AI・機械学習</span></div>
+  <p class="tl">LLMアプリの部品を組み合わせるフレームワーク</p>
+  <ul><li>多数のモデル・ツールとの統合</li><li>抽象化が多すぎるという批判を受け、低レベルで制御しやすい設計へ比重を移した</li><li>エコシステムの広さを強みに</li></ul>
+  <p class="lesson"><b>学び</b>早すぎる抽象化は批判を招く。フィードバックで設計を変える柔軟さも重要</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>LLMアプリ開発の定型作業を減らすため</p>
+
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="interop">#段階的採用と相互運用</button><button type="button" data-t="simple">#単純さと明示性を優先する</button></div>
+  </article><article class="entry" id="p90" style="--cc:var(--c-ai)">
+  <div class="head"><h3>ComfyUI</h3><span class="cat">AI・機械学習</span></div>
+  <p class="tl">ノードで組む画像生成パイプライン</p>
+  <ul><li>処理の流れをノードグラフとして完全に可視化</li><li>上級者が細かく制御できる透明性</li><li>ワークフローを共有・再現できる</li></ul>
+  <p class="lesson"><b>学び</b>内部を隠さず見せることが、パワーユーザーの熱狂を生む</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>画像生成の内部処理を細かく制御したいという要求</p>
+
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="read">#読み手と局所性を重視する</button><button type="button" data-t="user">#ユーザー主権を守る</button></div>
+  </article><article class="entry" id="p91" style="--cc:var(--c-ai)">
+  <div class="head"><h3>Open WebUI</h3><span class="cat">AI・機械学習</span></div>
+  <p class="tl">セルフホストのAIチャットUI</p>
+  <ul><li>オフラインでも動くセルフホスト前提</li><li>複数のモデルバックエンドに対応</li><li>拡張機能で機能を追加</li></ul>
+  <p class="lesson"><b>学び</b>『自分のサーバーで動く』はそれだけで強い価値提案</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>ローカルLLMを使いやすいUIで扱いたいという需要</p>
+
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="user">#ユーザー主権を守る</button><button type="button" data-t="interop">#段階的採用と相互運用</button></div>
+  </article><article class="entry" id="p92" style="--cc:var(--c-app)">
+  <div class="head"><h3>Home Assistant</h3><span class="cat">アプリ・プラットフォーム</span></div>
+  <p class="tl">ローカル制御とプライバシーを最優先するホームオートメーション</p>
+  <ul><li>作者は、イデオロギーからではなく、買ったスマート照明をスクリプトで動かしたくて始めたと語る</li><li>5周年の節目にプライバシー・ローカル制御・オープンソース・相互運用を目標として宣言</li><li>後にOpen Homeのビジョン（プライバシー・選択・持続可能性）へ発展。投資家なしで持続可能な開発体制</li></ul>
+  <p class="lesson"><b>学び</b>動機は後から『使命』に育ってよい。節目で言語化し直すことが大事</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>作者の個人的な照明自動化スクリプト</p>
+   <p><b>やらないこと・トレードオフ：</b>クラウド前提の動作</p>
+   <p>出典：<a href="https://community.home-assistant.io/t/thinking-big/69019" target="_blank" rel="noopener">community.home-assistant.io</a></p>
+  </details>
+  <div class="tags"><span class="badge v">Web確認済み</span><button type="button" data-t="user">#ユーザー主権を守る</button><button type="button" data-t="origin">#個人の痒みから始まる</button><button type="button" data-t="sustain">#持続性・統治・ライセンス</button><button type="button" data-t="phil">#哲学を明文化する</button></div>
+  </article><article class="entry" id="p93" style="--cc:var(--c-app)">
+  <div class="head"><h3>Godot</h3><span class="cat">アプリ・プラットフォーム</span></div>
+  <p class="tl">オープンなゲームエンジン</p>
+  <ul><li>貢献者向けベストプラクティス：問題が常に先、問題が実在すること、複雑か頻出であること…</li><li>『問題を探している解決策』を明確に退ける</li><li>よくある用途に応え、まれな用途には扉を開けておく</li></ul>
+  <p class="lesson"><b>学び</b>提案を評価する『共通の語彙』を作ると、PRレビューが感情論にならない</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>スタジオの社内エンジンをオープン化</p>
+   <p><b>やらないこと・トレードオフ：</b>実在しない問題への先回りの実装</p>
+   <p>出典：<a href="https://contributing.godotengine.org/en/latest/engine/guidelines/best_practices.html" target="_blank" rel="noopener">contributing.godotengine.org</a></p>
+  </details>
+  <div class="tags"><span class="badge v">Web確認済み</span><button type="button" data-t="scope">#問題起点でスコープを守る</button><button type="button" data-t="contrib">#貢献モデルを設計する</button><button type="button" data-t="phil">#哲学を明文化する</button></div>
+  </article><article class="entry" id="p94" style="--cc:var(--c-app)">
+  <div class="head"><h3>Blender</h3><span class="cat">アプリ・プラットフォーム</span></div>
+  <p class="tl">コミュニティが買い戻した3DCGスイート</p>
+  <ul><li>開発元の倒産後、コミュニティの寄付で権利を買い取りオープン化</li><li>財団と開発基金で持続的に運営</li><li>自らオープンムービーを制作し、実制作で機能を検証</li></ul>
+  <p class="lesson"><b>学び</b>自分たちでプロダクトを実際に使う企画は、最良の要件定義になる</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>クローズドな社内ツールの存続危機</p>
+
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="sustain">#持続性・統治・ライセンス</button><button type="button" data-t="contrib">#貢献モデルを設計する</button><button type="button" data-t="origin">#個人の痒みから始まる</button></div>
+  </article><article class="entry" id="p95" style="--cc:var(--c-app)">
+  <div class="head"><h3>Excalidraw</h3><span class="cat">アプリ・プラットフォーム</span></div>
+  <p class="tl">手描き風のホワイトボード</p>
+  <ul><li>あえて手描き風にし、完成度を気にせず発想を描ける</li><li>シンプルなUIに徹する</li><li>共同編集をエンドツーエンド暗号化で</li></ul>
+  <p class="lesson"><b>学び</b>見た目の『不完全さ』も、意図すれば価値になる</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>図を素早く描ける道具が欲しかった</p>
+   <p><b>やらないこと・トレードオフ：</b>精密な作図ツールにはならない</p>
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="simple">#単純さと明示性を優先する</button><button type="button" data-t="scope">#問題起点でスコープを守る</button><button type="button" data-t="user">#ユーザー主権を守る</button></div>
+  </article><article class="entry" id="p96" style="--cc:var(--c-app)">
+  <div class="head"><h3>Mastodon</h3><span class="cat">アプリ・プラットフォーム</span></div>
+  <p class="tl">分散型ソーシャルネットワーク</p>
+  <ul><li>単一企業に支配されない分散（フェデレーション）</li><li>広告やアルゴリズム操作に依存しない</li><li>非営利組織として運営</li></ul>
+  <p class="lesson"><b>学び</b>『何で稼がないか』を決めると、プロダクトの形が決まる</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>中央集権的SNSへの問題意識</p>
+   <p><b>やらないこと・トレードオフ：</b>広告ベースの収益化</p>
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="user">#ユーザー主権を守る</button><button type="button" data-t="sustain">#持続性・統治・ライセンス</button><button type="button" data-t="nongoal">#やらないことを宣言する</button></div>
+  </article><article class="entry" id="p97" style="--cc:var(--c-app)">
+  <div class="head"><h3>Tauri</h3><span class="cat">アプリ・プラットフォーム</span></div>
+  <p class="tl">小さく安全なデスクトップアプリ</p>
+  <ul><li>OSのWebViewを使い、配布サイズを小さく</li><li>セキュリティを最優先に設計</li><li>Rustのバックエンド</li></ul>
+  <p class="lesson"><b>学び</b>先行者のトレードオフの逆を取るのは、分かりやすい差別化</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>Electronアプリの肥大化への反省</p>
+   <p><b>やらないこと・トレードオフ：</b>ブラウザエンジンの同梱</p>
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="perf">#速さをアイデンティティにする</button><button type="button" data-t="user">#ユーザー主権を守る</button><button type="button" data-t="scope">#問題起点でスコープを守る</button></div>
+  </article><article class="entry" id="p98" style="--cc:var(--c-app)">
+  <div class="head"><h3>Flutter</h3><span class="cat">アプリ・プラットフォーム</span></div>
+  <p class="tl">自前で描画するクロスプラットフォームUI</p>
+  <ul><li>OSのUI部品に頼らず自前で描画し、どこでも同じ見た目</li><li>ホットリロードによる速い開発サイクル</li><li>単一コードベース</li></ul>
+  <p class="lesson"><b>学び</b>開発ループの速さは、最強の開発者体験</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>モバイル開発の効率化</p>
+
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="dx">#開発者の幸福を中心に置く</button><button type="button" data-t="opinion">#意見のある既定値を選ぶ</button></div>
+  </article><article class="entry" id="p99" style="--cc:var(--c-app)">
+  <div class="head"><h3>Electron</h3><span class="cat">アプリ・プラットフォーム</span></div>
+  <p class="tl">Web技術でデスクトップアプリを</p>
+  <ul><li>Webの知識と資産でデスクトップアプリを作れる</li><li>ChromiumとNode.jsを同梱し、環境差を吸収</li><li>財団配下で運営</li></ul>
+  <p class="lesson"><b>学び</b>『誰でも作れる』を選べば、別の軸（重さ）を明示的に諦めることになる</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>GitHubのエディタ（Atom）のために作られた</p>
+   <p><b>やらないこと・トレードオフ：</b>配布サイズやメモリの小ささは優先しない</p>
+   <p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>
+  </details>
+  <div class="tags"><span class="badge k">知識ベース</span><button type="button" data-t="dx">#開発者の幸福を中心に置く</button><button type="button" data-t="interop">#段階的採用と相互運用</button></div>
+  </article></div>
+</div></section>
+
+<section id="apply"><div class="wrap">
+  <h2>自分のOSSに取り入れる</h2>
+  <p class="prose">100のプロジェクトから見えてきた実践を、一般的な手順とテンプレートにまとめました。最初から全部書く必要はありません。多くのプロジェクトは、要望や議論が増えてきた節目で哲学を言語化しています。</p>
+
+  <ol class="steps">
+    <li><b>解く問題を1文で書く。</b>Ghosttyの「速さ・機能・ネイティブUIのうち2つしか選べない」のように、既存の選択肢の不満として書くと伝わりやすくなります。</li>
+    <li><b>誰のためか、誰のためではないかを書く。</b>Astroはコンテンツ中心のサイト向けと明言し、アプリ向けフレームワークとは違うトレードオフを取ると説明しています。</li>
+    <li><b>原則を3〜5個、「AよりB」の形で書く。</b>PyTorchの「性能より使いやすさ」、Railsの「安定より進歩」のように、捨てる側も書くと判断に使えます。</li>
+    <li><b>やらないこと（Non-goals）を書く。</b>TypeScriptやNeovimのように一覧にしておくと、要望を断るときに個人の好みではなく方針として説明できます。</li>
+    <li><b>互換性の約束を、範囲つきで書く。</b>公開APIの境界（命名規則やディレクトリ）を決め、そこだけは壊さないと約束します。</li>
+    <li><b>貢献の受け方と、判断が割れたときのルールを書く。</b>Godotの「問題が先」、Neovimの「迷ったら互換性、ただし利益が極めて大きければ使いやすさ」が参考になります。</li>
+    <li><b>自分の関わり方を正直に書く。</b>Ghosttyは作者の余暇の情熱プロジェクトだと明記しています。対応の速さに期待値を合わせることが、燃え尽きを防ぎます。</li>
+  </ol>
+
+  <div class="apply">
+    <div class="tpl">
+      <h3>PHILOSOPHY.md テンプレート</h3>
+      <button class="copy" id="copyBtn" type="button">コピー</button>
+      <pre id="tpl"># Philosophy
+
+## 解く問題
+既存の〇〇は△△か□□のどちらかしか選べない。
+このプロジェクトは両方を満たすためにある。
+
+## 誰のためのものか
+- 対象: 〇〇な人
+- 対象外: △△を求める人（代わりに □□ が向いている）
+
+## 原則（上ほど優先）
+1. A より B — 理由を1〜2文で
+2. C より D — 理由
+3. E より F — 理由
+
+## やらないこと（Non-goals）
+- 〇〇はしない。代わりに △△ で実現できる
+- 設定オプションは原則増やさない
+
+## 互換性の約束
+- 公開APIは `xxx_` 接頭辞のもののみ
+- マイナー版では公開APIを壊さない
+- 約束しないもの: 内部API、性能、出力の細部
+
+## 貢献について
+- 新機能は、実在する問題の説明から始めてください
+- 受け入れにくいもの: 〇〇、△△
+
+## 判断が割れたとき
+互換性を優先する。ただし利益が非常に大きい場合は
+使いやすさを優先する。
+
+## 関わり方
+個人が余暇で開発しています。返信には時間がかかる
+ことがあります。</pre>
+    </div>
+    <div>
+      <h3>見直しチェックリスト</h3>
+      <p class="progress" id="prog">0 / 10 項目 完了（このブラウザに保存されます）</p>
+      <ul class="check" id="check"><li><label><input type="checkbox" data-i="0"><span>解く問題を1文で説明できる<small>READMEの最初の段落で伝わるか</small></span></label></li><li><label><input type="checkbox" data-i="1"><span>対象ユーザーと対象外のユーザーを書いた<small>対象外には代替手段も添える</small></span></label></li><li><label><input type="checkbox" data-i="2"><span>原則を「AよりB」の形で3〜5個書いた<small>捨てる側も明記する</small></span></label></li><li><label><input type="checkbox" data-i="3"><span>やらないこと（Non-goals）を書いた<small>断った要望の理由から作るとよい</small></span></label></li><li><label><input type="checkbox" data-i="4"><span>公開APIの境界を決めた<small>接頭辞・モジュール・CLIの引数など</small></span></label></li><li><label><input type="checkbox" data-i="5"><span>互換性の約束と、約束しない範囲を書いた<small>性能や内部実装は対象外にしてよい</small></span></label></li><li><label><input type="checkbox" data-i="6"><span>貢献の受け方を書いた<small>歓迎するもの・受け入れにくいもの</small></span></label></li><li><label><input type="checkbox" data-i="7"><span>判断が割れたときのタイブレーク規則を決めた<small>迷ったらどちらを優先するか</small></span></label></li><li><label><input type="checkbox" data-i="8"><span>自分の関わり方（時間・頻度）を書いた<small>期待値を合わせて燃え尽きを防ぐ</small></span></label></li><li><label><input type="checkbox" data-i="9"><span>ライセンスと、将来の運営の考えを決めた<small>関われなくなったときの方針</small></span></label></li></ul>
+    </div>
+  </div>
+
+  <div class="talk" style="margin-top:36px">
+    <p class="talk-title">まとめの会話</p>
+    <div class="row r"><span class="who">霊夢</span><p class="say">結局、全部をいっぺんに真似しなくていいのよね？</p></div>
+    <div class="row m"><span class="who">魔理沙</span><p class="say">ああ。Home Assistantの作者だって、最初はイデオロギーじゃなく、買った照明をスクリプトで動かしたかっただけだと言ってる。それが5周年でプライバシーとローカル制御という目標になって、今は非営利の財団がそれを守ってる。</p></div>
+    <div class="row r"><span class="who">霊夢</span><p class="say">最初は自分の困りごとでいい。育ってきたら、節目で言葉にし直す、と。</p></div>
+    <div class="row m"><span class="who">魔理沙</span><p class="say">そうだ。まずは「やらないこと」を3つ書くところから始めてみるといいぜ。それだけで、次に来る要望への答え方が決まるからな。</p></div>
+  </div>
+</div></section>
+
+<section id="sources"><div class="wrap">
+  <h2>出典と注意事項</h2>
+  <p class="note">以下は今回Webで確認した資料です（一部は二次資料を含みます）。「知識ベース」の項目は一般に知られた情報を整理したもので、ライセンスや運営体制は変わることがあります。引用や判断に使う前に、各プロジェクトの最新の公式情報を確認してください。本文中の表現は各資料の要約・意訳です。</p>
+  <ul class="sources" id="srcList"><li><b>Go</b>：<a href="https://go.dev/doc/go1compat" target="_blank" rel="noopener">go.dev/doc/go1compat</a></li><li><b>Rust</b>：<a href="https://doc.Rust-lang.org/edition-guide/editions/index.html" target="_blank" rel="noopener">doc.Rust-lang.org/edition-guide/editions/index.html</a></li><li><b>TypeScript</b>：<a href="https://github.com/microsoft/TypeScript/wiki/TypeScript-Design-Goals" target="_blank" rel="noopener">github.com/microsoft/TypeScript/wiki/TypeScript-Design-Goals</a></li><li><b>Zig</b>：<a href="https://www.luisllamas.es/en/the-zen-of-zig/" target="_blank" rel="noopener">www.luisllamas.es/en/the-zen-of-zig/</a></li><li><b>Vue</b>：<a href="https://www.noze.it/en/insights/vuejs-open-source/" target="_blank" rel="noopener">www.noze.it/en/insights/vuejs-open-source/</a></li><li><b>htmx</b>：<a href="https://htmx.org/essays/all" target="_blank" rel="noopener">htmx.org/essays/all</a></li><li><b>Astro</b>：<a href="https://v4.docs.astro.build/en/concepts/why-astro/" target="_blank" rel="noopener">v4.docs.astro.build/en/concepts/why-astro/</a></li><li><b>Ruby on Rails</b>：<a href="https://rubyonrails.org/doctrine" target="_blank" rel="noopener">rubyonrails.org/doctrine</a></li><li><b>Django</b>：<a href="https://docs.djangoproject.com/en/stable/misc/design-philosophies/" target="_blank" rel="noopener">docs.djangoproject.com/en/stable/misc/design-philosophies/</a></li><li><b>esbuild</b>：<a href="https://esbuild.github.io/faq" target="_blank" rel="noopener">esbuild.github.io/faq</a></li><li><b>Prettier</b>：<a href="https://prettier.io/docs/option-philosophy" target="_blank" rel="noopener">prettier.io/docs/option-philosophy</a></li><li><b>Black</b>：<a href="https://github.com/psf/black/blob/7e4c6bf71fffc36ead970afde46a726144515e87/README.md" target="_blank" rel="noopener">github.com/psf/black/blob/7e4c6bf71fffc36ead970afde46a726144515e87/REA…</a></li><li><b>Biome</b>：<a href="https://v1.biomejs.dev/formatter/option-philosophy" target="_blank" rel="noopener">v1.biomejs.dev/formatter/option-philosophy</a></li><li><b>Neovim</b>：<a href="https://www.github.com/neovim/neovim.github.io/blob/master/charter.html" target="_blank" rel="noopener">www.github.com/neovim/neovim.github.io/blob/master/charter.html</a></li><li><b>Ghostty</b>：<a href="https://mitchellh.com/writing/ghostty-non-profit" target="_blank" rel="noopener">mitchellh.com/writing/ghostty-non-profit</a></li><li><b>Homebrew</b>：<a href="https://github.com/Homebrew/brew/blob/bd6fb88ddc72a0de4c27f65e60a82790a5d87f3f/docs/Acceptable-Formulae.md" target="_blank" rel="noopener">github.com/Homebrew/brew/blob/bd6fb88ddc72a0de4c27f65e60a82790a5d87f3f…</a></li><li><b>curl</b>：<a href="https://simonwillison.net/2025/Apr/8/writing-c-for-curl/" target="_blank" rel="noopener">simonwillison.net/2025/Apr/8/writing-c-for-curl/</a></li><li><b>Linux</b>：<a href="https://lwn.net/Articles/962435/" target="_blank" rel="noopener">lwn.net/Articles/962435/</a></li><li><b>Grafana</b>：<a href="https://www.infoworld.com/article/3699258/how-grafana-made-observability-accessible.html" target="_blank" rel="noopener">www.infoworld.com/article/3699258/how-grafana-made-observability-acces…</a></li><li><b>OpenTelemetry</b>：<a href="https://opentelemetry.io/community/mission/" target="_blank" rel="noopener">opentelemetry.io/community/mission/</a></li><li><b>SQLite</b>：<a href="https://www.sqlite.org/copyright.html" target="_blank" rel="noopener">www.sqlite.org/copyright.html</a></li><li><b>Redis</b>：<a href="https://oldblog.antirez.com/post/redis-manifesto.html" target="_blank" rel="noopener">oldblog.antirez.com/post/redis-manifesto.html</a></li><li><b>PyTorch</b>：<a href="https://docs.pytorch.org/docs/main/community/design.html" target="_blank" rel="noopener">docs.pytorch.org/docs/main/community/design.html</a></li><li><b>scikit-learn</b>：<a href="https://ar5iv.labs.arxiv.org/html/1309.0238" target="_blank" rel="noopener">ar5iv.labs.arxiv.org/html/1309.0238</a></li><li><b>Transformers</b>：<a href="https://huggingface.co/blog/transformers-design-philosophy" target="_blank" rel="noopener">huggingface.co/blog/transformers-design-philosophy</a></li><li><b>Diffusers</b>：<a href="https://huggingface.co/docs/diffusers/en/conceptual/philosophy.md" target="_blank" rel="noopener">huggingface.co/docs/diffusers/en/conceptual/philosophy.md</a></li><li><b>Home Assistant</b>：<a href="https://community.home-assistant.io/t/thinking-big/69019" target="_blank" rel="noopener">community.home-assistant.io/t/thinking-big/69019</a></li><li><b>Godot</b>：<a href="https://contributing.godotengine.org/en/latest/engine/guidelines/best_practices.html" target="_blank" rel="noopener">contributing.godotengine.org/en/latest/engine/guidelines/best_practice…</a></li></ul>
+</div></section>
+
+<footer><div class="wrap"><p><a href="../index.html">← thinking トップへ戻る</a></p><p>2026-09-23 作成。分類と「学び」は資料をもとにした解釈を含みます。</p></div></footer>
+
+<script>
+const D = [
+{n:"Python",c:"lang",tl:"読みやすさを言語の中心に置いた汎用言語",p:["PEP 20『The Zen of Python』で美学を短い格言として明文化（暗黙より明示、など）","変更はPEP（提案文書）で議論し、決定の理由を記録として残す","創始者の引退後はSteering Councilによる合議制へ移行"],m:"Guido van Rossumが年末休暇の趣味として始めたプロジェクト",ng:"同じことをする明白な方法は一つであるべき、とし表現の自由度より一貫性を取る",l:"格言レベルの短い原則は、議論の共通言語として何十年も効き続ける",t:["phil","simple","read"],v:0},
+{n:"Go",c:"lang",tl:"大規模開発のための、退屈で速い言語",p:["Go 1互換性の約束：Go 1仕様に沿って書かれたコードは将来も変更なしで動き続けることを意図","gofmtで書式を1つに固定し、スタイル論争そのものをなくした","提案プロセスでは、互換性の約束を破らないことが前提条件"],m:"Google社内の遅いビルドと複雑さへの不満から設計された",ng:"約束は『ソースレベル』の互換であり、バイナリ互換や性能は保証しないと範囲を明記",l:"約束の『範囲』まで書くと、約束は守れるものになる",t:["compat","opinion","simple"],v:1,s:"https://go.dev/doc/go1compat"},
+{n:"Rust",c:"lang",tl:"安全性と性能を両立させるシステム言語",p:["1.0以降『stability without stagnation（停滞なき安定）』を中核の約束に","非互換な変更は、クレート単位でオプトインするEditionにまとめて導入","異なるEditionのクレート同士がシームレスに連携できることを最重要ルールに"],m:"Graydon Hoareの個人プロジェクトとして始まり、Mozillaの支援で本格化",ng:"Editionで変えるのは表層的な部分に限り、エコシステムを分断しない",l:"破壊的変更を『いつ採用するか』はユーザーに選ばせると受け入れられやすい",t:["compat","phil","sustain"],v:1,s:"https://doc.Rust-lang.org/edition-guide/editions/index.html"},
+{n:"TypeScript",c:"lang",tl:"JavaScriptに型を足すだけ、に徹する言語",p:["公式WikiにDesign Goalsと並べて『Non-goals』を明記","型は完全に消去可能。実行時の挙動を変えず、読みやすいJavaScriptを出力","健全（sound）な型システムより、正しさと生産性のバランスを選ぶ"],m:"大規模なJavaScript開発を支えるためにMicrosoftが開発",ng:"実行時型情報の付与、独自ランタイムライブラリ、エンドツーエンドのビルドパイプラインは提供しない",l:"Non-goalsの一覧は、機能要望を断るときの最強の根拠になる",t:["nongoal","phil","compat","interop"],v:1,s:"https://github.com/microsoft/TypeScript/wiki/TypeScript-Design-Goals"},
+{n:"Zig",c:"lang",tl:"隠れた処理のない、Cの現代的な代替",p:["zig zenコマンドで原則を表示：意図を正確に伝える、エッジケースは重要、書くより読むことを優先…","隠れた制御フローも隠れたメモリ割り当てもない（見えないものは起きない）","非営利財団で開発を支える体制"],m:"Andrew Kelleyが既存言語の暗黙の挙動に不満を持ち開始",ng:"演算子オーバーロードや例外など、読み手に見えない振る舞いを持ち込まない",l:"原則をツール自体に埋め込む（CLIで表示する）と、文化として定着する",t:["phil","simple","read","sustain"],v:1,s:"https://www.luisllamas.es/en/the-zen-of-zig/"},
+{n:"Ruby",c:"lang",tl:"プログラマーの幸せのための言語",p:["まつもとゆきひろ氏が、機械の効率より『楽しく書けること』を優先して設計","同じことを複数の書き方で表現できる表現力を尊重","Railsの思想（プログラマーの幸福）の源流になった"],m:"1993年に日本で誕生。自分が好きになれる言語が欲しいという個人的動機",ng:"唯一の正解より表現の豊かさを取り、書き手ごとの流儀の差を許容する",l:"『誰を幸せにするか』を1行で言えるプロダクトは強い",t:["dx","origin","phil"],v:0},
+{n:"Kotlin",c:"lang",tl:"実用主義のJVM言語",p:["Javaとの相互運用を重視し、既存資産を捨てずに段階的に移行できる","null安全など、実務で痛い問題から優先して解決","JetBrains自身が自社IDE開発で使う（ドッグフーディング）"],m:"JetBrainsが自社の大規模Javaコードの生産性を上げたかった",ng:"学術的な新しさより、現場の実用性を優先",l:"自分が毎日使うことで、優先順位が自然に正しくなる",t:["interop","dx","origin"],v:0},
+{n:"Elixir",c:"lang",tl:"Erlang VM上の生産性重視言語",p:["Erlang/OTPの堅牢さに、開発者の生産性と拡張性を足す","マクロによる拡張性で、言語本体を大きくせずエコシステム側で進化","言語の主要な目標は達成したとして、大規模な破壊的変更に慎重な姿勢を示した"],m:"José ValimがRailsでの経験から、並行性に強い生産的な言語を求めた",ng:"言語本体に機能を積み増さず、ライブラリへ委ねる",l:"コアの『完成』を宣言して小さく保つ、という選択肢もある",t:["compat","scope","dx"],v:0},
+{n:"Node.js",c:"lang",tl:"ノンブロッキングI/OのJavaScriptランタイム",p:["『小さなコア』思想：多くの機能をnpmエコシステムに委ねる","イベント駆動・非同期I/Oを一貫したモデルで提供","財団配下で、技術運営委員会（TSC）による合議制"],m:"Ryan Dahlが、アップロード進捗の表示のような単純なことが難しい既存サーバーに不満を持ったこと",ng:"標準ライブラリを肥大化させない（その結果、依存の多さという新しい問題も生んだ）",l:"小さなコアは成長を加速させるが、依存の品質という別の責任を生む",t:["scope","sustain","origin"],v:0},
+{n:"Deno",c:"lang",tl:"Node.jsの反省から生まれたランタイム",p:["作者自身がNodeの設計上の後悔を講演で公に語り、それを設計に反映","デフォルトで安全：ファイルやネットワークへのアクセスは明示的な許可が必要","独自APIよりWeb標準APIを優先し、TypeScriptをそのまま実行"],m:"Ryan Dahlの講演『Nodeについて後悔している10のこと』",ng:"独自API・暗黙の全権限付与",l:"過去の自分の失敗を公開で振り返ることは、次のプロダクトの最良の設計書になる",t:["phil","user","origin"],v:0},
+{n:"Bun",c:"lang",tl:"速さを核にしたオールインワンJSツールキット",p:["ランタイム・パッケージマネージャ・バンドラ・テストランナーを1つに統合","速度をプロダクトのアイデンティティに","Node.js互換を重視し、乗り換えコストを下げる"],m:"JavaScriptツールチェーンの遅さと断片化への不満",ng:"—",l:"『遅い』『バラバラ』という共通の痛みは、それ自体がコンセプトになる",t:["perf","interop","dx"],v:0},
+{n:"React",c:"front",tl:"宣言的UIのためのコンポーネントライブラリ",p:["UIを状態の関数として宣言的に記述する","開発元の社内で大量のコンポーネントに使い続けること（ドッグフーディング）が安定性を担保","非推奨化は警告と自動移行ツール（codemod）で段階的に進める"],m:"Facebookの複雑なUIの状態管理を解決するため",ng:"長くビュー層に集中し、ルーティングなどはコア外に置いた",l:"自分が最大のユーザーであることは、互換性を守る強い動機になる",t:["compat","dx","origin"],v:0},
+{n:"Vue",c:"front",tl:"段階的に採用できるプログレッシブ・フレームワーク",p:["『Progressive』：ビュー層だけのコアから始め、必要に応じてルーターや状態管理を足せる","既存プロジェクトへ部分導入できることを最初からの設計目標に","スポンサー支援による独立したプロジェクト運営"],m:"Evan YouがAngularJSでの経験から、重い構成や部分導入の難しさを感じたこと",ng:"最初から全部を押しつけない",l:"『小さく始めて大きく育てられる』導入曲線は、それ自体が採用理由になる",t:["interop","dx","sustain","origin"],v:1,s:"https://www.noze.it/en/insights/vuejs-open-source/"},
+{n:"Svelte",c:"front",tl:"消えるフレームワーク：コンパイラとしてのUI",p:["仕事をブラウザでの実行時ではなく、ビルド時のコンパイラで行う","書くコード量を減らすことを重視","リアクティビティを言語のように自然に扱うことを追求"],m:"Rich Harrisがニュースのインタラクティブ表現で、軽さと表現力の両立を求めた",ng:"実行時ランタイムに依存する仮想DOM方式を採らない",l:"『どこで仕事をするか』を変えるだけで、新しいカテゴリーが生まれる",t:["perf","simple","dx"],v:0},
+{n:"Angular",c:"front",tl:"大規模開発のための全部入りプラットフォーム",p:["ルーター・フォーム・HTTP・テストまで公式に揃えた一体型","予測可能なリリース周期と明文化された非推奨ポリシー","AngularJSからの非互換な全面刷新は大きな反発を招き、以後は移行性を重視"],m:"Googleの大規模アプリ開発の需要",ng:"—",l:"全面書き直しの代償は大きい。移行パスは機能と同じくらい重要",t:["compat","opinion","sustain"],v:0},
+{n:"Solid",c:"front",tl:"仮想DOMなしの細粒度リアクティビティ",p:["状態変化を必要な箇所だけに伝える細粒度の更新","Reactに近い書き味で学習コストを下げる","ベンチマークを公開し、主張を数字で示す"],m:"Ryan Carniatoのリアクティビティ研究",ng:"仮想DOMを使わない",l:"既存の書き味を借りて中身だけ変えると、乗り換えの心理的障壁が下がる",t:["perf","interop"],v:0},
+{n:"Preact",c:"front",tl:"ほぼ同じAPIで極小サイズ",p:["Reactとほぼ互換のAPIを保ちつつ、サイズを極小に保つ","サイズ予算そのものが設計制約であり、機能追加の判断基準","互換レイヤーで既存資産を活かせる"],m:"軽量なReact代替の必要性",ng:"サイズを大きく増やす機能は入れない",l:"数値の制約（サイズ・速度）は、スコープを守る最も分かりやすい盾",t:["scope","perf","interop"],v:0},
+{n:"htmx",c:"front",tl:"HTMLに立ち返るハイパーメディア志向",p:["Locality of Behaviour：コードの振る舞いは、その場所を見ただけで分かるべき","ビルドステップを持たない理由などをエッセイで説明し続ける","自分たちへの批判（『htmx sucks』）までエッセイ一覧に並べる率直さ"],m:"前身intercooler.jsから続く、SPA偏重のWebへの問題提起",ng:"ビルド工程や独自の状態管理を持ち込まない",l:"エッセイで『なぜ』を発信し続けると、機能より思想でファンがつく",t:["phil","read","simple"],v:1,s:"https://htmx.org/essays/all"},
+{n:"Astro",c:"front",tl:"コンテンツ中心サイトのためのWebフレームワーク",p:["5つの設計原則：コンテンツ駆動・サーバーファースト・デフォルトで速い・使いやすい・開発者志向","遅いサイトを作るのが不可能であることを目指す","特定のUIフレームワークに縛られない（React・Vue・Svelteなどを併用可）"],m:"JavaScriptを出しすぎる現代的フレームワークへの反省",ng:"アプリ特化型フレームワークとは違う、コンテンツ重視のトレードオフを明示",l:"『誰向けではないか』を言うと、得意領域で圧倒的になれる",t:["phil","nongoal","perf","interop"],v:1,s:"https://v4.docs.astro.build/en/concepts/why-astro/"},
+{n:"Next.js",c:"front",tl:"規約で動くReactフルスタックフレームワーク",p:["ファイル配置がそのままルーティングになる規約ベース","ゼロコンフィグで始められることを重視","ホスティング企業が開発を主導し、事業とOSSが一体"],m:"Reactアプリの本番構成の煩雑さを解消",ng:"—",l:"企業主導OSSは速く進むが、中立性への信頼をどう担保するかが課題になる",t:["opinion","dx","sustain"],v:0},
+{n:"Tailwind CSS",c:"front",tl:"ユーティリティ・ファーストのCSS",p:["小さなユーティリティクラスの組み合わせで設計する","作者のエッセイで『関心の分離』の常識に正面から異論を述べた","有料のUIキット販売でOSS本体の開発資金をまかなう"],m:"Adam WathanがCSSの再利用と保守の難しさに悩んだ経験",ng:"—",l:"常識への異論は、理由を長文で書けば支持に変わる",t:["phil","opinion","sustain"],v:0},
+{n:"Three.js",c:"front",tl:"WebGLを誰でも使える3Dライブラリ",p:["低レベルなWebGLを簡潔なAPIで包む","豊富な公式サンプルが最大のドキュメント","長期にわたる小さな継続的改善"],m:"Web上の3D表現を身近にしたいという作者の動機",ng:"—",l:"動くサンプル集は、どんな説明文よりも採用を後押しする",t:["dx","origin"],v:0},
+{n:"Ruby on Rails",c:"back",tl:"設定より規約、のWebフレームワーク",p:["Rails Doctrineで9つの柱を明文化（プログラマーの幸福、設定より規約、メニューはおまかせ…）","『鋭利なナイフを提供する』：ユーザーを信頼して強力な機能を渡す","『安定より進歩』を柱の一つとして明言"],m:"DHHがBasecampの開発から抽出したフレームワーク",ng:"万人向けの中立的な道具箱ではなく、意見の詰まった一式を出す",l:"価値観の優先順位（安定より進歩、など）まで書くと判断がぶれない",t:["phil","opinion","dx","origin"],v:1,s:"https://rubyonrails.org/doctrine"},
+{n:"Django",c:"back",tl:"締め切りのある完璧主義者のためのフレームワーク",p:["設計哲学を公式ドキュメント化：疎結合、少ないコード、DRY、暗黙より明示、一貫性","『魔法』は大きな利便性がある時だけ、学習者を混乱させない形でのみ使う","非営利財団が商標と運営を支える"],m:"新聞社の締め切りに追われるWeb開発の現場から誕生",ng:"理由のない魔法は入れない",l:"設計哲学の目的を『過去を説明し、未来を導く』と定義すると書きやすい",t:["phil","simple","sustain","origin"],v:1,s:"https://docs.djangoproject.com/en/stable/misc/design-philosophies/"},
+{n:"Laravel",c:"back",tl:"Web職人のためのPHPフレームワーク",p:["美しく表現力のある構文と開発者体験を重視","周辺の公式有料サービスで持続性を確保","規約と一体化したツール群"],m:"Taylor OtwellがPHPで快適に書ける環境を求めた",ng:"—",l:"周辺の有料サービスで本体を無料に保つモデルは、個人発OSSでも現実的",t:["dx","opinion","sustain"],v:0},
+{n:"Flask",c:"back",tl:"マイクロフレームワーク",p:["コアは小さくシンプルに、拡張で広げる","DBやフォームなど多くの決定をユーザーに委ねる","明快なドキュメントと読みやすいコード"],m:"エイプリルフールのジョークとして公開したものが、本物の需要を掘り当てた",ng:"フルスタックの一体型にはならない",l:"軽い試作の公開が、そのまま需要検証になることがある",t:["scope","simple","origin"],v:0},
+{n:"FastAPI",c:"back",tl:"型ヒントと標準に乗るPython API",p:["OpenAPIやJSON Schemaなど既存の標準の上に構築","Pythonの型ヒントでエディタ補完と入力検証を同時に得る","ドキュメントで設計の根拠や代替案との比較を丁寧に説明"],m:"作者が既存フレームワークの良い点を組み合わせたかった",ng:"独自仕様を発明しない",l:"標準に乗ると、エコシステムの力を丸ごと借りられる",t:["interop","dx","phil"],v:0},
+{n:"Express",c:"back",tl:"高速・非独断・ミニマルなWebフレームワーク",p:["最小限の機能とミドルウェアの組み合わせ","構造を押しつけない（unopinionated）設計","長期にわたる安定したAPI"],m:"Node初期のWeb開発の基盤として",ng:"構造やディレクトリ規約を強制しない",l:"『意見を持たない』も明確な方針。ただし構成の自由度の代償は利用者が払う",t:["simple","scope","compat"],v:0},
+{n:"Spring Boot",c:"back",tl:"意見のある既定値ですぐ動くJava",p:["意見のある既定値（opinionated defaults）で設定を最小化","スターター依存で必要な構成をまとめて提供","既定値を後から上書きできる逃げ道も用意"],m:"Springの設定の重さへの反省",ng:"—",l:"既定値に意見を込めつつ、上書きの道を残すのが大規模利用の鍵",t:["opinion","dx"],v:0},
+{n:"Phoenix",c:"back",tl:"生産性と性能を両立するElixirのWebフレームワーク",p:["生産性を犠牲にせず、リアルタイム性と高い性能を実現","LiveViewでサーバー中心のインタラクティブUI","Erlang VMの特性を活かした設計"],m:"Chris McCordのリアルタイムWebへの関心",ng:"—",l:"基盤技術の強みを前面に出すと、差別化が明確になる",t:["perf","dx"],v:0},
+{n:"NestJS",c:"back",tl:"構造を持ったNode.jsサーバーフレームワーク",p:["Angularに着想を得たモジュール・DI構造","TypeScriptファースト","大規模チームでの保守性を重視"],m:"Nodeのサーバー開発に足りない『アーキテクチャ』を補う",ng:"—",l:"他分野の成功パターンを輸入するのは有効な差別化",t:["opinion","interop"],v:0},
+{n:"esbuild",c:"tool",tl:"極端に速いJSバンドラー",p:["READMEで、既存ツールは本来より10〜100倍遅いと問題提起し、ビルド性能の新時代を主目標に","FAQで『なぜ速いか』を詳細に説明","性能を損なう機能追加には慎重"],m:"Evan Wallaceがビルドツールの遅さに問題意識を持った",ng:"何でもできる万能バンドラーは目指さない",l:"一つの指標（速さ）に振り切ると、機能要望を断る基準も明確になる",t:["perf","scope","nongoal"],v:1,s:"https://esbuild.github.io/faq"},
+{n:"Vite",c:"tool",tl:"次世代フロントエンドツーリング",p:["開発時はネイティブESMでバンドルせず即起動","本番ビルドは実績あるツールに任せる実用主義","フレームワーク非依存で、多くのフレームワークの基盤に"],m:"Evan Youが開発サーバーの起動待ちに不満を持ったこと",ng:"—",l:"開発体験の『待ち時間』は、最も説得力のある改善対象",t:["perf","dx","interop"],v:0},
+{n:"webpack",c:"tool",tl:"すべてをモジュールとして扱うバンドラー",p:["ローダーとプラグインで何でも組み込める拡張性","柔軟さを最大化した結果、設定の複雑さが課題に","後続ツールが『ゼロコンフィグ』を掲げるきっかけにもなった"],m:"大規模フロントエンドの依存管理",ng:"—",l:"柔軟性は強みだが、既定値がないと導入障壁になる（反面教師としても学べる）",t:["interop","opinion"],v:0},
+{n:"Babel",c:"tool",tl:"次世代のJavaScriptを今日使うためのコンパイラ",p:["プラグイン構造で新しい構文を段階的に試せる","言語標準化の実験場として機能","膨大な利用に対して資金が不足していることを公開ブログで訴えた"],m:"新しいJS構文を古い環境で使いたいという需要",ng:"—",l:"利用者数と資金は比例しない。持続性は早めに設計すべき",t:["sustain","interop"],v:0},
+{n:"Prettier",c:"tool",tl:"議論を終わらせるためのコードフォーマッター",p:["Option Philosophy：既存オプションは歴史的経緯であり、今後は増やさないと宣言","オプションが増えるほど、スタイル論争がオプション論争に移るだけだと説明","GitHubの反応数は声なきユーザーを代表しないと気づいた経緯も記録"],m:"コードスタイルをめぐる終わりのない議論を止めたかった",ng:"何でも好みどおりに整形する万能ツールにはならない",l:"『なぜ要望を受けないか』を文書化すると、同じ議論を繰り返さずに済む",t:["nongoal","opinion","phil"],v:1,s:"https://prettier.io/docs/option-philosophy"},
+{n:"Black",c:"tool",tl:"妥協しないPythonフォーマッター",p:["手作業の整形の細部を委ねる代わりに、速さ・決定性・議論からの自由を得る、という取引を提示","設定項目は意図的に限定し、めったに増やさない","整形前後でコードの意味が変わらないことをASTで確認する安全策"],m:"スタイル議論の時間を、より重要な作業に回すため",ng:"柔軟なスタイル設定",l:"ユーザーに『何を手放し、何を得るか』を1文で示すと受け入れられやすい",t:["opinion","nongoal","compat"],v:1,s:"https://github.com/psf/black/blob/7e4c6bf71fffc36ead970afde46a726144515e87/README.md"},
+{n:"Biome",c:"tool",tl:"高速なWebツールチェーン（フォーマッター＋リンター）",p:["フォーマッターはPrettierと同じOption Philosophyに従うと明言","Prettierとの高い互換性で乗り換えコストを下げる","Rustによる高速化"],m:"前身Romeの運営会社が解散した後、コミュニティがフォークして継続",ng:"新しいフォーマットオプションは基本的に追加しない",l:"他プロジェクトの哲学を『採用します』と宣言するのも立派な方針",t:["opinion","interop","perf","sustain"],v:1,s:"https://v1.biomejs.dev/formatter/option-philosophy"},
+{n:"ESLint",c:"tool",tl:"すべてがプラガブルなリンター",p:["すべてのルールは独立していて、どれもオフにできる","特定のコーディングスタイルに依存しない","ルール・パーサー・設定をプラグインで拡張可能"],m:"既存リンターの拡張性不足を補うため",ng:"特定のスタイルを強制しない（Prettierと対照的）",l:"意見を持つか、器になるか。どちらかに振り切ると役割が明確になる",t:["interop","phil"],v:0},
+{n:"Ruff",c:"tool",tl:"極速のPythonリンター兼フォーマッター",p:["桁違いの速度を掲げる","多数の既存ツールの役割を1つで置き換える","既存ツールとのルール互換で移行を容易に"],m:"大規模コードベースでのリンターの遅さ",ng:"—",l:"既存ツールとの互換性は、速さと同じくらい強い採用理由になる",t:["perf","interop"],v:0},
+{n:"uv",c:"tool",tl:"Pythonのパッケージとプロジェクト管理を1つに",p:["pip・virtualenv・pyenvなど複数ツールの役割を統合","圧倒的な速さ","既存のpipワークフローに近い互換インターフェース"],m:"Python環境構築の断片化と遅さ",ng:"—",l:"断片化した道具を一本化することは、明確な価値提案になる",t:["perf","interop","dx"],v:0},
+{n:"Jest",c:"tool",tl:"楽しいJavaScriptテスト",p:["ゼロコンフィグで始められる","スナップショットテストなど実務に即した機能","分かりやすいエラーメッセージ"],m:"社内のテスト体験の改善",ng:"—",l:"『楽しい』のような感情語もプロダクト原則になり得る",t:["dx","opinion"],v:0},
+{n:"Playwright",c:"tool",tl:"信頼できるE2Eテスト",p:["自動待機で不安定（flaky）なテストを減らす","主要ブラウザエンジンを一貫したAPIで扱う","失敗調査を支えるトレース機能"],m:"Puppeteerを開発したメンバーが新たに構築",ng:"—",l:"ユーザーの最大の痛み（不安定さ）を名指しで解決すると伝わりやすい",t:["dx","origin"],v:0},
+{n:"pnpm",c:"tool",tl:"速く、ディスク効率の良いパッケージマネージャ",p:["コンテンツアドレス型ストアで依存を重複保存しない","宣言していない依存にはアクセスできない厳格さ","モノレポ対応"],m:"npmのディスク浪費と『幽霊依存』問題",ng:"緩い依存解決による便利さより、正しさを優先",l:"『厳しさ』は短期的には不便でも、長期的な信頼になる",t:["perf","opinion"],v:0},
+{n:"Git",c:"tool",tl:"速く、分散した版管理",p:["速度・分散・データ完全性（ハッシュによる改ざん検知）を中核に","単純なデータモデルの上に多様なワークフローを載せる","Linuxカーネル開発という巨大な実利用から要件を決めた"],m:"カーネル開発で使っていた商用ツールが使えなくなり、Linusが短期間で作った",ng:"—",l:"実在する最大のユーザー（自分たち）の要件から逆算した設計は強い",t:["perf","origin","simple"],v:0},
+{n:"Neovim",c:"cli",tl:"拡張性と使いやすさに振ったVimの継承者",p:["公式Charterに目標と『Non-goals』を明記（VimをIDEにする、POSIX viに準拠する、などはしない）","新しい貢献者の参入障壁を取り除くことを目標に","好みが割れる点は伝統・互換性を優先。ただし利益が極めて大きければ使いやすさを取る"],m:"Vimの保守性と拡張性の限界を超えるための大規模リファクタリングとして開始",ng:"Vim9scriptのサポート、VimのIDE化",l:"判断が割れた時のタイブレーク規則まで書くと、運営が楽になる",t:["nongoal","phil","contrib","compat"],v:1,s:"https://www.github.com/neovim/neovim.github.io/blob/master/charter.html"},
+{n:"Vim",c:"cli",tl:"どこにでもあるモーダルエディタ",p:["長期にわたる後方互換性の重視","チャリティウェア：寄付をウガンダの子どもたちの支援へ","作者の逝去後はコミュニティが保守を継承"],m:"viクローンの改良から始まった",ng:"—",l:"一人の作者に依存する体制の継承計画は、元気なうちに考えておく",t:["compat","sustain"],v:0},
+{n:"VS Code",c:"cli",tl:"軽量なコアと拡張で広がるエディタ",p:["拡張機能を別プロセスで動かし、本体の応答性を守る","言語サポートをLSPという標準プロトコルで外部化","予測可能な定期リリース"],m:"クロスプラットフォームの軽量エディタを目指した",ng:"コアに全言語サポートを入れない",l:"拡張の仕組みを『本体を守る境界』として設計すると品質を保てる",t:["interop","perf","scope"],v:0},
+{n:"Helix",c:"cli",tl:"最初から全部入りのモーダルエディタ",p:["LSPやTree-sitterを標準搭載し、設定なしで高機能","『選択してから操作』という編集モデル","プラグイン機構は拙速に入れず、設計を慎重に進める"],m:"Vim系エディタの設定の重さへの反発",ng:"未成熟なプラグインAPIを先に公開しない",l:"急いで公開したAPIは、永遠に互換性の負債になる",t:["opinion","scope","dx"],v:0},
+{n:"Zed",c:"cli",tl:"速さと共同編集のためのエディタ",p:["GPUレンダリングとRustで高い応答性","共同編集を最初から設計に組み込む","前作（Atom）の開発者たちが、その教訓から再出発"],m:"Electron時代のエディタの性能の限界",ng:"—",l:"前作の限界を認めて作り直すストーリーは信頼を生む",t:["perf","origin"],v:0},
+{n:"Ghostty",c:"cli",tl:"速さ・機能・ネイティブUIを全部取るターミナル",p:["既存ターミナルは速さ・機能・ネイティブUIのうち最大2つしか選べない、という問題設定","作者の余暇の情熱プロジェクトであることを明記し、その前提での接し方を求める","非営利の財政スポンサー下に移行し、売却や方針転換（rug pull）が起きない構造に"],m:"Mitchell Hashimotoが個人で始めたプロジェクト",ng:"最低限の共通UIやラッパーでの妥協",l:"『これは趣味の情熱プロジェクトです』と明記するのは、燃え尽きを防ぐ境界線になる",t:["phil","perf","sustain","origin"],v:1,s:"https://mitchellh.com/writing/ghostty-non-profit"},
+{n:"tmux",c:"cli",tl:"ターミナルマルチプレクサ",p:["セッションの永続化という一点の価値","スクリプトから操作できる一貫したコマンド体系","長期にわたる安定した挙動"],m:"既存のマルチプレクサの代替として",ng:"—",l:"一つの確かな価値を長く提供し続けるだけで、インフラになる",t:["scope","compat"],v:0},
+{n:"fzf",c:"cli",tl:"汎用のファジーファインダー",p:["標準入力を受けて標準出力へ返すUnix的な合成性","どんなリストにも使える汎用性","単一バイナリで導入が簡単"],m:"作者が自分のワークフローのために作った",ng:"特定用途専用にしない",l:"入出力を標準に合わせると、他者が想像以上の使い方をしてくれる",t:["interop","simple","origin"],v:0},
+{n:"ripgrep",c:"cli",tl:"速く、賢い既定値のgrep",p:["既定で.gitignoreを尊重し、隠しファイルやバイナリを飛ばす","速度を最優先","POSIX grepの完全な置き換えではないと明言"],m:"作者の正規表現エンジン研究から",ng:"grepとの完全互換",l:"『何の代替ではないか』を言うと、誤った期待を防げる",t:["perf","opinion","nongoal"],v:0},
+{n:"jq",c:"cli",tl:"JSONのためのsed",p:["小さなフィルタ言語で合成可能","依存の少ない単一バイナリ","パイプラインに溶け込む"],m:"コマンドラインでJSONを扱う不便さ",ng:"—",l:"既存の道具の比喩（〇〇のためのsed）は一瞬で価値を伝える",t:["simple","interop"],v:0},
+{n:"Oh My Zsh",c:"cli",tl:"楽しい、コミュニティ主導のzsh設定フレームワーク",p:["初心者が『ターミナルが楽しい』と感じる体験を重視","膨大なプラグインとテーマをコミュニティが供給","気軽な貢献を歓迎する文化"],m:"作者が自分のzsh設定を共有したこと",ng:"—",l:"最初の成功体験（楽しさ）は、機能より強い入口になる",t:["dx","contrib","origin"],v:0},
+{n:"Homebrew",c:"cli",tl:"macOS（とLinux）のパッケージマネージャ",p:["受け入れ基準を明文化：保守されている・知られている・安定・使われている・ホームページがある","無名すぎるものは保守されないため断る。作者本人による自作の登録は、よほど人気がない限り歓迎しない","『自分のtapを持てばいい』という逃げ道を示して断る"],m:"既存のパッケージ管理への不満から開始",ng:"バージョンタグのないソフトウェア、バイナリのみのもの（Caskへ）",l:"断る基準と『代わりにこうすればいい』をセットで書くと、拒否が建設的になる",t:["scope","nongoal","contrib"],v:1,s:"https://github.com/Homebrew/brew/blob/bd6fb88ddc72a0de4c27f65e60a82790a5d87f3f/docs/Acceptable-Formulae.md"},
+{n:"curl",c:"cli",tl:"URLでデータを転送するツールとライブラリ",p:["libcurlのアップグレードはABIや文書化された挙動を壊さない、と文書で約束","公開関数だけに『curl_』接頭辞をつけ、互換性を守る境界を一目で分かるように","IRCボットで為替レートを取得する小さなツールから始まった"],m:"Daniel Stenbergの小さな個人ツールが、長い年月をかけて世界中の機器へ",ng:"互換性を壊す変更",l:"『守るべき境界』を命名規則で可視化すると、互換性の維持が仕組みになる",t:["compat","origin","sustain"],v:1,s:"https://simonwillison.net/2025/Apr/8/writing-c-for-curl/"},
+{n:"Linux",c:"infra",tl:"世界を動かすカーネル",p:["『ユーザー空間を壊さない』が最重要ルール：変更でユーザーのプログラムが壊れたらカーネル側のバグ","壊れたという報告があれば、変更を素早く差し戻す実利的な運用","メンテナ階層による大規模な分散レビュー"],m:"Linus Torvaldsの学生時代の趣味のプロジェクト",ng:"壊れた原因をユーザーのプログラムのせいにすること",l:"『壊れたらこちらのバグ』と責任の所在を明言すると、ユーザーは安心して依存できる",t:["compat","contrib","origin"],v:1,s:"https://lwn.net/Articles/962435/"},
+{n:"Kubernetes",c:"infra",tl:"宣言的なコンテナオーケストレーション",p:["望ましい状態を宣言し、コントローラーが現実を近づけ続ける調整ループ","カスタムリソースなどの拡張性で、コアを肥大化させず周辺で進化","社内の経験を元に、中立の財団（CNCF）へ寄贈"],m:"Google社内システムの教訓を外に出す",ng:"—",l:"中立な財団への移管は、競合企業が参加できる土台になる",t:["interop","sustain","phil"],v:0},
+{n:"Docker",c:"infra",tl:"コンテナを誰でも使えるものにした",p:["『ビルド・シップ・ラン』の単純な体験","Dockerfileという読みやすい宣言形式","中核部品を独立したプロジェクトや財団へ切り出した"],m:"PaaS企業の社内技術の公開",ng:"—",l:"既存技術（Linuxのコンテナ機能）でも、体験を磨けば革命になる",t:["dx","simple","sustain"],v:0},
+{n:"OpenTofu",c:"infra",tl:"オープンなIaCを守るためのTerraformフォーク",p:["TerraformのライセンスがBSLに変更されたことを受け、オープンソースのまま続けるためにフォーク","Linux Foundation配下で中立的に運営","既存のTerraform構成との互換性を重視"],m:"ライセンス変更への反発",ng:"特定企業によるライセンスの一方的変更",l:"ライセンスは技術と同じくらい、ユーザーの信頼を左右する",t:["sustain","user","compat"],v:0},
+{n:"Ansible",c:"infra",tl:"エージェントレスの構成管理",p:["管理対象にエージェントを入れず、SSHだけで動く","読みやすいYAMLで手順を記述","シンプルさを最優先の価値に"],m:"既存の構成管理ツールの複雑さへの不満",ng:"—",l:"導入の前提条件を減らすこと自体が最大の機能になる",t:["simple","dx"],v:0},
+{n:"Nginx",c:"infra",tl:"イベント駆動の高性能Webサーバー",p:["少ないリソースで大量の同時接続を処理","一貫した構文の設定ファイル","リバースプロキシとしての汎用性"],m:"大量同時接続（C10K問題）への対処",ng:"—",l:"時代の具体的な技術課題を名指しで解決すると一気に広まる",t:["perf","origin"],v:0},
+{n:"Caddy",c:"infra",tl:"HTTPSが既定のWebサーバー",p:["証明書の取得・更新を自動化し、HTTPSを既定に","メモリ安全な言語で実装","簡潔な設定ファイル"],m:"Webサーバーを安全に設定することの難しさ",ng:"—",l:"安全な選択を『既定値』にすると、ユーザー全体の底上げになる",t:["opinion","user","dx"],v:0},
+{n:"Prometheus",c:"infra",tl:"運用が簡単な監視システム",p:["プル型の収集と多次元データモデル","単一サーバーで動き、分散ストレージに依存しない運用の簡単さ","請求計算のような100%の正確さが必要な用途には向かないと明記"],m:"SoundCloudでの監視課題",ng:"完全な正確さが必要な用途",l:"『向いていない用途』を公式に書くことは、信頼の表明になる",t:["nongoal","simple","scope"],v:0},
+{n:"Grafana",c:"infra",tl:"データソースを選ばない可視化",p:["『ビッグテント』哲学：競合製品も含めた多数のデータソースと相互運用","データを一か所に集めさせず、各データソースのクエリ言語のまま可視化","プラグイン機構をコミュニティが拡張"],m:"Torkel Ödegaardのサイドプロジェクトから",ng:"ユーザーを単一ベンダーに閉じ込めること",l:"競合と繋がることは、弱さではなく最大の差別化になり得る",t:["interop","user","origin"],v:1,s:"https://www.infoworld.com/article/3699258/how-grafana-made-observability-accessible.html"},
+{n:"OpenTelemetry",c:"infra",tl:"ベンダー中立なテレメトリ標準",p:["ミッション・ビジョン・価値観を公開：高品質でポータブルなテレメトリを遍在させる","ベンダー中立と疎結合：必要な部品だけを選べる","中核の技術的価値は互換性・安定性・回復力・性能"],m:"計装がベンダー固有のエージェントに縛られてきた歴史への反省",ng:"特定の勝者（ベンダー）を選ばない",l:"ミッション→ビジョン→価値観の3層で書くと、抽象から実装判断まで一貫する",t:["phil","interop","user","compat"],v:1,s:"https://opentelemetry.io/community/mission/"},
+{n:"Nix",c:"infra",tl:"再現可能なパッケージ管理",p:["純粋関数的なビルドで、同じ入力なら同じ結果","宣言的なシステム構成","ロールバック可能な世代管理"],m:"作者の博士研究から",ng:"—",l:"原理から出発したOSSは、思想の一貫性が強みになる",t:["phil","compat"],v:0},
+{n:"Envoy",c:"infra",tl:"アプリから透過的なネットワークプロキシ",p:["ネットワークはアプリから透過的であるべき、という設計目標","可観測性を第一級の機能に","動的設定APIによる拡張"],m:"マイクロサービス移行時のネットワークの課題",ng:"—",l:"一文の設計目標が、アーキテクチャ全体を方向づける",t:["phil","interop"],v:0},
+{n:"PostgreSQL",c:"data",tl:"コミュニティが所有するRDBMS",p:["特定企業に支配されない、コミュニティ主導の開発体制","正しさと標準準拠を重視し、慎重に機能を追加","拡張機能で本体の外側に進化の余地を残す"],m:"大学の研究プロジェクトが起源",ng:"データの正しさを犠牲にする近道",l:"『誰のものでもない』体制は、長期的な信頼の源になる",t:["contrib","sustain","interop"],v:0},
+{n:"SQLite",c:"data",tl:"Small. Fast. Reliable. Choose any three.",p:["『Open-Source, not Open-Contribution』：誰でも自由に使えるが、パッチは原則受け付けない","全コードをパブリックドメインに捧げ、出所を追跡可能に保つ","伽藍（cathedral）型の開発を公言"],m:"作者が軍艦向けソフトウェアのために、サーバー不要のDBを作ったことが起源",ng:"外部からのパッチ受け入れ",l:"貢献の受け方は自由に選べる。受けないなら理由を明示すればよい",t:["contrib","nongoal","sustain","phil"],v:1,s:"https://www.sqlite.org/copyright.html"},
+{n:"Redis",c:"data",tl:"抽象データ型のためのDSL",p:["作者がマニフェストを書いた動機は、機能要望や『なぜこうなっているのか』という質問への答え方に困ったから","メモリ上のデータ構造と計算量こそが製品の本質","2024年のライセンス変更でコミュニティのフォーク（Valkey）が生まれた"],m:"antirezが自分のスタートアップのリアルタイム解析のために開発",ng:"ディスク中心のDBにはならない",l:"哲学文書は、要望への『答え方』に困った時が書き時",t:["phil","scope","sustain"],v:1,s:"https://oldblog.antirez.com/post/redis-manifesto.html"},
+{n:"DuckDB",c:"data",tl:"分析用のインプロセスDB",p:["サーバー不要で、アプリに埋め込んで使える分析DB","依存の少ない簡単なインストール","非営利財団が知的財産を保有し、オープンなライセンスを守る"],m:"研究所の研究者が、分析用途の組み込みDBを目指した",ng:"—",l:"IPを財団に置く設計は、利用者への『ずっとオープン』の保証になる",t:["simple","sustain"],v:0},
+{n:"ClickHouse",c:"data",tl:"速さがすべての分析DB",p:["列指向ストレージと速度への徹底的なこだわり","実運用の大規模ワークロードから生まれた機能","性能ベンチマークを公開"],m:"大規模なウェブ解析サービスのため",ng:"—",l:"社内の極端な要件は、外に出すと強い差別化になる",t:["perf","origin"],v:0},
+{n:"Apache Kafka",c:"data",tl:"ログを中心に据えたストリーミング基盤",p:["追記型ログという単純な抽象を、データ統合の中心に据える","作者によるエッセイでその思想を解説","企業内プロジェクトからApache財団へ"],m:"LinkedIn内のデータパイプラインの乱立",ng:"—",l:"一つの抽象を深く説明するエッセイは、採用の強い後押しになる",t:["phil","simple"],v:0},
+{n:"Elasticsearch / OpenSearch",c:"data",tl:"ライセンスをめぐって分岐した検索エンジン",p:["Elasticsearchのライセンス変更を受け、OpenSearchがフォークとして誕生","OpenSearchはその後、中立的な財団の下へ","Elastic側も後にオープンソースライセンスを選択肢に戻した"],m:"クラウド事業者によるただ乗りへの対抗",ng:"—",l:"ライセンス変更は、後で戻しても信頼の回復に時間がかかる",t:["sustain","user"],v:0},
+{n:"NumPy",c:"data",tl:"Pythonの数値計算の共通語",p:["配列を科学計算エコシステムの共通インターフェースに","NEP（拡張提案）で設計判断を記録","非営利の財政スポンサーの下で運営"],m:"分裂していた数値計算ライブラリの統合",ng:"—",l:"エコシステムの『共通語』になると、置き換えられない存在になる",t:["interop","sustain","phil"],v:0},
+{n:"pandas",c:"data",tl:"実用的なデータ分析ライブラリ",p:["現場のデータ分析作業から直接生まれたAPI","非営利の財政スポンサーの下で運営","破壊的変更は非推奨警告を経て段階的に"],m:"作者が金融データ分析の業務で必要に迫られて",ng:"—",l:"実務の具体的な痛みから生まれたAPIは、多少不格好でも広まる",t:["origin","compat"],v:0},
+{n:"Supabase",c:"data",tl:"既存のOSSを組み合わせたBaaS",p:["車輪の再発明をせず、Postgresなど実績あるOSSの上に構築","可能な限り上流のOSSに貢献する","データはPostgresのまま持ち出せ、ロックインを避ける"],m:"オープンソースなFirebase代替を求めて",ng:"独自の新しいDBを作ること",l:"『既存の良いものを組み合わせる』もまた明確な思想",t:["interop","user"],v:0},
+{n:"PyTorch",c:"ai",tl:"使いやすさを最優先するディープラーニング基盤",p:["原則1『性能より使いやすさ』：研究者の柔軟性を守ることを優先","原則2『EasyよりSimple』：暗黙の便利さより、明示的で理解・デバッグしやすい部品","設計哲学文書を、厳密な規則ではなく意見の相違を解決するための指針と位置づけ"],m:"研究者が試行錯誤しやすいフレームワークの必要性",ng:"制約先行（静的形状のみ等）の設計に安易に移ること",l:"原則は『規則』ではなく『トレードオフの判断指針』として書くと使える",t:["phil","simple","dx"],v:1,s:"https://docs.pytorch.org/docs/main/community/design.html"},
+{n:"TensorFlow",c:"ai",tl:"本番規模の機械学習基盤",p:["大規模分散と本番運用を重視","2系で即時実行（Eager）を標準にし、ユーザーの声に合わせて大転換","1系から2系への移行コストは大きな教訓になった"],m:"社内の機械学習基盤の公開",ng:"—",l:"方針転換が正しくても、移行の痛みを最小化する設計が不可欠",t:["compat","dx"],v:0},
+{n:"JAX",c:"ai",tl:"合成可能な関数変換",p:["grad・jit・vmapなどの変換を自由に組み合わせられる","NumPyに近いAPIで学習コストを下げる","小さなコアに強力な概念を集中"],m:"研究用途の高速な数値計算",ng:"—",l:"少数の直交した概念は、多数の機能より強い",t:["simple","interop"],v:0},
+{n:"scikit-learn",c:"ai",tl:"一貫したAPIの機械学習ライブラリ",p:["論文でAPI設計原則を公開：一貫性、内部状態の検査可能性、クラスの乱立を避ける、合成、賢い既定値","限られたメソッド（fit/predict/transform）をすべての推定器が共有","データはNumPy配列など標準形式のまま扱う"],m:"非専門家にも使える機械学習ツールの必要性",ng:"独自のデータ型を増やすこと",l:"インターフェースの『一貫性』は、機能の数より長く効く資産",t:["phil","simple","opinion","interop"],v:1,s:"https://ar5iv.labs.arxiv.org/html/1309.0238"},
+{n:"Transformers",c:"ai",tl:"あえてDRYに逆らうモデルライブラリ",p:["『1モデル1ファイル』方針：推論に必要なコードを1つのファイルに収める","共通部品の抽象化はあえて拒み、コピーを許容（読む人・改造する人のため）","公開APIを壊さず、追加的な標準化で進化する"],m:"モデルを読み、改造するユーザーこそが主な顧客だという認識",ng:"注意機構などを中央集権的に抽象化すること",l:"有名な原則（DRY）に逆らう時も、『誰のためか』を説明すれば支持される",t:["read","phil","contrib","compat"],v:1,s:"https://huggingface.co/blog/transformers-design-philosophy"},
+{n:"Diffusers",c:"ai",tl:"拡散モデルのための道具箱",p:["性能より使いやすさ、EasyよりSimple（PyTorchの哲学を明示的に継承）","抽象化より、いじりやすく貢献しやすいコード","必須依存を最小限にした軽量パッケージ"],m:"拡散モデルを誰でも扱えるようにするため",ng:"凝縮された『魔法』のようなコード",l:"上流の哲学を明示的に継承すると、エコシステム全体の一貫性が生まれる",t:["simple","read","contrib"],v:1,s:"https://huggingface.co/docs/diffusers/en/conceptual/philosophy.md"},
+{n:"llama.cpp",c:"ai",tl:"手元のハードウェアでLLMを動かす",p:["最小限の依存で、素のC/C++で実装","一般消費者向けハードウェアでの推論を目標に","速い試行錯誤と頻繁なリリース"],m:"公開されたモデルを自分のMacで動かしたいという作者の欲求",ng:"重い依存やフレームワーク",l:"『自分の手元で動かしたい』という個人的欲求は、多くの人と共有されている",t:["simple","user","origin","perf"],v:0},
+{n:"Ollama",c:"ai",tl:"ローカルLLMを一行で",p:["モデルの取得から実行までを一つのコマンドに","Dockerfileに着想を得たModelfile","ローカル実行でデータを手元に保つ"],m:"ローカルLLMの導入の煩雑さ",ng:"—",l:"既知の体験（Docker）の比喩を借りると学習コストが下がる",t:["dx","user","simple"],v:0},
+{n:"vLLM",c:"ai",tl:"高スループットなLLM推論サーバー",p:["PagedAttentionでGPUメモリを効率化","OpenAI互換APIで既存コードからそのまま移行","研究プロジェクトから生まれ、コミュニティで拡大"],m:"LLM推論のコストとスループットの課題",ng:"—",l:"デファクトのAPIに合わせると、導入障壁がほぼゼロになる",t:["perf","interop"],v:0},
+{n:"LangChain",c:"ai",tl:"LLMアプリの部品を組み合わせるフレームワーク",p:["多数のモデル・ツールとの統合","抽象化が多すぎるという批判を受け、低レベルで制御しやすい設計へ比重を移した","エコシステムの広さを強みに"],m:"LLMアプリ開発の定型作業を減らすため",ng:"—",l:"早すぎる抽象化は批判を招く。フィードバックで設計を変える柔軟さも重要",t:["interop","simple"],v:0},
+{n:"ComfyUI",c:"ai",tl:"ノードで組む画像生成パイプライン",p:["処理の流れをノードグラフとして完全に可視化","上級者が細かく制御できる透明性","ワークフローを共有・再現できる"],m:"画像生成の内部処理を細かく制御したいという要求",ng:"—",l:"内部を隠さず見せることが、パワーユーザーの熱狂を生む",t:["read","user"],v:0},
+{n:"Open WebUI",c:"ai",tl:"セルフホストのAIチャットUI",p:["オフラインでも動くセルフホスト前提","複数のモデルバックエンドに対応","拡張機能で機能を追加"],m:"ローカルLLMを使いやすいUIで扱いたいという需要",ng:"—",l:"『自分のサーバーで動く』はそれだけで強い価値提案",t:["user","interop"],v:0},
+{n:"Home Assistant",c:"app",tl:"ローカル制御とプライバシーを最優先するホームオートメーション",p:["作者は、イデオロギーからではなく、買ったスマート照明をスクリプトで動かしたくて始めたと語る","5周年の節目にプライバシー・ローカル制御・オープンソース・相互運用を目標として宣言","後にOpen Homeのビジョン（プライバシー・選択・持続可能性）へ発展。投資家なしで持続可能な開発体制"],m:"作者の個人的な照明自動化スクリプト",ng:"クラウド前提の動作",l:"動機は後から『使命』に育ってよい。節目で言語化し直すことが大事",t:["user","origin","sustain","phil"],v:1,s:"https://community.home-assistant.io/t/thinking-big/69019"},
+{n:"Godot",c:"app",tl:"オープンなゲームエンジン",p:["貢献者向けベストプラクティス：問題が常に先、問題が実在すること、複雑か頻出であること…","『問題を探している解決策』を明確に退ける","よくある用途に応え、まれな用途には扉を開けておく"],m:"スタジオの社内エンジンをオープン化",ng:"実在しない問題への先回りの実装",l:"提案を評価する『共通の語彙』を作ると、PRレビューが感情論にならない",t:["scope","contrib","phil"],v:1,s:"https://contributing.godotengine.org/en/latest/engine/guidelines/best_practices.html"},
+{n:"Blender",c:"app",tl:"コミュニティが買い戻した3DCGスイート",p:["開発元の倒産後、コミュニティの寄付で権利を買い取りオープン化","財団と開発基金で持続的に運営","自らオープンムービーを制作し、実制作で機能を検証"],m:"クローズドな社内ツールの存続危機",ng:"—",l:"自分たちでプロダクトを実際に使う企画は、最良の要件定義になる",t:["sustain","contrib","origin"],v:0},
+{n:"Excalidraw",c:"app",tl:"手描き風のホワイトボード",p:["あえて手描き風にし、完成度を気にせず発想を描ける","シンプルなUIに徹する","共同編集をエンドツーエンド暗号化で"],m:"図を素早く描ける道具が欲しかった",ng:"精密な作図ツールにはならない",l:"見た目の『不完全さ』も、意図すれば価値になる",t:["simple","scope","user"],v:0},
+{n:"Mastodon",c:"app",tl:"分散型ソーシャルネットワーク",p:["単一企業に支配されない分散（フェデレーション）","広告やアルゴリズム操作に依存しない","非営利組織として運営"],m:"中央集権的SNSへの問題意識",ng:"広告ベースの収益化",l:"『何で稼がないか』を決めると、プロダクトの形が決まる",t:["user","sustain","nongoal"],v:0},
+{n:"Tauri",c:"app",tl:"小さく安全なデスクトップアプリ",p:["OSのWebViewを使い、配布サイズを小さく","セキュリティを最優先に設計","Rustのバックエンド"],m:"Electronアプリの肥大化への反省",ng:"ブラウザエンジンの同梱",l:"先行者のトレードオフの逆を取るのは、分かりやすい差別化",t:["perf","user","scope"],v:0},
+{n:"Flutter",c:"app",tl:"自前で描画するクロスプラットフォームUI",p:["OSのUI部品に頼らず自前で描画し、どこでも同じ見た目","ホットリロードによる速い開発サイクル","単一コードベース"],m:"モバイル開発の効率化",ng:"—",l:"開発ループの速さは、最強の開発者体験",t:["dx","opinion"],v:0},
+{n:"Electron",c:"app",tl:"Web技術でデスクトップアプリを",p:["Webの知識と資産でデスクトップアプリを作れる","ChromiumとNode.jsを同梱し、環境差を吸収","財団配下で運営"],m:"GitHubのエディタ（Atom）のために作られた",ng:"配布サイズやメモリの小ささは優先しない",l:"『誰でも作れる』を選べば、別の軸（重さ）を明示的に諦めることになる",t:["dx","interop"],v:0}
+];
+
+const CATS={lang:"言語・ランタイム",front:"Webフロントエンド",back:"Webバックエンド",tool:"ビルド・開発ツール",cli:"エディタ・CLI",infra:"インフラ・運用",data:"データベース・データ",ai:"AI・機械学習",app:"アプリ・プラットフォーム"};
+const TH={
+ phil:{n:"哲学を明文化する",d:"設計原則・マニフェスト・Doctrineなどを文書として公開し、判断の根拠を共有する。",w:"要望や議論への答えが個人の好みではなく方針になる。新しい貢献者が判断基準を学べる。",pit:"抽象的すぎると使えない。具体例とトレードオフを添える。",how:"「解く問題」「原則」「やらないこと」の3節から始める。"},
+ nongoal:{n:"やらないことを宣言する",d:"Non-goals、向いていない用途、追加しない機能を明記する。",w:"断る判断が一貫し、同じ議論の繰り返しが減る。誤った期待を持つユーザーを早めに減らせる。",pit:"理由のない拒否は反発を招く。代替手段とセットで書く。",how:"要望を3回断ったら、その理由をNon-goalsに追記する。"},
+ compat:{n:"互換性を約束する",d:"既存ユーザーのコードや運用を壊さないことを明文化し、約束の範囲も示す。",w:"安心して依存でき、エコシステムが育つ。",pit:"範囲の広すぎる約束は守れない。守る境界を小さく明確に。",how:"公開APIの境界（接頭辞・ディレクトリ）を決め、そこだけ守ると約束する。"},
+ opinion:{n:"意見のある既定値を選ぶ",d:"設定を増やさず、最良と考える既定値や規約を提供する。",w:"導入が速く、スタイル論争がなくなる。",pit:"上書きの逃げ道がないと大規模利用で困る。",how:"新しいオプションの要望には、まず既定値の改善で解けないか検討する。"},
+ simple:{n:"単純さと明示性を優先する",d:"暗黙の便利さより、理解しやすく予測可能な振る舞いを選ぶ。",w:"デバッグしやすく、長期の保守コストが下がる。",pit:"初心者にとっての「手軽さ」を失いすぎないように。",how:"「魔法」を入れるときは、それなしでは得られない大きな利便性があるか確認する。"},
+ read:{n:"読み手と局所性を重視する",d:"コードや振る舞いが、その場所を見るだけで理解できるようにする。",w:"改造・貢献のハードルが下がる。",pit:"重複が増えるので、同期の仕組みを用意する。",how:"主要な処理は1ファイルで上から下まで読めるかを基準にする。"},
+ scope:{n:"問題起点でスコープを守る",d:"実在する問題だけを解き、受け入れ基準を明文化する。",w:"保守対象が増えすぎず、プロジェクトが長生きする。",pit:"基準が曖昧だと「あれは入れたのに」という不公平感を生む。",how:"PRテンプレートで「どんな実在の問題を解くか」を最初に書いてもらう。"},
+ interop:{n:"段階的採用と相互運用",d:"既存の標準・ツール・競合とつながり、少しずつ導入できるようにする。",w:"乗り換えコストが低く、採用のハードルが下がる。",pit:"互換対応の範囲が広がりすぎると保守が重くなる。",how:"入出力を標準形式に合わせ、既存ツールとの併用手順を書く。"},
+ user:{n:"ユーザー主権を守る",d:"ローカル動作、データの持ち出し、ベンダーロックイン回避、プライバシーを重視する。",w:"長期的な信頼と、熱心な支持者を得られる。",pit:"利便性（クラウド連携など）とのバランスが必要。",how:"「ユーザーのデータはどこにあり、どう持ち出せるか」を明記する。"},
+ contrib:{n:"貢献モデルを設計する",d:"誰から・どんな貢献を・どう受けるかを意図して決める（受けない選択も含む）。",w:"メンテナの負担と品質をコントロールできる。",pit:"方針を書かずに断ると、閉鎖的だと受け取られる。",how:"CONTRIBUTINGに「歓迎するもの」「受け入れにくいもの」を両方書く。"},
+ origin:{n:"個人の痒みから始まる",d:"作者自身の具体的な不満や必要が出発点になっている。",w:"要件が現実的で、作者が最大のユーザーとして品質を保てる。",pit:"自分以外の用途を見落としやすい。",how:"READMEの冒頭に「なぜ作ったか」を自分の言葉で書く。"},
+ sustain:{n:"持続性・統治・ライセンス",d:"財団、非営利化、資金モデル、ライセンス選択などで長期存続を設計する。",w:"「突然消える・変わる」不安を減らし、企業も採用しやすくなる。",pit:"ライセンスの一方的変更はフォークと信頼低下を招く。",how:"作者が関われなくなった場合にどうするかを一度考えて書いておく。"},
+ perf:{n:"速さをアイデンティティにする",d:"性能を最優先の価値として掲げ、他の判断基準にする。",w:"違いが数字で伝わり、機能要望を断る基準も明確になる。",pit:"速さだけでは乗り換えない。互換性や導入しやすさと組み合わせる。",how:"ベンチマークの方法と結果を公開し、性能劣化をCIで検出する。"},
+ dx:{n:"開発者の幸福を中心に置く",d:"使っていて楽しい・気持ちいい体験を明確な目標にする。",w:"感情的な愛着が生まれ、口コミで広がる。",pit:"主観的になりやすいので、具体的な体験（待ち時間、エラー文）に落とす。",how:"最初の5分の体験（インストールから最初の成功まで）を磨く。"}
+};
+const CHECK=[
+ ["解く問題を1文で説明できる","READMEの最初の段落で伝わるか"],
+ ["対象ユーザーと対象外のユーザーを書いた","対象外には代替手段も添える"],
+ ["原則を「AよりB」の形で3〜5個書いた","捨てる側も明記する"],
+ ["やらないこと（Non-goals）を書いた","断った要望の理由から作るとよい"],
+ ["公開APIの境界を決めた","接頭辞・モジュール・CLIの引数など"],
+ ["互換性の約束と、約束しない範囲を書いた","性能や内部実装は対象外にしてよい"],
+ ["貢献の受け方を書いた","歓迎するもの・受け入れにくいもの"],
+ ["判断が割れたときのタイブレーク規則を決めた","迷ったらどちらを優先するか"],
+ ["自分の関わり方（時間・頻度）を書いた","期待値を合わせて燃え尽きを防ぐ"],
+ ["ライセンスと、将来の運営の考えを決めた","関われなくなったときの方針"]
+];
+const $=s=>document.querySelector(s);
+const cv=c=>`var(--c-${c})`;
+const state={cat:null,theme:null,q:"",onlyV:false};
+D.forEach((d,i)=>d.id="p"+i);
+$("#f-total").textContent=D.length;
+$("#f-ver").textContent=D.filter(d=>d.v).length;
+
+// board
+const board=$("#board"),tip=$("#tip");board.innerHTML="";
+const order=Object.keys(CATS);
+[...D].sort((a,b)=>order.indexOf(a.c)-order.indexOf(b.c)).forEach(d=>{
+  const b=document.createElement("button");
+  b.className="cell"+(d.v?" v":"");b.type="button";b.style.setProperty("--cc",cv(d.c));
+  b.setAttribute("aria-label",`${d.n}（${CATS[d.c]}）`);
+  b.addEventListener("mouseenter",e=>{tip.textContent=d.n;tip.style.opacity=1});
+  b.addEventListener("mousemove",e=>{tip.style.left=(e.clientX+12)+"px";tip.style.top=(e.clientY+12)+"px"});
+  b.addEventListener("mouseleave",()=>tip.style.opacity=0);
+  b.addEventListener("click",()=>jumpTo(d));
+  board.appendChild(b);
+});
+$("#legend").innerHTML=order.map(c=>`<span style="--cc:${cv(c)}"><i></i>${CATS[c]}</span>`).join("");
+
+// rank + themes
+const tcount=k=>D.filter(d=>d.t.includes(k)).length;
+const tkeys=Object.keys(TH).sort((a,b)=>tcount(b)-tcount(a));
+const max=Math.max(...tkeys.map(tcount));
+$("#rank").innerHTML=tkeys.map(k=>`<button class="bar" data-t="${k}" type="button"><span>${TH[k].n}</span><span class="track"><span class="fill" style="width:${tcount(k)/max*100}%"></span></span><span class="num">${tcount(k)}</span></button>`).join("");
+$("#rank").addEventListener("click",e=>{const b=e.target.closest(".bar");if(b)filterTheme(b.dataset.t)});
+$("#themes").innerHTML=tkeys.map(k=>{
+  const t=TH[k],ex=D.filter(d=>d.t.includes(k));
+  const pick=ex.filter(d=>d.v).concat(ex.filter(d=>!d.v)).slice(0,6);
+  return `<article class="theme"><h3>${t.n}<span class="cnt">${ex.length}件</span></h3>
+  <p style="margin:0">${t.d}</p>
+  <dl><dt>なぜ効くか</dt><dd>${t.w}</dd><dt>落とし穴</dt><dd>${t.pit}</dd><dt>取り入れ方</dt><dd>${t.how}</dd></dl>
+  <div class="ex">${pick.map(d=>`<button type="button" data-id="${d.id}">${d.n}</button>`).join("")}<button type="button" class="more" data-t="${k}">${ex.length}件すべて</button></div></article>`;
+}).join("");
+$("#themes").addEventListener("click",e=>{
+  const b=e.target.closest("button");if(!b)return;
+  if(b.dataset.t)filterTheme(b.dataset.t);
+  else jumpTo(D.find(d=>d.id===b.dataset.id));
+});
+
+// filters
+function chip(label,key,val,dotColor){
+  const b=document.createElement("button");b.type="button";b.className="chip";b.dataset.key=key;b.dataset.val=val??"";
+  b.innerHTML=(dotColor?`<span class="dot" style="--cc:${dotColor}"></span>`:"")+label;
+  b.addEventListener("click",()=>{state[key]=(state[key]===val?null:val);render()});
+  return b;
+}
+const fc=$("#f-cat");fc.innerHTML='<span class="lbl">分野</span>';fc.appendChild(chip("すべて","cat",null));order.forEach(c=>fc.appendChild(chip(CATS[c],"cat",c,cv(c))));
+const ft=$("#f-theme");ft.innerHTML='<span class="lbl">傾向</span>';ft.appendChild(chip("すべて","theme",null));tkeys.forEach(k=>ft.appendChild(chip(TH[k].n,"theme",k)));
+$("#q").addEventListener("input",e=>{state.q=e.target.value.trim().toLowerCase();render()});
+$("#onlyV").addEventListener("change",e=>{state.onlyV=e.target.checked;render()});
+$("#reset").addEventListener("click",()=>{state.cat=null;state.theme=null;state.q="";state.onlyV=false;$("#q").value="";$("#onlyV").checked=false;render()});
+
+function card(d){
+  const src=d.s?`<p>出典：<a href="${d.s}" target="_blank" rel="noopener">${new URL(d.s).hostname}</a></p>`:`<p>出典：一般に知られた情報に基づく整理（要一次情報確認）</p>`;
+  return `<article class="entry" id="${d.id}" style="--cc:${cv(d.c)}">
+  <div class="head"><h3>${d.n}</h3><span class="cat">${CATS[d.c]}</span></div>
+  <p class="tl">${d.tl}</p>
+  <ul>${d.p.map(x=>`<li>${x}</li>`).join("")}</ul>
+  <p class="lesson"><b>学び</b>${d.l}</p>
+  <details><summary>動機・やらないこと・出典</summary>
+   <p><b>動機・起源：</b>${d.m}</p>
+   ${d.ng&&d.ng!=="—"?`<p><b>やらないこと・トレードオフ：</b>${d.ng}</p>`:""}
+   ${src}
+  </details>
+  <div class="tags"><span class="badge ${d.v?"v":"k"}">${d.v?"Web確認済み":"知識ベース"}</span>${d.t.map(k=>`<button type="button" data-t="${k}">#${TH[k].n}</button>`).join("")}</div>
+  </article>`;
+}
+function render(){
+  document.querySelectorAll(".chip").forEach(b=>{const v=b.dataset.val||null;b.setAttribute("aria-pressed",String(state[b.dataset.key]===v))});
+  const list=D.filter(d=>(!state.cat||d.c===state.cat)&&(!state.theme||d.t.includes(state.theme))&&(!state.onlyV||d.v)&&
+    (!state.q||[d.n,d.tl,d.m,d.ng,d.l,...d.p,CATS[d.c],...d.t.map(k=>TH[k].n)].join(" ").toLowerCase().includes(state.q)));
+  $("#entries").innerHTML=list.length?list.map(card).join(""):`<p class="empty">条件に合うプロジェクトがありません。条件をクリアしてください。</p>`;
+  $("#count").textContent=`${list.length} / ${D.length} 件`;
+}
+$("#entries").addEventListener("click",e=>{const b=e.target.closest(".tags button");if(b){filterTheme(b.dataset.t)}});
+function filterTheme(k){state.theme=k;state.cat=null;state.q="";$("#q").value="";render();$("#catalog").scrollIntoView()}
+function jumpTo(d){
+  state.cat=null;state.theme=null;state.onlyV=false;state.q="";$("#q").value="";$("#onlyV").checked=false;render();
+  const el=document.getElementById(d.id);if(!el)return;
+  el.scrollIntoView({block:"center"});el.classList.remove("flash");void el.offsetWidth;el.classList.add("flash");
+  const s=el.querySelector("summary");if(s)s.focus({preventScroll:true});
+}
+render();
+
+// checklist
+let saved={};try{saved=JSON.parse(localStorage.getItem("oss-phil-check")||"{}")}catch(e){saved={}}
+function renderCheck(){
+  $("#check").innerHTML=CHECK.map((c,i)=>`<li><label><input type="checkbox" data-i="${i}" ${saved[i]?"checked":""}><span>${c[0]}<small>${c[1]}</small></span></label></li>`).join("");
+  const n=Object.values(saved).filter(Boolean).length;
+  $("#prog").textContent=`${n} / ${CHECK.length} 項目 完了（このブラウザに保存されます）`;
+}
+$("#check").addEventListener("change",e=>{const i=e.target.dataset.i;saved[i]=e.target.checked;try{localStorage.setItem("oss-phil-check",JSON.stringify(saved))}catch(err){}renderCheck()});
+renderCheck();
+
+// copy
+$("#copyBtn").addEventListener("click",async()=>{
+  const t=$("#tpl").textContent;
+  try{await navigator.clipboard.writeText(t);$("#copyBtn").textContent="コピーしました"}
+  catch(e){const r=document.createRange();r.selectNodeContents($("#tpl"));const s=getSelection();s.removeAllRanges();s.addRange(r);$("#copyBtn").textContent="選択しました"}
+  setTimeout(()=>$("#copyBtn").textContent="コピー",1800);
+});
+
+// sources
+$("#srcList").innerHTML=D.filter(d=>d.s).map(d=>`<li><b>${d.n}</b>：<a href="${d.s}" target="_blank" rel="noopener">${d.s.replace(/^https?:\/\//,"").slice(0,70)}${d.s.length>78?"…":""}</a></li>`).join("");
+</script>
+
+
+</body></html>
