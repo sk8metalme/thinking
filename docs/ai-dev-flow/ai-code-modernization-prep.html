@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AIでコードを近代化する前に、組織で決めておく6つのこと</title>
+<meta name="description" content="AIエージェントでレガシーコードの近代化が数か月で終わる時代に、ボトルネックになるのは組織側の準備。Anthropicのブログ記事をもとに、到達点・合格基準・本番反映ルールを中心とした6ステップを日本語で整理した解説。">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🕸️</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EEF2F0; --paper-2:#E3E9E6; --card:#F8FAF9;
+  --ink:#16232C; --ink-2:#4A5A63; --rule:#C6D1CC;
+  --teal:#1F6F63; --teal-soft:#D5E8E3;
+  --red:#B5392A; --red-soft:#F3DCD7;
+  --amber:#A8720C; --amber-soft:#F2E6CC;
+  --navy:#2D4A6B; --navy-soft:#DCE4EE;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN","Yu Mincho","MS PMincho",serif;
+  --sans:"Noto Sans JP","Hiragino Sans","Yu Gothic","Meiryo",system-ui,sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#10191F; --paper-2:#16222A; --card:#18252E;
+    --ink:#E3EAE7; --ink-2:#9FB0AA; --rule:#2C3C45;
+    --teal:#5FBFAE; --teal-soft:#16352F;
+    --red:#EE7A68; --red-soft:#3A1F1B;
+    --amber:#E3B04F; --amber-soft:#382C14;
+    --navy:#8FB0D6; --navy-soft:#1C2B3D;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#10191F; --paper-2:#16222A; --card:#18252E;
+  --ink:#E3EAE7; --ink-2:#9FB0AA; --rule:#2C3C45;
+  --teal:#5FBFAE; --teal-soft:#16352F;
+  --red:#EE7A68; --red-soft:#3A1F1B;
+  --amber:#E3B04F; --amber-soft:#382C14;
+  --navy:#8FB0D6; --navy-soft:#1C2B3D;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 16px);scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.85;-webkit-font-smoothing:antialiased}
+img,svg{max-width:100%}
+a{color:var(--navy);text-underline-offset:3px}
+a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid var(--amber);outline-offset:2px;border-radius:4px}
+code{font-size:.88em;background:var(--paper-2);padding:.1em .35em;border-radius:4px}
+h1,h2,h3,h4{font-family:var(--serif);line-height:1.35;letter-spacing:.01em}
+h2{font-size:clamp(1.5rem,3.2vw,2rem);margin:0 0 .6em}
+h3{font-size:1.18rem;margin:2em 0 .6em}
+p{margin:0 0 1.1em}
+.en{font-family:var(--sans);font-size:.72em;font-weight:500;color:var(--ink-2);letter-spacing:0}
+
+/* layout */
+.shell{display:grid;grid-template-columns:230px minmax(0,1fr);gap:48px;max-width:1180px;margin:0 auto;padding:0 24px}
+nav.toc{position:sticky;top:calc(env(safe-area-inset-top,0px) + 24px);align-self:start;padding-top:40px;font-size:.88rem;max-height:calc(100vh - 48px);overflow:auto}
+nav.toc p{font-family:var(--serif);font-weight:800;margin-bottom:.6em}
+nav.toc ol{list-style:none;margin:0;padding:0;border-left:2px solid var(--rule)}
+nav.toc li a{display:block;padding:.3em .9em;color:var(--ink-2);text-decoration:none;border-left:2px solid transparent;margin-left:-2px}
+nav.toc li a:hover,nav.toc li a.active{color:var(--ink);border-left-color:var(--teal)}
+main{min-width:0;padding-bottom:80px}
+section.block{padding:64px 0 24px;border-top:1px solid var(--rule)}
+.prose{max-width:720px}
+@media (max-width:900px){.shell{grid-template-columns:1fr;gap:0}nav.toc{display:none}}
+@media (max-width:480px){.shell{padding:0 16px}}
+
+/* hero */
+.hero{padding:56px 0 40px;max-width:780px}
+.hero .kicker{font-size:.85rem;color:var(--teal);font-weight:700;margin-bottom:.6em}
+.hero h1{font-size:clamp(1.9rem,4.6vw,3rem);font-weight:800;margin:0 0 .5em;line-height:1.25}
+.hero .lede{font-size:1.06rem;color:var(--ink-2)}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px;padding:0;list-style:none}
+.meta li{font-size:.82rem;border:1px solid var(--rule);background:var(--card);border-radius:999px;padding:.2em .9em}
+
+/* dialogue */
+.talk{display:grid;gap:14px;margin:28px 0 32px;max-width:720px}
+.talk-title{font-family:var(--serif);font-weight:800;font-size:.95rem;color:var(--ink-2);margin:0}
+.say{display:grid;grid-template-columns:52px minmax(0,1fr);gap:12px;align-items:start}
+.say.r{grid-template-columns:minmax(0,1fr) 52px}
+.say.r .who{order:2}
+.who{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;font-family:var(--serif);font-weight:800;font-size:.8rem;color:#fff;line-height:1}
+.who.reimu{background:var(--red)}
+.who.marisa{background:var(--amber)}
+.bubble{background:var(--card);border:1px solid var(--rule);border-radius:14px;padding:.8em 1.05em;font-size:.97rem}
+.say:not(.r) .bubble{border-top-left-radius:4px}
+.say.r .bubble{border-top-right-radius:4px;background:var(--paper-2)}
+.bubble .name{display:block;font-size:.75rem;color:var(--ink-2);margin-bottom:.1em}
+
+/* figures */
+figure.dia{margin:26px 0;background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:16px}
+figure.dia .scroll{overflow-x:auto}
+figure.dia svg{display:block;min-width:680px;width:100%;height:auto}
+figure.dia figcaption{font-size:.85rem;color:var(--ink-2);margin-top:10px}
+.dia text{font-family:var(--sans);font-size:12.5px;fill:var(--ink)}
+.dia .ttl{font-family:var(--serif);font-weight:800;font-size:14px}
+.dia .sub{font-size:11.5px;fill:var(--ink-2)}
+.dia .num{font-family:var(--serif);font-weight:800;font-size:18px;fill:var(--teal)}
+.dia .phase{font-family:var(--serif);font-weight:800;font-size:13px;fill:var(--ink-2)}
+.dia rect.box{fill:var(--paper-2);stroke:var(--rule);stroke-width:1.2}
+.dia rect.box.g{fill:var(--teal-soft);stroke:var(--teal)}
+.dia rect.box.a{fill:var(--amber-soft);stroke:var(--amber)}
+.dia rect.box.n{fill:var(--navy-soft);stroke:var(--navy)}
+.dia rect.box.r{fill:var(--red-soft);stroke:var(--red)}
+.dia .ln{fill:none;stroke:var(--ink-2);stroke-width:1.4}
+.dia .ln.dash{stroke-dasharray:5 4}
+.dia .brace{fill:none;stroke:var(--rule);stroke-width:2}
+.dia .arrowhead{fill:var(--ink-2)}
+
+/* tables */
+.tbl{overflow-x:auto;margin:22px 0;background:var(--card);border:1px solid var(--rule);border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:.9rem;min-width:640px}
+th,td{padding:.75em 1em;text-align:left;vertical-align:top;border-bottom:1px solid var(--rule)}
+thead th{font-weight:700;background:var(--paper-2);font-size:.82rem;color:var(--ink-2)}
+tbody th{font-family:var(--serif);font-weight:800;width:17%}
+tr:last-child td,tr:last-child th{border-bottom:0}
+caption{caption-side:top;text-align:left;padding:.8em 1em .2em;font-size:.85rem;color:var(--ink-2)}
+
+/* callouts & panels */
+.note{border-left:4px solid var(--teal);background:var(--teal-soft);padding:14px 18px;border-radius:0 8px 8px 0;margin:22px 0;max-width:720px;font-size:.95rem}
+.note.warn{border-color:var(--red);background:var(--red-soft)}
+.note.idea{border-color:var(--amber);background:var(--amber-soft)}
+.note b{display:block;margin-bottom:.2em}
+.note p:last-child{margin:0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:16px;margin:22px 0}
+.panel{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:18px 20px}
+.panel h4{margin:0 0 .5em;font-size:1.03rem}
+.panel ul{margin:0;padding-left:1.2em;font-size:.92rem}
+.panel li{margin:.3em 0}
+.panel p{font-size:.92rem;margin:0}
+.rules{list-style:none;padding:0;margin:22px 0;counter-reset:r;max-width:760px}
+.rules li{position:relative;padding:0 0 22px 56px;border-left:2px solid var(--rule);margin-left:18px}
+.rules li:last-child{border-left-color:transparent}
+.rules li::before{counter-increment:r;content:counter(r);position:absolute;left:-19px;top:-2px;width:36px;height:36px;border-radius:50%;background:var(--ink);color:var(--paper);display:grid;place-items:center;font-family:var(--serif);font-weight:800}
+.rules h4{margin:0 0 .3em;font-size:1.05rem}
+.rules p{margin:0;font-size:.93rem;color:var(--ink-2)}
+.checklist{columns:2 300px;column-gap:32px;margin:14px 0;padding:0;list-style:none;font-size:.93rem}
+.checklist li{break-inside:avoid;padding:.3em 0 .3em 1.7em;position:relative}
+.checklist li::before{content:"";position:absolute;left:0;top:.72em;width:12px;height:12px;border:2px solid var(--teal);border-radius:3px}
+.spectrum{display:grid;grid-template-columns:1fr 1fr;gap:0;margin:22px 0;border:1px solid var(--rule);border-radius:10px;overflow:hidden;max-width:760px}
+.spectrum div{padding:16px 18px;background:var(--card);font-size:.92rem}
+.spectrum div+div{border-left:1px solid var(--rule);background:var(--paper-2)}
+.spectrum h4{margin:0 0 .4em;font-size:1rem}
+@media (max-width:560px){.spectrum{grid-template-columns:1fr}.spectrum div+div{border-left:0;border-top:1px solid var(--rule)}}
+.sources{font-size:.9rem}
+.sources li{margin:.3em 0}
+footer{border-top:1px solid var(--rule);margin-top:40px;padding-top:24px;font-size:.82rem;color:var(--ink-2)}
+footer a{color:var(--ink-2)}
+.theme-toggle{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:5;background:var(--card);color:var(--ink);border:1px solid var(--rule);border-radius:999px;padding:.4em .9em;font:inherit;font-size:.82rem;cursor:pointer}
+</style>
+</head>
+<body>
+<button class="theme-toggle" id="themeBtn" type="button">表示テーマ切替</button>
+<div class="shell">
+<nav class="toc" aria-label="目次">
+  <p>目次</p>
+  <ol>
+    <li><a href="#shift">ボトルネックの移動</a></li>
+    <li><a href="#overview">6ステップの全体像</a></li>
+    <li><a href="#target">① 到達点を決める</a></li>
+    <li><a href="#certificate">② 合格基準を決める</a></li>
+    <li><a href="#promotion">③ 本番反映ルールを決める</a></li>
+    <li><a href="#prereq">④ 前提をそろえる</a></li>
+    <li><a href="#workflow">⑤ ワークフローを作る</a></li>
+    <li><a href="#run">⑥ 小さく回してから広げる</a></li>
+    <li><a href="#cost">コストの見積もり方</a></li>
+    <li><a href="#beyond">終わったあとに残るもの</a></li>
+    <li><a href="#sources">出典</a></li>
+  </ol>
+</nav>
+<main>
+<header class="hero">
+  <p class="kicker">AI開発フロー ／ 記事解説</p>
+  <h1>AIでコードを近代化する前に、組織で決めておく6つのこと</h1>
+  <p class="lede">AIエージェントを使えば、何年もかかると見積もられていたレガシーコードの近代化が数か月で終わることもあります。ただし、変更管理・レビュー・承認といった組織側の手続きは速くなりません。コードを書く速さが上がるほど、全体の速さは組織の準備で決まるようになります。Anthropicの実践記事をもとに、着手前に決めておくことを6つのステップに整理しました。</p>
+  <ul class="meta" aria-label="このページの前提">
+    <li>元記事：2026-09-23 公開</li>
+    <li>Claude Code</li>
+    <li>基幹系・規制業界向け</li>
+    <li>翻訳ではなく要点の再構成</li>
+  </ul>
+</header>
+
+<section class="block" id="shift" aria-labelledby="h-shift">
+  <div class="prose">
+    <h2 id="h-shift">ボトルネックは「書くこと」から「組織を動かすこと」へ移る</h2>
+    <p>銀行の勘定系のような重要システムでは、どんな小さな変更も変更管理のプロセスを通り、レビューと承認を経て本番に入ります。この仕組みは規制当局・監査・事業部門が求めるもので、システムが信頼される理由そのものです。</p>
+    <p>ところが、この仕組みは「人が1件ずつ変更を書き、人が1件ずつ差分を読む」ことを前提に作られています。エージェントが大量の変更を短時間で作るようになると、詰まるのはコードを書く工程ではなく、その変更を受け入れる組織の側です。</p>
+    <p>元記事は、この詰まりを解消するために<strong>近代化の作業を始める前に</strong>決めておくべきことを整理しています。完了の定義、変更が示すべき証拠、合格した変更を本番へ届ける経路、そして作業開始に必要な準備です。</p>
+  </div>
+  <div class="talk">
+    <div class="say"><div class="who reimu" aria-hidden="true">霊夢</div><div class="bubble"><span class="name">霊夢</span>AIがコードを速く書けるなら、近代化も一気に終わるんじゃないの？</div></div>
+    <div class="say r"><div class="who marisa" aria-hidden="true">魔理沙</div><div class="bubble"><span class="name">魔理沙</span>書くところはな。でも基幹系だと、変更1件ごとにレビューと承認が要る。AIが1日に何百件も変更を出しても、人が1件ずつ読んでたら結局そこで止まるんだぜ。</div></div>
+    <div class="say"><div class="who reimu" aria-hidden="true">霊夢</div><div class="bubble"><span class="name">霊夢</span>じゃあレビューを省けばいい？</div></div>
+    <div class="say r"><div class="who marisa" aria-hidden="true">魔理沙</div><div class="bubble"><span class="name">魔理沙</span>省くんじゃなくて、<strong>何をもって正しいとするか</strong>と<strong>どの変更をどこまで人が見るか</strong>を先に合意しておくんだ。この記事は、その合意の作り方の話だぜ。</div></div>
+  </div>
+</section>
+
+<section class="block" id="overview" aria-labelledby="h-overview">
+  <div class="prose">
+    <h2 id="h-overview">6ステップの全体像</h2>
+    <p>元記事は準備を6つのステップに分けています。前半の3つで「何を作り、何をもって正しいとし、どう本番に入れるか」を決め、4つ目で環境と承認をそろえ、後半の2つで実際にエージェントを動かします。</p>
+  </div>
+  <figure class="dia">
+    <div class="scroll">
+    <svg viewBox="0 0 760 270" role="img" aria-labelledby="flow-title flow-desc">
+      <title id="flow-title">近代化準備の6ステップ</title>
+      <desc id="flow-desc">左から順に、1 到達点を決める、2 合格基準を決める、3 本番反映ルールを決める、4 前提をそろえる、5 ワークフローを作る、6 小さく回してから広げる、の6つの箱が矢印でつながる。1から3は「決める」、4は「整える」、5と6は「作って回す」の段階。6のパイロットで見つかった問題は、個々の変更ではなく2の合格基準と5のワークフローに戻して直す。</desc>
+      <defs>
+        <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="arrowhead" d="M0,0 L10,5 L0,10 z"/></marker>
+      </defs>
+      <!-- phases -->
+      <path class="brace" d="M14,40 V32 H372 V40"/>
+      <text class="phase" x="193" y="24" text-anchor="middle">決める</text>
+      <path class="brace" d="M392,40 V32 H498 V40"/>
+      <text class="phase" x="445" y="24" text-anchor="middle">整える</text>
+      <path class="brace" d="M518,40 V32 H746 V40"/>
+      <text class="phase" x="632" y="24" text-anchor="middle">作って回す</text>
+      <!-- boxes -->
+      <g>
+        <rect class="box g" x="12" y="52" width="108" height="100" rx="8"/>
+        <text class="num" x="24" y="76">1</text>
+        <text class="ttl" x="24" y="100">到達点</text>
+        <text class="sub" x="24" y="120">技術スタックと</text>
+        <text class="sub" x="24" y="136">守る振る舞い</text>
+      </g>
+      <g>
+        <rect class="box g" x="138" y="52" width="108" height="100" rx="8"/>
+        <text class="num" x="150" y="76">2</text>
+        <text class="ttl" x="150" y="100">合格基準</text>
+        <text class="sub" x="150" y="120">変更が満たす</text>
+        <text class="sub" x="150" y="136">自動チェック</text>
+      </g>
+      <g>
+        <rect class="box g" x="264" y="52" width="108" height="100" rx="8"/>
+        <text class="num" x="276" y="76">3</text>
+        <text class="ttl" x="276" y="100">本番反映</text>
+        <text class="sub" x="276" y="120">レビューの</text>
+        <text class="sub" x="276" y="136">深さを階層化</text>
+      </g>
+      <g>
+        <rect class="box n" x="390" y="52" width="108" height="100" rx="8"/>
+        <text class="num" x="402" y="76">4</text>
+        <text class="ttl" x="402" y="100">前提</text>
+        <text class="sub" x="402" y="120">環境・CI/CD・</text>
+        <text class="sub" x="402" y="136">承認・人員</text>
+      </g>
+      <g>
+        <rect class="box a" x="516" y="52" width="108" height="100" rx="8"/>
+        <text class="num" x="528" y="76">5</text>
+        <text class="ttl" x="528" y="100">ワークフロー</text>
+        <text class="sub" x="528" y="120">並列エージェント</text>
+        <text class="sub" x="528" y="136">を組んで調整</text>
+      </g>
+      <g>
+        <rect class="box a" x="642" y="52" width="108" height="100" rx="8"/>
+        <text class="num" x="654" y="76">6</text>
+        <text class="ttl" x="654" y="100">実行</text>
+        <text class="sub" x="654" y="120">一部で通して</text>
+        <text class="sub" x="654" y="136">から全体へ</text>
+      </g>
+      <!-- forward arrows -->
+      <path class="ln" d="M120,102 H136" marker-end="url(#ah)"/>
+      <path class="ln" d="M246,102 H262" marker-end="url(#ah)"/>
+      <path class="ln" d="M372,102 H388" marker-end="url(#ah)"/>
+      <path class="ln" d="M498,102 H514" marker-end="url(#ah)"/>
+      <path class="ln" d="M624,102 H640" marker-end="url(#ah)"/>
+      <!-- feedback loop -->
+      <path class="ln dash" d="M696,152 V210 H192 V156" marker-end="url(#ah)"/>
+      <path class="ln dash" d="M570,210 V156" marker-end="url(#ah)"/>
+      <text class="sub" x="380" y="232" text-anchor="middle">パイロットで見つかった問題は、個々の変更ではなく</text>
+      <text class="sub" x="380" y="250" text-anchor="middle">合格基準（2）とワークフロー（5）を直して解消する</text>
+    </svg>
+    </div>
+    <figcaption>図1　6ステップの流れ。①〜③が合意づくり、④が環境と承認、⑤⑥が実作業。点線は、試行で見つかった問題の戻し先を表す。</figcaption>
+  </figure>
+  <div class="prose">
+    <p>図は左から右への順番を示していますが、実際には完全な直列ではありません。④の前提づくりは他チームへの依頼が多く時間がかかるため、①〜③を進めながら必要なものが見えた時点で依頼を始めます。また、⑥の試行で問題が見つかったら、変更を1件ずつ手で直すのではなく、合格基準やワークフローの側を直します。この「仕組みの側を直す」という考え方は、記事全体を通して繰り返し出てきます。</p>
+    <p>このページでは用語を次のように訳しています。</p>
+  </div>
+  <div class="tbl">
+    <table>
+      <caption>このページの訳語</caption>
+      <thead><tr><th scope="col">訳語</th><th scope="col">原語</th><th scope="col">意味</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">到達点</th><td>target</td><td>近代化後のコードが採用する技術スタックと、持つべき振る舞い</td></tr>
+        <tr><th scope="row">合格基準</th><td>certificate</td><td>すべての変更が満たすべき条件の集まり。人が介在せずに判定できるもの</td></tr>
+        <tr><th scope="row">本番反映ルール</th><td>promotion policy</td><td>合格した変更が、どの深さのレビューを経て本番に入るかを定めた取り決め</td></tr>
+        <tr><th scope="row">専門家</th><td>SME（subject matter expert）</td><td>業務やシステムを深く理解している人。時間が最も限られた資源になる</td></tr>
+        <tr><th scope="row">影響範囲</th><td>blast radius</td><td>その変更が壊れたときに被害が及ぶ範囲</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="block" id="target" aria-labelledby="h-target">
+  <div class="prose">
+    <h2 id="h-target">① 到達点を決める <span class="en">Define the target</span></h2>
+    <p>到達点とは、近代化が終わったときの姿です。どんな姿を目指すかによって、近代化は次の3種類に分かれます。後ろの種類ほど、決めておくことが増えます。</p>
+  </div>
+  <div class="tbl">
+    <table>
+      <caption>近代化の3類型</caption>
+      <thead><tr><th scope="col">類型</th><th scope="col">中身</th><th scope="col">選ぶ場面</th><th scope="col">到達点として決めるもの</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">引き上げ<br><span class="en">Uplift</span></th><td>同じ技術スタックのままバージョンを上げる（例：C++11 → C++20）</td><td>スタック自体に不満はないが、サポート切れのランタイム、未修正の脆弱性、上げられない依存関係などでバージョンが取り残されている</td><td>ランタイムのバージョンと、使うパッケージの組み合わせ</td></tr>
+        <tr><th scope="row">載せ替え<br><span class="en">Transform</span></th><td>振る舞いは変えずに別のスタックへ書き直す（例：COBOL → Java）</td><td>スタックそのものが問題で、今の振る舞いは信頼できる</td><td>引き上げの内容に加えて、言語・フレームワーク・新しいコードが従う設計規約</td></tr>
+        <tr><th scope="row">作り直し<br><span class="en">Reimagine</span></th><td>新しいアーキテクチャでゼロから作り、振る舞いも変える</td><td>コードと一緒に振る舞いも変える必要がある</td><td>載せ替えの内容に加えて、新システムの振る舞いを文章にした仕様書</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="prose">
+    <h3>類型は早めに合意しておく</h3>
+    <p>どの類型にするかは、社内で意見が割れやすいところです。本番運用に近い人ほど、リスクを抑えるために「振る舞いはそのまま、スタックだけ替える」載せ替えを望みます。一方、長年そのコードと付き合ってきた開発者は技術的負債も一緒に返したいと考え、事業部門はこの機会に新しい要件を入れたいと考えます。こちらは作り直しに近い立場です。</p>
+    <p>どちらにも理があります。ただし、ここを曖昧にしたまま進めると、あとで個々の変更について「これは正しいのか」という議論として何度も蒸し返されます。最初に合意を取る手間はかかりますが、プロジェクト全体はそのほうが速く進みます。</p>
+
+    <h3>現行システムを棚卸しする</h3>
+    <p>到達点を決める最初の一歩は、今のシステムが実際に何をしているかを把握することです。振る舞いを一覧にすると、どこを残し、どこを変え、どこを捨てるかを判断しやすくなり、載せ替えと作り直しのどちらになるかも見えてきます。誰も覚えていない業務ロジックや例外処理が見つかることもよくあります。</p>
+    <p>この調査の多くはClaudeに任せられます。公式の<a href="https://github.com/anthropics/claude-plugins-official/tree/main/plugins/code-modernization">code-modernizationプラグイン</a>には、現状を評価する <code>assess</code>、依存関係を地図にする <code>map</code>、業務ルールを抽出する <code>extract-rules</code> といったコマンドがあり、抽出したルールには根拠となるソースの場所が付くので、エンジニアが確認できます。</p>
+  </div>
+  <div class="note warn">
+    <b>コードからの抽出だけでは足りない</b>
+    <p>レガシーシステムの振る舞いは、コードを読むだけでは把握しきれないことがあります。業務ユーザーや開発者へのヒアリング、社内文書で穴を埋めます。最初に時間はかかりますが、ここで集めた文脈の質が、後でワークフローが下すすべての判断の質を決めます。作り直しの場合は、さらに詳しい振る舞いの仕様書を書き、利用者のグループと合意しておきます。</p>
+  </div>
+
+  <div class="prose">
+    <h3>「なぜやるのか」を言葉にする</h3>
+    <p>到達点と並んで、そもそもなぜ近代化するのかも整理しておきます。保守や運用のコストが下がる効果はありますが、元記事の経験では、コスト削減が主な動機になった案件は多くありません。</p>
+  </div>
+  <div class="note idea">
+    <b>一番大きい効果はリスクの削減</b>
+    <p>やるかどうかを議論するときは、<strong>やらなかった場合のリスク</strong>を天秤に載せます。未修正の脆弱性を抱えたシステムは、事業そのものを揺るがす侵害や障害につながり得ます。サポートが切れたランタイムや、そのシステムを理解している技術者の減少は、このリスクをさらに大きくします。</p>
+  </div>
+  <div class="prose">
+    <p>予算の目安には、Anthropicや<a href="https://claude.com/customers/lg-cns">LG CNS</a>が公開している実績コストが使えます（考え方は<a href="#cost">後述</a>）。ただ、本当に難しいのは、所有チームと依存チームの合意を取ることです。経営層で事業上の理由と目標を決めておけば、後で「どこまでリスクを許すか」で揉めたときに、<strong>近代化しないリスク</strong>が判断の重しになります。</p>
+  </div>
+</section>
+
+<section class="block" id="certificate" aria-labelledby="h-cert">
+  <div class="prose">
+    <h2 id="h-cert">② 合格基準を決める <span class="en">Create the certificate</span></h2>
+    <p>合格基準とは、近代化で生まれるすべての変更が満たすべき条件やテストの集まりです。「この変更は到達点に照らして正しい」と言える証拠が、全体として最も強くなるように条件を選びます。</p>
+    <p>大事なのは、<strong>どの条件も人が介在せずに判定できること</strong>です。そうすれば、エージェントのワークフローは基準を満たすまで自分で変更を作り直し、どうしても満たせないものだけを人に回せます。</p>
+    <h3>条件の候補</h3>
+    <p>何を入れるかは到達点によって変わりますが、たいていは次の中から選ぶことになります。</p>
+  </div>
+  <div class="grid">
+    <div class="panel">
+      <h4>テスト</h4>
+      <ul>
+        <li>既存のテストスイートが通る</li>
+        <li>近代化の途中でClaudeが書いたテストがすべて通る</li>
+        <li>カバレッジが合意した水準を満たす</li>
+        <li>性能ベンチマークが合意した範囲に収まる</li>
+      </ul>
+    </div>
+    <div class="panel">
+      <h4>新旧の一致</h4>
+      <ul>
+        <li>同じ入力に対して新旧が同じ出力を返す（入力は本番のもの、記録したもの、Claudeが生成したもののいずれか）</li>
+        <li>保存データや通信フォーマットを新旧で読み書きしても崩れない</li>
+      </ul>
+    </div>
+    <div class="panel">
+      <h4>レビューと解析</h4>
+      <ul>
+        <li>毎回新しい文脈で起動したClaudeによる独立した批判的レビューで、ブロッカーが見つからない</li>
+        <li>画面がある場合、Claudeが実際に操作して退行が見つからない</li>
+        <li>静的解析とセキュリティスキャンで新しい指摘が出ない</li>
+        <li>コンパイル言語ならビルドと型チェックがクリーン</li>
+      </ul>
+    </div>
+    <div class="panel">
+      <h4>運用での確認</h4>
+      <ul>
+        <li>合意した期間ステージングで動かし、エラー率・レイテンシ・アラートに悪化がない</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="note">
+    <b>合格基準は、変更を審査し本番に入れる人たちと一緒に作る</b>
+    <p>今そのコードに依存している開発者、利用者のグループ、事業責任者を、合格基準とワークフローを設計している段階から巻き込みます。彼らの知見が「何を測るべきか」を形づくり、早く関わってもらうことが、後で変更をレビューするときの納得につながります。出来上がった基準は「この証拠だけでマージしてよいと思えるか」を彼らに問うことで確かめます。自分たちの基準がそこに反映されていると感じてもらえれば、次の本番反映ルールを軽くできます。</p>
+  </div>
+
+  <div class="prose">
+    <h3>類型ごとに「何と比べるか」が変わる</h3>
+  </div>
+  <div class="tbl">
+    <table>
+      <caption>類型別の合格基準の組み立て方</caption>
+      <thead><tr><th scope="col">類型</th><th scope="col">比べる相手</th><th scope="col">中心になる証拠</th><th scope="col">難しさ</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">引き上げ</th><td>元のコード</td><td>既存のテストスイートをそのまま基準の核にできる</td><td>比較的やりやすい</td></tr>
+        <tr><th scope="row">載せ替え</th><td>元のコード</td><td>既存テストは新しいスタックでは動かないことが多い。本番トラフィックの再生、新旧の差分テスト、本番と並行稼働させた比較が主役になる</td><td>比較の仕組みを作る手間がかかる</td></tr>
+        <tr><th scope="row">作り直し</th><td>振る舞いの仕様書</td><td>仕様書から書いたテスト、仕様に照らしたClaudeの独立レビュー、振る舞いを引き継ぐ部分での新旧差分チェック</td><td>最も難しい。既存システムと違って仕様書は解釈の余地があり、モデルの判断に頼る部分が増えて結果がぶれやすい。仕様の穴はまずここで見つかるので、基準も仕様と一緒に改訂していく前提で進める</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="prose">
+    <h3>証拠が足りなければ、先に証拠を作る</h3>
+    <p>古いシステムは、テストが少ない、不安定なテストが多い、テレメトリがほとんどない、ということがよくあります。合格基準を考える過程で、こうした穴を洗い出すこと自体がこのステップの仕事です。強い基準を支えられそうにないなら、Claudeを使って足りない証拠を作るのが一番効果的です。本番並行環境を立てる、リプレイの仕組みを作る、テストを書き足す、といった作業です。</p>
+  </div>
+  <div class="talk">
+    <p class="talk-title">合格基準についての会話</p>
+    <div class="say"><div class="who reimu" aria-hidden="true">霊夢</div><div class="bubble"><span class="name">霊夢</span>「人がいなくても判定できる」って条件、かなり厳しくない？</div></div>
+    <div class="say r"><div class="who marisa" aria-hidden="true">魔理沙</div><div class="bubble"><span class="name">魔理沙</span>厳しいけど、そこが肝なんだぜ。機械で判定できれば、エージェントは落ちたら自分で直してもう一回出せる。人に聞かないと合否が決まらない条件ばかりだと、結局また人が1件ずつ見ることになる。</div></div>
+    <div class="say"><div class="who reimu" aria-hidden="true">霊夢</div><div class="bubble"><span class="name">霊夢</span>でも古いシステムって、テストがほとんどないことも多いわよね。</div></div>
+    <div class="say r"><div class="who marisa" aria-hidden="true">魔理沙</div><div class="bubble"><span class="name">魔理沙</span>だから近代化の前に、証拠を作る仕事をAIにやらせるんだ。旧システムに本番の入力を流して出力を記録しておけば、新しいほうと突き合わせられる。「正しさを測るものさし」を先に作るわけだな。</div></div>
+  </div>
+</section>
+
+<section class="block" id="promotion" aria-labelledby="h-promo">
+  <div class="prose">
+    <h2 id="h-promo">③ 本番反映ルールを決める <span class="en">Set the promotion policy</span></h2>
+    <p>エージェントは、人のチームが1件ずつ差分を読める速さをはるかに超えて変更を作ります。本番反映ルールは、変更ごとに人のレビューをどこまで深くするかを階層で決め、事前に文書化して合意しておく取り決めです。これがあることで、近代化を現実的な期間で終わらせられます。</p>
+    <p>合格基準と同じく、このステップもレビューする人たちと一緒に進め、できるだけ既存の変更管理プロセスに組み込みます。細部は組織やリスクの事情で変わりますが、次の4つはどこでも通用します。</p>
+  </div>
+  <ol class="rules">
+    <li><h4>影響範囲とエージェントの確信度で階層を分ける</h4><p>組織に独自の変更区分やリスク区分があれば、それを使います。重要な経路は、必ず人がしっかりレビューする階層に残します。</p></li>
+    <li><h4>繰り返し出るフラグは発生源で直す</h4><p>人に回された変更を集めて傾向を分析します。同じ種類のフラグが何度も出るなら、1件ずつレビューするのではなく、ワークフローか合格基準の側で原因を直します。</p></li>
+    <li><h4>レビューしやすい出力形式をレビュー担当と決める</h4><p>どの情報をどんな形で見せればレビューが最も速いか、どんな証拠なら安心できるかを担当者と決めます。⑤の段階で、実際の出力サンプルを早めに見てもらいます。</p></li>
+    <li><h4>専門家の時間を一番リスクの高いところに使う</h4><p>専門家がすべての差分を読むことはできませんが、その判断は最も貴重な資源です。高リスク階層の変更と、各階層でエージェントが判断に迷った箇所へ、大きな差分をかき分けずに直接たどり着けるようにします。そうすれば、少ない時間で最もリスクの高い変更をカバーできます。</p></li>
+  </ol>
+  <div class="prose">
+    <p>これらのルールの多くは、専門家の時間をプロジェクトの<strong>前半</strong>に使うものです。彼らのフィードバックで、本番の近代化を始める前に合格基準とワークフローを調整します。サンプルへの承認は、確信度が高い変更のレビューを軽くしてよい根拠にもなります。レビューを最後にまとめて行う従来のやり方とは、ちょうど逆の順番です。</p>
+  </div>
+
+  <figure class="dia">
+    <div class="scroll">
+    <svg viewBox="0 0 760 330" role="img" aria-labelledby="promo-title promo-desc">
+      <title id="promo-title">変更が生成されてから本番に入るまでの経路</title>
+      <desc id="promo-desc">エージェントが変更を作り、合格基準を自動チェックする。未達なら自動で作り直す。作り直しても満たせない変更は人へフラグとして回り、繰り返し出る種類のものはワークフローや合格基準の側で原因を直す。合格した変更は影響範囲と確信度で3つの階層に振り分けられ、低リスクは軽い確認、中リスクは通常のレビュー、重要経路は専門家の精査を経て本番に入る。</desc>
+      <defs>
+        <marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="arrowhead" d="M0,0 L10,5 L0,10 z"/></marker>
+      </defs>
+      <!-- generate -->
+      <rect class="box a" x="10" y="130" width="120" height="62" rx="8"/>
+      <text class="ttl" x="70" y="156" text-anchor="middle">変更を生成</text>
+      <text class="sub" x="70" y="176" text-anchor="middle">エージェント</text>
+      <!-- certificate check -->
+      <rect class="box g" x="162" y="130" width="130" height="62" rx="8"/>
+      <text class="ttl" x="227" y="156" text-anchor="middle">合格基準チェック</text>
+      <text class="sub" x="227" y="176" text-anchor="middle">すべて自動判定</text>
+      <path class="ln" d="M130,161 H160" marker-end="url(#ah2)"/>
+      <!-- retry loop -->
+      <path class="ln dash" d="M227,130 V98 H70 V128" marker-end="url(#ah2)"/>
+      <text class="sub" x="148" y="90" text-anchor="middle">未達 → 自動で作り直し</text>
+      <!-- flag -->
+      <rect class="box r" x="162" y="246" width="130" height="62" rx="8"/>
+      <text class="ttl" x="227" y="272" text-anchor="middle">人へフラグ</text>
+      <text class="sub" x="227" y="292" text-anchor="middle">作り直しても未達</text>
+      <path class="ln" d="M227,192 V244" marker-end="url(#ah2)"/>
+      <!-- root cause -->
+      <rect class="box" x="10" y="246" width="120" height="62" rx="8"/>
+      <text class="ttl" x="70" y="272" text-anchor="middle">発生源を修正</text>
+      <text class="sub" x="70" y="292" text-anchor="middle">基準・ワークフロー</text>
+      <path class="ln" d="M162,277 H132" marker-end="url(#ah2)"/>
+      <path class="ln dash" d="M70,246 V194" marker-end="url(#ah2)"/>
+      <!-- tiering -->
+      <rect class="box n" x="330" y="130" width="140" height="62" rx="8"/>
+      <text class="ttl" x="400" y="156" text-anchor="middle">階層に振り分け</text>
+      <text class="sub" x="400" y="176" text-anchor="middle">影響範囲 × 確信度</text>
+      <path class="ln" d="M292,161 H328" marker-end="url(#ah2)"/>
+      <text class="sub" x="310" y="150" text-anchor="middle">合格</text>
+      <!-- tiers -->
+      <rect class="box" x="508" y="36" width="142" height="56" rx="8"/>
+      <text class="ttl" x="579" y="60" text-anchor="middle">低リスク</text>
+      <text class="sub" x="579" y="79" text-anchor="middle">軽い確認</text>
+      <rect class="box" x="508" y="133" width="142" height="56" rx="8"/>
+      <text class="ttl" x="579" y="157" text-anchor="middle">中リスク</text>
+      <text class="sub" x="579" y="176" text-anchor="middle">通常のレビュー</text>
+      <rect class="box r" x="508" y="230" width="142" height="56" rx="8"/>
+      <text class="ttl" x="579" y="254" text-anchor="middle">重要経路</text>
+      <text class="sub" x="579" y="273" text-anchor="middle">専門家が精査</text>
+      <path class="ln" d="M470,150 C490,150 488,64 506,64" marker-end="url(#ah2)"/>
+      <path class="ln" d="M470,161 H506" marker-end="url(#ah2)"/>
+      <path class="ln" d="M470,172 C490,172 488,258 506,258" marker-end="url(#ah2)"/>
+      <!-- prod -->
+      <rect class="box g" x="682" y="130" width="68" height="62" rx="8"/>
+      <text class="ttl" x="716" y="166" text-anchor="middle">本番</text>
+      <path class="ln" d="M650,64 C668,64 664,150 680,150" marker-end="url(#ah2)"/>
+      <path class="ln" d="M650,161 H680" marker-end="url(#ah2)"/>
+      <path class="ln" d="M650,258 C668,258 664,172 680,172" marker-end="url(#ah2)"/>
+    </svg>
+    </div>
+    <figcaption>図2　変更が本番に入るまでの経路。元記事の説明をもとに作図したもの。階層の数や名前は組織ごとに決める。</figcaption>
+  </figure>
+  <div class="prose">
+    <p>図の読み方は左から右です。人が関わるのは、右側の3階層のレビューと、下段の「人へフラグ」の2か所だけです。下段の点線が示すように、フラグで見つかった問題は、同じ種類が繰り返し出るなら個別に直さず、合格基準やワークフローへ戻して発生源をつぶします。図は流れの骨組みだけを表しており、ステージングでの並行稼働期間や承認者の割り当てといった各社の手続きは含めていません。</p>
+
+    <h3>速さとレビューの深さ、どちらに寄せるか</h3>
+    <p>本番反映ルールには、そのプロジェクトが「速さ」と「レビューの深さ」のどこに位置するかも反映させます。関係者のリスク許容度や制約によって落としどころは変わるので、作業開始前に確定させておきます。</p>
+  </div>
+  <div class="spectrum">
+    <div>
+      <h4>速さ寄り</h4>
+      <p>ランタイムのサポート終了など動かせない期限がある場合。人のレビューを軽くし、1件あたりのリスクが大きくなることを明示的に受け入れる。</p>
+    </div>
+    <div>
+      <h4>深さ寄り</h4>
+      <p>期間に余裕がある場合。人のレビューを深くし、切り替えもゆっくり進められる。</p>
+    </div>
+  </div>
+  <div class="prose">
+    <h3>方針はトップから示し、責任は共有する</h3>
+    <p>規制の厳しい環境では、レビューを軽くすることへの抵抗が強く出ます。承認者個人は悪い変更を通すリスクを背負い、経営層は古いシステムを抱え続けるリスクを背負っていて、両者の見ているリスクがずれているからです。元記事は、この方針を組織のトップから出し、事前に合意しておくことを勧めています。そうすれば、不具合が出ても責任は組織全体で持つことになり、承認した個人のせいにはなりません。</p>
+  </div>
+  <div class="note warn">
+    <b>前提条件</b>
+    <p>ここまでの仕組みはすべて、本当の証拠として通用するほど詳しい合格基準と、Claudeがどうやってその変更にたどり着いたかを理解して信頼できるレビュー担当がいることを前提にしています。</p>
+  </div>
+  <div class="talk">
+    <p class="talk-title">本番反映ルールについての会話</p>
+    <div class="say"><div class="who reimu" aria-hidden="true">霊夢</div><div class="bubble"><span class="name">霊夢</span>レビューを軽くしていい変更がある、って言われても、承認する側は怖いわよ。何かあったら自分のせいになるもの。</div></div>
+    <div class="say r"><div class="who marisa" aria-hidden="true">魔理沙</div><div class="bubble"><span class="name">魔理沙</span>まさにそこが一番の壁だって記事も書いてるぜ。だから方針は上から出して、先に合意しておく。そうすれば不具合が出ても「承認した人の責任」じゃなくて「組織で決めたルールの結果」になる。</div></div>
+    <div class="say"><div class="who reimu" aria-hidden="true">霊夢</div><div class="bubble"><span class="name">霊夢</span>専門家を最初に巻き込むのも、そのためなのね。</div></div>
+    <div class="say r"><div class="who marisa" aria-hidden="true">魔理沙</div><div class="bubble"><span class="name">魔理沙</span>そうだ。最後に全部読んでもらうんじゃなくて、最初にサンプルを見て基準を一緒に作ってもらう。自分の目線が基準に入っていれば、軽いレビューでも納得して通せるってわけだな。</div></div>
+  </div>
+</section>
+
+<section class="block" id="prereq" aria-labelledby="h-prereq">
+  <div class="prose">
+    <h2 id="h-prereq">④ 前提をそろえる <span class="en">Put the prerequisites in place</span></h2>
+    <p>このステップの多くは、近代化チームの外を通ります。実行ホストはプラットフォームやインフラのチーム、テスト環境はQAやリリースエンジニアリング、承認はセキュリティやコンプライアンスのチームです。それぞれに自分たちのバックログや承認手続きがあるので、必要なものがわかった時点で、①〜③の途中でも早めに相談を始めます。</p>
+  </div>
+  <div class="grid">
+    <div class="panel">
+      <h4>環境</h4>
+      <ul class="checklist" style="columns:1">
+        <li>ワークフロー専用のリモートホスト。コードベースや関連する情報源にClaudeが届く</li>
+        <li>合格基準が求めるだけのテスト実行能力</li>
+        <li>基準を強くするもの：本番テレメトリ、本番並行環境、リプレイ用の本番データ</li>
+      </ul>
+    </div>
+    <div class="panel">
+      <h4>コードベースとCI/CD</h4>
+      <ul class="checklist" style="columns:1">
+        <li>依存関係の地図。ビルドやコンパイルのログ、import解析、実行時トレースに基づくもの。プラグインの <code>map</code> は出発点で、古く大きなコードベースでは追加の作業が要る</li>
+        <li>依存パッケージの扱い方（到達点の一部として決める）</li>
+        <li>必要なら、CI/CDに入れる互換性チェック</li>
+        <li>その場で近代化するならコード凍結の方針</li>
+        <li>凍結や新しい互換性要件を、開発中のメンバーへ伝える計画</li>
+      </ul>
+    </div>
+    <div class="panel">
+      <h4>チームとレビュー</h4>
+      <ul class="checklist" style="columns:1">
+        <li>コードベースに依存する他チームが、どう関わるかの合意（合格基準の承認、本番反映ルールに沿ったレビューなど）</li>
+        <li>レビュー担当の時間の確保</li>
+      </ul>
+    </div>
+    <div class="panel">
+      <h4>セキュリティとコンプライアンス</h4>
+      <ul class="checklist" style="columns:1">
+        <li>ソースコードを扱うことが承認された、Claude Codeからのモデル利用経路</li>
+        <li>最小権限：書き込みは近代化用ブランチのみ、本番の認証情報は持たせない</li>
+        <li>近代化用ブランチから秘密情報や個人情報を除去またはマスク</li>
+        <li>すべての変更とPRを、エージェントの作業記録と合格基準の証拠にひも付けて追跡できる</li>
+        <li>新しく入る依存関係のライセンスと脆弱性のチェック</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="workflow" aria-labelledby="h-wf">
+  <div class="prose">
+    <h2 id="h-wf">⑤ エージェントのワークフローを作り、調整する <span class="en">Build and refine the agentic workflow</span></h2>
+    <p>Claude Codeで、そのコードベース専用の<a href="https://claude.com/blog/introducing-dynamic-workflows-in-claude-code">dynamic workflow</a>を作ります。近代化の作業を小さな単位に分け、多数のサブエージェントに並列で処理させる仕組みです。</p>
+    <p>進め方の要点は3つです。</p>
+    <ul>
+      <li><strong>知識ベースを置く：</strong>code-modernizationプラグインを出発点に、①〜③で決めたこと、コード、ドキュメント、判定用のデータやツールを、ファイルシステムかMCP経由でClaudeが読める場所にまとめる</li>
+      <li><strong>土台を専門家が確認する：</strong>抽出した業務ルールやコードベース固有のスキルは、それを使う処理を動かす前に確認してもらう</li>
+      <li><strong>小さな範囲で調整する：</strong>変更そのものに加えて、エージェントの作業過程と合格基準の証拠まで専門家に見てもらう</li>
+    </ul>
+  </div>
+  <div class="note idea">
+    <b>直すのは個々の変更ではなく、ワークフロー</b>
+    <p>問題が見つかったら、その変更を手で直すのではなくワークフローを修正します。目指すのは、規模を広げたときに、ほぼすべての変更が合格基準を満たし、レビュー担当が本番反映ルールに沿って安心してマージできる、という確信を得ることです。</p>
+  </div>
+</section>
+
+<section class="block" id="run" aria-labelledby="h-run">
+  <div class="prose">
+    <h2 id="h-run">⑥ 小さく回してから広げる <span class="en">Run the modernization</span></h2>
+    <p>まずコードベースの一部分で、近代化を最初から最後まで通します。本番反映ルールに沿ったレビューと本番への反映まで含めて、です。うまくいかないところは、直すコストが小さいうちに直します。確信が持てるまでこれを繰り返してから、コードベース全体へ広げます。</p>
+    <h3>進め方は2通り</h3>
+  </div>
+  <div class="tbl">
+    <table>
+      <caption>近代化の進め方</caption>
+      <thead><tr><th scope="col">進め方</th><th scope="col">使える類型</th><th scope="col">中身</th><th scope="col">向いている場面</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">並行して作り、切り替える</th><td>載せ替え・作り直し（引き上げも可）</td><td>既存システムの横で新しいものを作り、完成したら切り替える</td><td>別のコピーを作って保てる場合</td></tr>
+        <tr><th scope="row">その場で近代化する</th><td>引き上げのみ</td><td>開発が続いている本番のコードベースを、そのまま近代化していく</td><td>システムを止められない場合や、変更が速すぎて別コピーを追従させられない場合</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="prose">
+    <p>その場で近代化する場合、元記事でうまくいったのは次のやり方です。</p>
+    <ol>
+      <li>コードベースを論理的な区画に分け、依存される側の末端（葉）から内側へ向かって順番を決める</li>
+      <li>区画を1つずつ凍結して近代化する</li>
+      <li>CI/CDにゲートを設け、近代化が終わった区画を新しいコミットが元に戻せないようにする</li>
+    </ol>
+  </div>
+</section>
+
+<section class="block" id="cost" aria-labelledby="h-cost">
+  <div class="prose">
+    <h2 id="h-cost">コストの見積もり方</h2>
+    <p>トークン代がどのくらいかかるかは案件ごとに違いますが、主に次の4つで決まります。</p>
+  </div>
+  <div class="tbl">
+    <table>
+      <caption>コストを左右する要因</caption>
+      <thead><tr><th scope="col">要因</th><th scope="col">内容</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">読む量と変える量</th><td>コードベースのうち、読む必要がある部分と、実際に書き換える部分の割合</td></tr>
+        <tr><th scope="row">合格基準の重さ</th><td>規制の厳しい環境では、変更を書くことより検証のほうがコストの大半を占めることが多い</td></tr>
+        <tr><th scope="row">テストの追加と修復</th><td>合格基準が求める新しいテストの作成と、壊れたテストの修復の量</td></tr>
+        <tr><th scope="row">並行開発との調整</th><td>作業中に他チームがマージしてくる変更との突き合わせ</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="note">
+    <b>パイロットで測って、下限を出す</b>
+    <p>⑥の最初の小さな範囲でトークン使用量を測り、それを全体に外挿します。本番コードベースでの調整作業のように、パイロットでは見えなかったものは「未知」として扱います。こうして得られるのは、全体コストの<strong>下限</strong>の見積もりです。</p>
+  </div>
+  <div class="prose">
+    <h3>パイロットの計測からコストを下げる</h3>
+  </div>
+  <div class="grid">
+    <div class="panel">
+      <h4>重い検証は、安いゲートの後ろに置く</h4>
+      <p>トークンを最も使っている工程を見つけて効率化します。計算の重い検証は、安いチェックを通った変更にだけ実行されるよう、順番を後ろにします。</p>
+    </div>
+    <div class="panel">
+      <h4>作業の性質でモデルを使い分ける</h4>
+      <p>合格基準で完全に検証できる機械的で大量の作業には、Sonnetのようにコストと能力のバランスがよいモデルを使います。難しい変換や、正しさを確かめる批判的レビューには、より賢いモデルを残しておきます。</p>
+    </div>
+    <div class="panel">
+      <h4>エスカレーションはリトライ率を見て決める</h4>
+      <p>安いモデルが基準を満たせなかったときだけ高いモデルに上げる方法もあります。ただし、安いモデルで何度もやり直すと、高いモデル1回より高くつくことがあるので、パイロット中にリトライ率を注意深く分析します。ワークフローとパイロットのデータをClaudeに渡せば、この分析も一緒に進められます。</p>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="beyond" aria-labelledby="h-beyond">
+  <div class="prose">
+    <h2 id="h-beyond">終わったあとに残るもの</h2>
+    <p>近代化されたコードは、成果物の1つにすぎません。ほかにも次のものが残ります。</p>
+    <ul>
+      <li>そのコードを生み出したワークフロー</li>
+      <li>「何をもって正しいとするか」を文章にした合格基準</li>
+      <li>自社の変更管理プロセスがすでに受け入れた本番反映ルール</li>
+      <li>本番に入ったすべての変更についての証拠の記録</li>
+    </ul>
+    <p>これらを再利用できる手順書としてまとめておけば、次のバージョンアップや書き直しのときには、同じ型がすでに手元にある状態から始められます。</p>
+  </div>
+  <div class="talk">
+    <p class="talk-title">まとめの会話</p>
+    <div class="say"><div class="who reimu" aria-hidden="true">霊夢</div><div class="bubble"><span class="name">霊夢</span>結局、AIの使い方というより、段取りの話だったわね。</div></div>
+    <div class="say r"><div class="who marisa" aria-hidden="true">魔理沙</div><div class="bubble"><span class="name">魔理沙</span>そうだな。6ステップのうち、エージェントを実際に動かすのは後ろの2つだけだ。前の4つは「何を作るか」「何をもって正しいとするか」「どう本番に入れるか」「そのための環境と承認」を決める話だぜ。</div></div>
+    <div class="say"><div class="who reimu" aria-hidden="true">霊夢</div><div class="bubble"><span class="name">霊夢</span>しかも、一度決めた基準やルールは次の案件でも使えるのね。</div></div>
+    <div class="say r"><div class="who marisa" aria-hidden="true">魔理沙</div><div class="bubble"><span class="name">魔理沙</span>ああ。まずは自分のところの一番古いシステムについて、3つの類型のどれに当たるか、やらなかったら何が起きるかを書き出すところから始めてみるといいぜ。</div></div>
+  </div>
+</section>
+
+<section class="block" id="sources" aria-labelledby="h-src">
+  <div class="prose">
+    <h2 id="h-src">出典</h2>
+    <p>このページは次の記事の内容を、日本語で読みやすいように再構成した解説です。逐語訳ではありません。正確な記述は原文を確認してください。</p>
+    <ul class="sources">
+      <li>元記事：Jonah Ezekiel, Lexie Tonelli「<a href="https://claude.com/blog/how-to-prepare-for-ai-driven-code-modernization-projects">How to prepare for AI-driven code modernization projects</a>」Claude Blog, 2026-09-23</li>
+      <li><a href="https://github.com/anthropics/claude-plugins-official/tree/main/plugins/code-modernization">code-modernization プラグイン（anthropics/claude-plugins-official）</a></li>
+      <li><a href="https://claude.com/blog/introducing-dynamic-workflows-in-claude-code">Introducing dynamic workflows in Claude Code</a></li>
+      <li><a href="https://claude.com/blog/ai-code-migration">AI code migration（大規模移行の事例とコスト）</a></li>
+      <li><a href="https://claude.com/blog/how-ai-helps-break-cost-barrier-cobol-modernization">COBOL Modernization with AI: Breaking the Cost Barrier</a></li>
+      <li><a href="https://claude.com/blog/the-ai-native-sdlc-playbook">The AI-Native SDLC playbook</a></li>
+      <li><a href="https://resources.anthropic.com/code-modernization-playbook">Code modernization playbook</a></li>
+    </ul>
+  </div>
+  <footer>
+    <p><a href="../">thinking トップに戻る</a></p>
+    元記事の公開時点の内容に基づいています。プラグインのコマンド名やツールの機能は変わる可能性があるため、導入時は公式ドキュメントで確認してください。
+  </footer>
+</section>
+</main>
+</div>
+
+<script>
+(function(){
+  var root=document.documentElement, btn=document.getElementById('themeBtn');
+  try{var t=localStorage.getItem('theme'); if(t) root.setAttribute('data-theme',t);}catch(e){}
+  btn.addEventListener('click',function(){
+    var cur=root.getAttribute('data-theme');
+    if(!cur){cur=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}
+    var next=cur==='dark'?'light':'dark';
+    root.setAttribute('data-theme',next);
+    try{localStorage.setItem('theme',next);}catch(e){}
+  });
+
+  var links=[].slice.call(document.querySelectorAll('nav.toc a'));
+  if('IntersectionObserver' in window){
+    var io=new IntersectionObserver(function(es){
+      es.forEach(function(e){
+        if(e.isIntersecting){
+          links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href')==='#'+e.target.id);});
+        }
+      });
+    },{rootMargin:'-40% 0px -55% 0px'});
+    document.querySelectorAll('section.block').forEach(function(s){io.observe(s);});
+  }
+})();
+</script>
+</body>
+</html>
