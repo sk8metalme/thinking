@@ -13,9 +13,11 @@ AGENTS.md                                      エージェント向けの執筆
 docs/                                           Pagesに公開する静的HTML
 ├── .nojekyll                                   Jekyll処理を無効化
 ├── index.html                                  トップページと記事一覧
-└── testing/                                    テスト戦略カテゴリ
-    ├── ai-coding-test-strategy.html
-    └── jev-test-strategy.html
+├── testing/                                    テスト戦略カテゴリ
+│   ├── ai-coding-test-strategy.html
+│   └── jev-test-strategy.html
+└── jev/                                        Jevカテゴリ
+    └── jev-as-a-judge.html
 ```
 
 公開は、PRでページ構成を検証したあと、`main`へのpushをきっかけにGitHub Actionsが`docs/`をデプロイします。記事の追加や公開準備では、リポジトリ内の `publish-github-pages` Skillを使います。

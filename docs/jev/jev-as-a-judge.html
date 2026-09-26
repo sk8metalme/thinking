@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>JEV-as-a-Judge 論文解説 — 自信があれば採用、迷ったら格上げ</title>
+<meta name="description" content="安い判定専用モデルJEVで一次審査し、自信の低い判定だけGPT-6へ格上げするカスケードを検証したCMUの論文を、霊夢と魔理沙の対話でエンジニア向けに解説">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@600;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EEF2F0; --paper-2:#E3E9E6; --card:#F8FAF9;
+  --ink:#16232C; --ink-2:#4A5A63; --rule:#C6D1CC;
+  --teal:#1F6F63; --teal-soft:#D5E8E3;
+  --red:#B5392A; --red-soft:#F3DCD7;
+  --amber:#A8720C; --amber-soft:#F2E6CC;
+  --navy:#2D4A6B; --navy-soft:#DCE4EE;
+  --code-bg:#1B2830; --code-ink:#DDE7E3;
+  --bg:var(--paper); --surface:var(--card); --sunk:var(--paper-2); --muted:var(--ink-2); --line:var(--rule);
+  --accent:var(--navy); --accent-soft:var(--navy-soft);
+  --accept:var(--teal); --accept-soft:var(--teal-soft);
+  --escalate:var(--red); --escalate-soft:var(--red-soft);
+  --warn:var(--amber); --warn-soft:var(--amber-soft);
+  --reimu:var(--red); --reimu-soft:var(--red-soft);
+  --marisa:var(--amber); --marisa-soft:var(--amber-soft);
+  --display:"Noto Serif JP","Hiragino Mincho ProN","Yu Mincho","MS PMincho",serif;
+  --body:"Noto Sans JP","Hiragino Sans","Yu Gothic","Meiryo",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --paper:#10191F; --paper-2:#16222A; --card:#18252E;
+    --ink:#E3EAE7; --ink-2:#9FB0AA; --rule:#2C3C45;
+    --teal:#5FBFAE; --teal-soft:#16352F;
+    --red:#EE7A68; --red-soft:#3A1F1B;
+    --amber:#E3B04F; --amber-soft:#382C14;
+    --navy:#8FB0D6; --navy-soft:#1C2B3D;
+    --code-bg:#0B1216; --code-ink:#D5E0DC;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --paper:#10191F; --paper-2:#16222A; --card:#18252E;
+  --ink:#E3EAE7; --ink-2:#9FB0AA; --rule:#2C3C45;
+  --teal:#5FBFAE; --teal-soft:#16352F;
+  --red:#EE7A68; --red-soft:#3A1F1B;
+  --amber:#E3B04F; --amber-soft:#382C14;
+  --navy:#8FB0D6; --navy-soft:#1C2B3D;
+  --code-bg:#0B1216; --code-ink:#D5E0DC;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.85;margin:0;padding-inline:16px;padding-block:0 64px;-webkit-font-smoothing:antialiased}
+.wrap{max-width:780px;margin:0 auto}
+h1,h2,h3{font-family:var(--display);letter-spacing:.01em;text-wrap:balance;line-height:1.35;margin:0}
+h2{font-size:clamp(1.5rem,3vw,1.9rem);font-weight:800}
+h3{font-size:1.12rem;font-weight:700;margin-top:8px}
+p{margin:0}
+a{color:var(--accent)}
+a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.num,td.n,.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+code{font-family:var(--mono);font-size:.88em;background:var(--sunk);padding:1px 5px;border-radius:4px}
+
+/* header */
+header.hero{padding-block:44px 28px;display:grid;gap:14px;border-bottom:1px solid var(--line)}
+.eyebrow{font-family:var(--mono);font-size:.78rem;letter-spacing:.08em;color:var(--muted);text-transform:uppercase}
+.hero h1{font-size:clamp(1.8rem,4.8vw,2.7rem);font-weight:800;line-height:1.3}
+.hero h1 .gate{color:var(--accept)}
+.hero h1 .up{color:var(--escalate)}
+.hero .en{font-family:var(--mono);font-size:.9rem;color:var(--muted)}
+.meta{display:flex;flex-wrap:wrap;gap:8px 16px;font-size:.88rem;color:var(--muted)}
+.meta span b{color:var(--ink);font-weight:700}
+
+/* toc */
+nav.toc{margin-top:24px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px 20px}
+nav.toc ol{margin:6px 0 0;padding-left:1.4em;columns:2;column-gap:28px;font-size:.92rem}
+nav.toc li{break-inside:avoid}
+@media (max-width:560px){nav.toc ol{columns:1}}
+
+section{margin-top:56px;display:grid;gap:18px}
+.sec-no{font-family:var(--mono);font-size:.8rem;color:var(--accent);letter-spacing:.06em}
+
+/* tldr */
+.tldr{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px 22px;display:grid;gap:12px}
+.tldr ul{margin:0;padding-left:1.2em;display:grid;gap:8px}
+.big3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.big3 div{background:var(--sunk);border-radius:8px;padding:12px 14px}
+.big3 .v{font-family:var(--mono);font-size:1.5rem;font-weight:600;line-height:1.2}
+.big3 .l{font-size:.8rem;color:var(--muted);line-height:1.5;margin-top:4px}
+@media (max-width:560px){.big3{grid-template-columns:1fr}}
+
+/* dialogue */
+.talk{display:grid;gap:12px}
+.line{display:grid;grid-template-columns:44px 1fr;gap:10px;align-items:start}
+.line.m{grid-template-columns:1fr 44px}
+.av{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:1.05rem;color:#fff}
+.r .av{background:var(--reimu)}
+.m .av{background:var(--marisa);grid-column:2;grid-row:1}
+:root[data-theme="dark"] .av{color:#11151D}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .av{color:#11151D}}
+.bubble{padding:10px 14px;border-radius:12px;font-size:.97rem;max-width:62ch}
+.r .bubble{background:var(--reimu-soft);border-top-left-radius:3px}
+.m .bubble{background:var(--marisa-soft);border-top-right-radius:3px;grid-column:1;grid-row:1;justify-self:end}
+.who{display:block;font-size:.72rem;font-weight:700;letter-spacing:.06em;margin-bottom:2px}
+.r .who{color:var(--reimu)} .m .who{color:var(--marisa)}
+.bubble b{font-weight:700}
+
+/* notes, tables */
+.note{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px 18px;display:grid;gap:8px;font-size:.95rem}
+.note .t{font-size:.76rem;font-weight:700;color:var(--muted);letter-spacing:.08em}
+.note.warn{border-left:4px solid var(--warn)}
+.tbl{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:.88rem;line-height:1.5}
+th,td{padding:8px 12px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-size:.76rem;color:var(--muted);font-weight:700;background:var(--sunk)}
+td.n,th.n{text-align:right}
+tr:last-child td{border-bottom:0}
+tr.hl td{background:var(--accent-soft);font-weight:700}
+.cap{font-size:.8rem;color:var(--muted);line-height:1.6}
+.pill{display:inline-block;font-size:.74rem;font-weight:700;padding:2px 9px;border-radius:999px;white-space:nowrap}
+.p-use{background:var(--accept-soft);color:var(--accept)}
+.p-esc{background:var(--escalate-soft);color:var(--escalate)}
+.p-val{background:var(--warn-soft);color:var(--warn)}
+.p-no{background:var(--sunk);color:var(--muted)}
+.bar-cell{display:flex;align-items:center;gap:8px}
+.bar-cell i{display:block;height:8px;border-radius:4px;background:var(--accent)}
+
+pre.code{background:var(--code-bg);color:var(--code-ink);border-radius:10px;padding:14px 16px;overflow-x:auto;font-family:var(--mono);font-size:.8rem;line-height:1.6;margin:0}
+pre.code .c{color:#8C99AE}
+pre.code .k{color:#FFB86B}
+pre.code .s{color:#9BE39B}
+
+.fig{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;display:grid;gap:10px}
+.fig svg{width:100%;height:auto;display:block}
+.fig svg text{fill:var(--ink);font-family:var(--body)}
+.fig svg .mut{fill:var(--muted)}
+.fig svg .mono{font-family:var(--mono)}
+
+/* flow diagram */
+.flow{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:8px;align-items:center;font-size:.86rem}
+.flow .box{background:var(--sunk);border-radius:8px;padding:10px 12px;text-align:center;line-height:1.5}
+.flow .box b{display:block;font-family:var(--display)}
+.flow .arr{color:var(--muted);font-family:var(--mono)}
+.flow .split{display:grid;gap:8px}
+.flow .ok{background:var(--accept-soft);color:var(--accept)}
+.flow .ng{background:var(--escalate-soft);color:var(--escalate)}
+@media (max-width:600px){.flow{grid-template-columns:1fr}.flow .arr{transform:rotate(90deg);justify-self:center}}
+
+/* simulator */
+.sim{background:var(--surface);border:2px solid var(--accent);border-radius:14px;padding:20px;display:grid;gap:18px}
+.sim h3{margin:0}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{font:inherit;font-size:.84rem;border:1px solid var(--line);background:var(--bg);color:var(--ink);padding:5px 12px;border-radius:999px;cursor:pointer}
+.chips button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--surface);font-weight:700}
+.ctl{display:grid;gap:6px}
+.ctl label{font-size:.8rem;font-weight:700;color:var(--muted);letter-spacing:.04em}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.ticks{display:flex;justify-content:space-between;font-family:var(--mono);font-size:.74rem;color:var(--muted)}
+.ticks span.on{color:var(--accent);font-weight:600}
+.split-bar{display:flex;height:30px;border-radius:6px;overflow:hidden;font-size:.78rem;font-weight:700}
+.split-bar div{display:flex;align-items:center;justify-content:center;white-space:nowrap;overflow:hidden;transition:flex-basis .35s ease}
+.split-bar .a{background:var(--accept-soft);color:var(--accept)}
+.split-bar .e{background:var(--escalate-soft);color:var(--escalate)}
+.split-bar .u{background:var(--sunk);color:var(--muted);flex-basis:100%}
+.accs{display:grid;gap:8px}
+.acc-row{display:grid;grid-template-columns:9.5em 1fr 4.2em;gap:10px;align-items:center;font-size:.85rem}
+.acc-row .track{height:14px;background:var(--sunk);border-radius:4px;position:relative;overflow:hidden}
+.acc-row .fill{position:absolute;inset:0 auto 0 0;border-radius:4px;transition:width .35s ease}
+.acc-row .v{font-family:var(--mono);text-align:right;font-variant-numeric:tabular-nums}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stat{background:var(--sunk);border-radius:8px;padding:10px 12px}
+.stat .k{font-size:.74rem;color:var(--muted);font-weight:700}
+.stat .v{font-family:var(--mono);font-size:1.3rem;font-weight:600}
+@media (max-width:560px){.stats{grid-template-columns:1fr 1fr}.stats .stat:last-child{grid-column:1 / -1}.acc-row{grid-template-columns:7.5em 1fr 3.8em}}
+.verdict{font-size:.9rem;padding:10px 12px;border-radius:8px}
+.verdict.good{background:var(--accept-soft);color:var(--accept)}
+.verdict.bad{background:var(--escalate-soft);color:var(--escalate)}
+.verdict.info{background:var(--sunk);color:var(--muted)}
+.cost{border-top:1px dashed var(--line);padding-top:16px;display:grid;gap:12px}
+.cost-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:560px){.cost-grid{grid-template-columns:1fr}}
+.cost input[type=number]{font:inherit;font-family:var(--mono);width:100%;padding:6px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)}
+.cost-out{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media (max-width:560px){.cost-out{grid-template-columns:1fr}}
+
+ol.check{margin:0;padding-left:1.4em;display:grid;gap:10px}
+ol.check li::marker{font-family:var(--mono);color:var(--accent);font-weight:600}
+dl.gloss{display:grid;grid-template-columns:9em 1fr;gap:8px 16px;margin:0;font-size:.92rem}
+dl.gloss dt{font-weight:700;font-family:var(--mono);font-size:.86rem}
+dl.gloss dd{margin:0;color:var(--muted)}
+@media (max-width:560px){dl.gloss{grid-template-columns:1fr}dl.gloss dd{margin-bottom:6px}}
+footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--line);font-size:.84rem;color:var(--muted);display:grid;gap:8px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 16px);scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}}
+.theme-toggle{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:5;background:var(--card);color:var(--ink);border:1px solid var(--rule);border-radius:999px;padding:.4em .9em;font:inherit;font-size:.82rem;cursor:pointer}
+.theme-toggle:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+@media print{.theme-toggle{display:none}}
+.related{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:14px 18px;font-size:.95rem}
+tbody th{font-size:inherit;color:inherit;font-weight:400;background:none;text-align:left}
+tr.hl th{font-weight:700}
+</style>
+</head>
+<body>
+<button class="theme-toggle" id="themeBtn" type="button">表示テーマ切替</button>
+<div class="wrap">
+<header class="hero">
+  <div class="eyebrow">PAPER × JEV · arXiv 2609.26550</div>
+  <h1>自信があれば<span class="gate">採用</span>、迷ったら<span class="up">格上げ</span>。<br>安い「判定専用AI」で評価コストを半分にする話</h1>
+  <div class="en">JEV-as-a-Judge: Accept When Confident, Escalate When Unsure</div>
+  <div class="meta">
+    <span>著者 <b>Yubo Li, Yidi Miao, Ramayya Krishnan, Rema Padman</b></span>
+    <span>所属 <b>Carnegie Mellon University</b></span>
+    <span>公開 <b>2026-09-22</b></span>
+    <span><a href="https://arxiv.org/html/2609.26550v1" target="_blank" rel="noopener">原文（HTML版）</a></span>
+  </div>
+</header>
+
+<main>
+<nav class="toc" aria-label="目次">
+  <div class="note t" style="border:0;padding:0;background:none">目次</div>
+  <ol>
+    <li><a href="#tldr">3行でいうと</a></li>
+    <li><a href="#bg">背景：LLM審査員の2つの悩み</a></li>
+    <li><a href="#jev">JEVとは何者か</a></li>
+    <li><a href="#setup">実験のやり方</a></li>
+    <li><a href="#acc">結果①：精度の総当たり表</a></li>
+    <li><a href="#envelope">結果②：得意と苦手の境界線</a></li>
+    <li><a href="#cost">結果③：速度と料金</a></li>
+    <li><a href="#stability">結果④：安定性と「自信」の質</a></li>
+    <li><a href="#cascade">本題：カスケード（採用 or 格上げ）</a></li>
+    <li><a href="#sim">τシミュレーター</a></li>
+    <li><a href="#weak">自信が当てにならない場所</a></li>
+    <li><a href="#practice">実務チェックリスト</a></li>
+    <li><a href="#limits">この論文の限界</a></li>
+    <li><a href="#gloss">用語集</a></li>
+  </ol>
+</nav>
+
+<!-- TLDR -->
+<section id="tldr">
+  <div class="sec-no">00 · SUMMARY</div>
+  <h2>3行でいうと</h2>
+  <div class="tldr">
+    <ul>
+      <li><b>JEV</b>（TypeSafe社のホスト型「判定専用」モデル）は、普通の好み判定や根拠つき事実確認なら、最強のLLM審査員 GPT-6 Astra と<b>3ポイント以内</b>の精度を出す。料金は約<b>1/277</b>。</li>
+      <li>一方、<b>推論の検算</b>が必要な問題や、<b>立派に書かれた誤答</b>を見抜く問題では 9〜20ポイント負ける。</li>
+      <li>JEVは「間違えるときは自信が低い」傾向があるので、<b>自信が高ければ採用、低ければGPT-6へ回す</b>カスケードで、GPT-6の精度の約99%を約57%の費用で出せた。</li>
+    </ul>
+    <div class="big3">
+      <div><div class="v">$0.044</div><div class="l">JEVの1,000判定あたり料金（GPT-6は $12.18）</div></div>
+      <div><div class="v">0.152 s</div><div class="l">JEVのレイテンシ中央値（GPT-6は 1.885 s）</div></div>
+      <div><div class="v">92.5 / 93.1</div><div class="l">凍結カスケード vs GPT-6単体の精度（%）、費用は56.8%</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- BG -->
+<section id="bg">
+  <div class="sec-no">01 · BACKGROUND</div>
+  <h2>背景：LLM審査員の2つの悩み</h2>
+  <div class="talk">
+    <div class="line r"><div class="av">霊</div><div class="bubble"><span class="who">霊夢</span>「LLM-as-a-judge」って最近よく聞くけど、要するにAIの回答をAIに採点させるってこと？</div></div>
+    <div class="line m"><div class="av">魔</div><div class="bubble"><span class="who">魔理沙</span>そうだぜ。昔は翻訳ならBLEUみたいな専用指標か、人間の評価に頼ってた。でも今のLLMは対話もコードも推論もやるから、固定の正解や採点ルールに落とし込めない評価が多い。そこで「強いLLMにルーブリックを渡して判定させる」のが定番になったんだ。</div></div>
+    <div class="line r"><div class="av">霊</div><div class="bubble"><span class="who">霊夢</span>便利そうだけど、何が問題なの？</div></div>
+    <div class="line m"><div class="av">魔</div><div class="bubble"><span class="who">魔理沙</span>論文は2つの悩みを挙げてる。<br><b>①コスト</b>：推論モデルは長く考えるほど賢くなるけど、思考トークンぶん料金もレイテンシも増える。モデル改修のたびに何千件も評価し直すと、審査員の費用が開発費に直結する。<br><b>②自信の信頼性</b>：LLMに「どれくらい自信ある？」と聞くと、間違っているのに高い確率を言うことがある（過信）。どの判定を信じてよいかわからないと、人やもっと強いモデルに回す判断ができない。</div></div>
+    <div class="line r"><div class="av">霊</div><div class="bubble"><span class="who">霊夢</span>安くて、しかも「迷ってる」ことを正直に教えてくれる審査員が欲しいわけね。</div></div>
+    <div class="line m"><div class="av">魔</div><div class="bubble"><span class="who">魔理沙</span>その通り。この論文の問いは「<b>安い判定専用モデルで一次審査をして、強いLLMが必要な入力だけを見分けられるか</b>」だぜ。精度・確率の質・運用コストを同時に測ってるのがポイントだ。</div></div>
+  </div>
+</section>
+
+<!-- JEV -->
+<section id="jev">
+  <div class="sec-no">02 · WHAT IS JEV</div>
+  <h2>JEVとは何者か</h2>
+  <div class="talk">
+    <div class="line r"><div class="av">霊</div><div class="bubble"><span class="who">霊夢</span>JEVって初めて聞いた。GPTとかと何が違うの？</div></div>
+    <div class="line m"><div class="av">魔</div><div class="bubble"><span class="who">魔理沙</span>TypeSafe AIが提供するホスト型サービスで、<b>文章を生成しない</b>のが最大の違いだ。構造化した入力（state）と自然言語の指示、そして「出力の型」を渡すと、<b>判定ラベルとラベルごとの確率</b>だけを返す。理由の説明文は出さない。実装はプロプライエタリで中身は非公開だぜ。</div></div>
+    <div class="line r"><div class="av">霊</div><div class="bubble"><span class="who">霊夢</span>出力の型って？</div></div>
+    <div class="line m"><div class="av">魔</div><div class="bubble"><span class="who">魔理沙</span>3種類ある。<code>Choice</code>は指定ラベル上の確率分布、<code>Noul</code>はYesの確率、<code>Score</code>は順序つきルーブリック段階ごとの確率。実験は主に<code>Choice</code>を1リクエスト1問で使ってる。料金は当時の jev-1.13.0 で<b>入力100万トークンあたり$0.042、出力は無料</b>だ。</div></div>
+  </div>
+
+  <h3>実際のリクエストとレスポンス（論文 Figure 6 より）</h3>
+  <pre class="code"><span class="c">// Request</span>
+{
+  <span class="k">"model"</span>: <span class="s">"jev-1.13.0"</span>,
+  <span class="k">"state"</span>: {
+    <span class="k">"evidence"</span>: <span class="s">"The verified ledger records that Aster0 delivered 11 crates."</span>,
+    <span class="k">"claim"</span>: <span class="s">"Aster0 delivered 11 crates."</span>
+  },
+  <span class="k">"questions"</span>: {
+    <span class="k">"verdict"</span>: {
+      <span class="k">"type"</span>: <span class="s">"choice"</span>,
+      <span class="k">"instructions"</span>: <span class="s">"Assess the relation of the claim to the verified evidence only. ..."</span>,
+      <span class="k">"criteria"</span>: {
+        <span class="k">"supported"</span>:    <span class="s">"The evidence establishes the claim."</span>,
+        <span class="k">"contradicted"</span>: <span class="s">"The evidence establishes the claim is false."</span>,
+        <span class="k">"unknown"</span>:      <span class="s">"The evidence neither establishes nor disproves the claim."</span>
+      }
+    }
+  }
+}
+
+<span class="c">// Response</span>
+{
+  <span class="k">"answers"</span>: { <span class="k">"verdict"</span>: {
+    <span class="k">"type"</span>: <span class="s">"choice"</span>, <span class="k">"choice"</span>: <span class="s">"supported"</span>, <span class="k">"confidence"</span>: 1.0,
+    <span class="k">"probabilities"</span>: { <span class="k">"contradicted"</span>: 0.0, <span class="k">"unknown"</span>: 0.0, <span class="k">"supported"</span>: 1.0 }
+  }},
+  <span class="k">"usage"</span>: { <span class="k">"input_tokens"</span>: 416, <span class="k">"output_tokens"</span>: 42 }
+}</pre>
+
+  <div class="note">
+    <div class="t">エンジニア向けメモ：この論文の「自信」の定義</div>
+    <p>JEVはネイティブの <code>confidence</code> も返すが、最大ラベル確率とのスピアマン相関が 0.971 / 0.999 / 0.948（RewardBench / JudgeBench / HaluEval）とほぼ同じ順序になるため、論文全体では<b>自信 q = max<sub>k</sub> p<sub>k</sub></b>（最も高いラベルの確率）を使っている。以降の「自信」「q」はすべてこれを指す。</p>
+    <p>比較対象の生成LLMにも公平を期して、同じ指示・同じ入力で「判定と各ラベルの確率をJSONで。説明は不要」と頼んでいる。つまりGPT側の確率は<b>言葉で述べた推定値</b>（verbalized confidence）で、JEVの分布とは出どころが違う。</p>
+  </div>
+</section>
+
+<!-- SETUP -->
+<section id="setup">
+  <div class="sec-no">03 · SETUP</div>
+  <h2>実験のやり方</h2>
+  <div class="talk">
+    <div class="line r"><div class="av">霊</div><div class="bubble"><span class="who">霊夢</span>どんな問題で勝負させたの？</div></div>
+    <div class="line m"><div class="av">魔</div><div class="bubble"><span class="who">魔理沙</span>「審査員の出力の形」と「審査される回答の形」を分けて考えてるのが面白いところだ。ラベルしか返さない審査員でも自由記述は評価できるからな。タスクは大きく3種類：<b>2つの回答のどちらが良いか</b>、<b>根拠文書に照らして1つの回答が正しいか</b>、<b>選択式・数値の最終回答が正解か</b>。</div></div>
+  </div>
+  <div class="tbl"><table>
+    <thead><tr><th scope="col">データ</th><th scope="col" class="n">件数</th><th scope="col">何を測るか</th></tr></thead>
+    <tbody>
+      <tr><td>RewardBench</td><td class="n">400</td><td>普通の好み判定（chat / 難chat / safety / reasoning 各100）</td></tr>
+      <tr><td>JudgeBench（GPT-4o split）</td><td class="n">350</td><td>客観的な正しさ（知識・推論・数学・コード）</td></tr>
+      <tr><td>HaluEval（QA）</td><td class="n">240</td><td>根拠文書に照らしたハルシネーション判定（120問×正答/偽答）</td></tr>
+      <tr><td>既存ラベル付き回答</td><td class="n">150</td><td>多ターン対話後の最終回答が correct / incorrect / no_answer か</td></tr>
+      <tr><td>GSM8K軌跡・合成根拠（対照）</td><td class="n">108 + 64</td><td>基本動作の確認（ほぼ全モデル満点）</td></tr>
+      <tr><td>RewardBench 2（追加）</td><td class="n">100</td><td>4択から最良を選ぶ難しい選択</td></tr>
+      <tr><td>RM-Bench（追加）</td><td class="n">80 × 9ペア × 2順序</td><td>文体の違いに惑わされないか</td></tr>
+      <tr><td>HaluEval 要約 / 一般応答（追加）</td><td class="n">80 + 80</td><td>自然な長文。根拠あり / 根拠なし</td></tr>
+    </tbody>
+  </table></div>
+  <div class="note">
+    <div class="t">比較した審査員（17構成）</div>
+    <p>ホスト型13：JEV 1.13、GPT-4.1 mini / 4.1 / 5.2 / 5.4 / 5.6 Sol / 6 Astra、GPT-OSS 120B・Qwen3.6 27B・Qwen3.8 27B（Groq）、Claude Sonnet 5、Gemini 3 Flash / 3.1 Pro。ローカル4：Qwen3 32B、Qwen3.5 27B（H100・非思考モード）、PairRM、Skywork-Reward-V2-Qwen3-8B（報酬モデル）。推論モデルは基本 reasoning effort = low。</p>
+  </div>
+  <div class="note">
+    <div class="t">不正をしないための段取り（ここが丁寧）</div>
+    <p><b>凍結</b>：642件のパイロットは推論前に固定し、公開タスク部分を問題単位で 40/60 に分割。40%の「選択セット」は温度・閾値の決定<b>だけ</b>に使う。670件の拡張セットはパイロットの精度を見る前に固定し、一度もフィットに使っていない。</p>
+    <p><b>無効出力はエラー扱い</b>：スキーマ違反・ラベル外・確率の合計ずれ（許容0.025）・判定とargmaxの不一致はすべて不正解として数え、修正や再実行はしない。</p>
+    <p><b>統計</b>：差の95%区間は元の問題単位のクラスタ・ブートストラップ（2,000回）。<b>人手裁定</b>：JEVとGPT-6の正誤が分かれた183件を、ラベルも審査員出力も伏せて著者の一人が裁定。</p>
+  </div>
+</section>
+
+<!-- ACC -->
+<section id="acc">
+  <div class="sec-no">04 · RESULT 1</div>
+  <h2>結果①：精度の総当たり表</h2>
+  <div class="tbl"><table id="t1">
+    <thead><tr><th scope="col">審査員</th><th scope="col" class="n">RewardBench</th><th scope="col" class="n">JudgeBench</th><th scope="col" class="n">HaluEval</th><th scope="col" class="n">既存ラベル</th><th scope="col" class="n">有効出力</th></tr></thead>
+    <tbody>
+      <tr class="hl"><th scope="row">JEV 1.13</th><td class="n">92.2</td><td class="n">78.6</td><td class="n">87.5</td><td class="n">94.0</td><td class="n">1312/1312</td></tr>
+      <tr><th scope="row">GPT-4.1 mini †</th><td class="n">89.0</td><td class="n">64.0</td><td class="n">86.2</td><td class="n">84.0</td><td class="n">1312/1312</td></tr>
+      <tr><th scope="row">GPT-4.1 †</th><td class="n">90.8</td><td class="n">71.7</td><td class="n">87.1</td><td class="n">92.0</td><td class="n">1312/1312</td></tr>
+      <tr><th scope="row">GPT-5.2 †</th><td class="n">92.0</td><td class="n">88.9</td><td class="n"><b>89.6</b></td><td class="n">95.3</td><td class="n">1312/1312</td></tr>
+      <tr><th scope="row">GPT-5.4</th><td class="n">93.0</td><td class="n">90.9</td><td class="n">88.3</td><td class="n">92.7</td><td class="n">1310/1312</td></tr>
+      <tr><th scope="row">GPT-5.6 Sol</th><td class="n">93.2</td><td class="n"><b>93.1</b></td><td class="n">89.2</td><td class="n">95.3</td><td class="n">1312/1312</td></tr>
+      <tr><th scope="row">GPT-6 Astra</th><td class="n">93.5</td><td class="n"><b>93.1</b></td><td class="n">86.7</td><td class="n"><b>96.7</b></td><td class="n">1312/1312</td></tr>
+      <tr><th scope="row">GPT-OSS 120B</th><td class="n">87.5</td><td class="n">71.1</td><td class="n">87.5</td><td class="n">95.3</td><td class="n">1289/1312</td></tr>
+      <tr><th scope="row">Qwen3 32B（local）</th><td class="n">88.2</td><td class="n">66.9</td><td class="n">81.7</td><td class="n">94.0</td><td class="n">1311/1312</td></tr>
+      <tr><th scope="row">Qwen3.5 27B（local）</th><td class="n">90.5</td><td class="n">77.4</td><td class="n">85.0</td><td class="n">92.7</td><td class="n">1312/1312</td></tr>
+      <tr><th scope="row">Qwen3.6 27B</th><td class="n">87.0</td><td class="n">72.3</td><td class="n">83.8</td><td class="n">93.3</td><td class="n">1206/1312</td></tr>
+      <tr><th scope="row">Qwen3.8 27B</th><td class="n">93.8</td><td class="n">74.3</td><td class="n">87.9</td><td class="n">95.3</td><td class="n">1303/1312</td></tr>
+      <tr><th scope="row">Claude Sonnet 5</th><td class="n">91.2</td><td class="n">88.9</td><td class="n">85.8</td><td class="n">94.7</td><td class="n">1308/1312</td></tr>
+      <tr><th scope="row">Gemini 3 Flash</th><td class="n">92.8</td><td class="n">76.0</td><td class="n">83.3</td><td class="n">95.3</td><td class="n">1312/1312</td></tr>
+      <tr><th scope="row">Gemini 3.1 Pro</th><td class="n"><b>94.5</b></td><td class="n">87.4</td><td class="n">87.1</td><td class="n">94.7</td><td class="n">1312/1312</td></tr>
+      <tr><th scope="row">PairRM（local）†</th><td class="n">68.0</td><td class="n">54.3</td><td class="n">–</td><td class="n">–</td><td class="n">750/750</td></tr>
+    </tbody>
+  </table></div>
+  <p class="cap">正答率（%）。無効出力はエラーとして算入。† は初期ウィンドウでの計測。各列の最高値を太字。出典：論文 Table 1。</p>
+  <div class="talk">
+    <div class="line r"><div class="av">霊</div><div class="bubble"><span class="who">霊夢</span>JEV、RewardBenchとHaluEvalは上位陣と互角なのに、JudgeBenchだけガクッと落ちてるわね。</div></div>
+    <div class="line m"><div class="av">魔</div><div class="bubble"><span class="who">魔理沙</span>そこがこの論文の核心の半分だぜ。JudgeBenchは「どっちの答えが<b>本当に正しいか</b>」を検算しないと判定できない問題集だ。次の節で詳しく見よう。ちなみに PairRM（古い報酬モデル）は 68.0 / 54.3 とかなり弱いが、現代的な Skywork は RewardBench 94.0 / JudgeBench 71.1 と強い。「安い審査員の比較相手が弱すぎる」という批判を避けるために入れてあるんだ。</div></div>
+  </div>
+</section>
+
+<!-- ENVELOPE -->
+<section id="envelope">
+  <div class="sec-no">05 · RESULT 2</div>
+  <h2>結果②：得意と苦手の境界線</h2>
+  <p>論文はワークロード別に「JEVで足りる／格上げすべき／事前検証が必要／誰にも無理」を整理した運用範囲表（Operating envelope）を出しています。</p>
+  <div class="tbl"><table>
+    <thead><tr><th scope="col">ワークロード</th><th scope="col" class="n">JEV</th><th scope="col">比較相手</th><th scope="col" class="n">差 [95%CI]</th><th scope="col">指針</th></tr></thead>
+    <tbody>
+      <tr><td>普通の好み判定（RewardBench）</td><td class="n">92.2</td><td>GPT-6 93.5</td><td class="n">−1.3 [−3.8, 1.5]</td><td><span class="pill p-use">JEVでOK</span></td></tr>
+      <tr><td>根拠つき事実確認（HaluEval）</td><td class="n">87.5</td><td>GPT-6 86.7</td><td class="n">+0.8 [−1.3, 2.9]</td><td><span class="pill p-use">JEVでOK</span></td></tr>
+      <tr><td>最終回答の正誤（既存ラベル）</td><td class="n">94.0</td><td>GPT-6 96.7</td><td class="n">−2.7 [−6.5, 0.7]</td><td><span class="pill p-use">JEVでOK</span></td></tr>
+      <tr><td>難しい正しさ（JudgeBench）</td><td class="n">78.6</td><td>GPT-6 93.1</td><td class="n">−14.6 [−18.9, −10.3]</td><td><span class="pill p-esc">格上げ</span></td></tr>
+      <tr><td>文体で騙すペア（RM-Bench hard）</td><td class="n">74.8</td><td>GPT-6 94.6</td><td class="n">−19.8 [−27.7, −12.7]</td><td><span class="pill p-esc">格上げ</span></td></tr>
+      <tr><td>同じ文体のペア（RM-Bench normal）</td><td class="n">84.0</td><td>GPT-6 93.3</td><td class="n">−9.4 [−16.7, −2.9]</td><td><span class="pill p-esc">格上げ</span></td></tr>
+      <tr><td>4択選択（RewardBench 2）</td><td class="n">73.0</td><td>Skywork 79.0</td><td class="n">−6.0 [−13.0, 1.0]</td><td><span class="pill p-val">事前検証</span></td></tr>
+      <tr><td>根拠つき要約（HaluEval summ.）</td><td class="n">71.2</td><td>GPT-5.4 72.5</td><td class="n">−1.2 [−10.0, 7.5]</td><td><span class="pill p-val">事前検証</span></td></tr>
+      <tr><td>根拠なし自由文（HaluEval general）</td><td class="n">52.5</td><td>GPT-5.4 55.0</td><td class="n">−2.5 [−11.2, 6.2]</td><td><span class="pill p-no">誰も無理</span></td></tr>
+    </tbody>
+  </table></div>
+  <p class="cap">比較相手は各ワークロードで最強だった審査員。出典：論文 Table 2。</p>
+
+  <h3>その1：「互角」は人手で見直すとどうなる？</h3>
+  <div class="talk">
+    <div class="line r"><div class="av">霊</div><div class="bubble"><span class="who">霊夢</span>HaluEvalではJEVがGPT-6に勝ってるじゃない。</div></div>
+    <div class="line m"><div class="av">魔</div><div class="bubble"><span class="who">魔理沙</span>ベンチマークのラベルそのものに誤りがあるから、著者らは2人の正誤が割れた問題を人手で裁定したんだ。すると<b>RewardBenchでは29件中17件がGPT-6側、JEV側は5件</b>（残り7件は判定不能）で、人手基準の差は −3.0 [−5.3, −0.8]。<b>HaluEvalでは10件中8件がGPT-6側</b>で −2.5 [−5.0, −0.4]。</div></div>
+    <div class="line m"><div class="av">魔</div><div class="bubble"><span class="who">魔理沙</span>さらに、2人とも「外した」HaluEvalの26件のうち<b>24件はラベル自体が根拠に支持されていなかった</b>。修正ラベルだとJEV 95.8%、GPT-6 98.3%。つまりHaluEvalの「引き分け」は天井付近のラベルノイズのせいでもある。どちらのラベルでも言えるのは「<b>JEVはGPT-6の3ポイント以内</b>」までだぜ。</div></div>
+  </div>
+
+  <h3>その2：検算が必要な問題は本当に苦手</h3>
+  <div class="talk">
+    <div class="line r"><div class="av">霊</div><div class="bubble"><span class="who">霊夢</span>JudgeBenchの差も、ラベルのせいだったりしない？</div></div>
+    <div class="line m"><div class="av">魔</div><div class="bubble"><span class="who">魔理沙</span>しない。人手裁定では<b>69件中57件がGPT-6側、JEV側はたった1件</b>で、差は −16.0 [−20.0, −12.3]。分野別の裁定は推論 27対0、コード 9対0、数学 7対0だ。正答率で見ても推論 68.4% 対 95.9%、コード 76.2% 対 97.6% と大差で、知識問題（84.4% 対 90.9%）が一番差が小さい。<b>多段の導出を追って検算する力</b>は、考える時間を使うモデルに分があるってことだな。</div></div>
+  </div>
+
+  <h3>その3：立派な文章に騙される</h3>
+  <div class="talk">
+    <div class="line m"><div class="av">魔</div><div class="bubble"><span class="who">魔理沙</span>RM-Benchは内容の正しさと文体（簡潔・詳細・Markdown整形など）の組み合わせを変えてくる。JEVは2つの回答が<b>同じ文体</b>なら84.0%だが、<b>不正解の方がより丁寧に書かれている</b>と74.8%まで落ちる（−9.2ポイント）。GPT-6は93.3%→94.6%でまったく動じない。</div></div>
+    <div class="line r"><div class="av">霊</div><div class="bubble"><span class="who">霊夢</span>見た目が立派だと信じちゃう、と。人間の審査員にもありがちね…。</div></div>
+    <div class="line m"><div class="av">魔</div><div class="bubble"><span class="who">魔理沙</span>論文も「正しい答えを選ぶ力」と「見せかけの文体に抵抗する力」は<b>別の能力</b>だとまとめてる。</div></div>
+  </div>
+
+  <h3>その4：根拠なしの自由文は全員お手上げ</h3>
+  <div class="talk">
+    <div class="line m"><div class="av">魔</div><div class="bubble"><span class="who">魔理沙</span>参照文書のない一般応答のハルシネーション判定では、JEV 52.5%、GPT-4.1 mini 53.8%、GPT-5.4 55.0%。ほぼコイン投げだ。怖いのは<b>それでも自信満々</b>なこと。最大確率の平均は 0.90 / 0.95 / 0.96 で、JEVの誤り検出AUROCは 0.518（ランダム同然）。</div></div>
+    <div class="line r"><div class="av">霊</div><div class="bubble"><span class="who">霊夢</span>JEVだけの弱点じゃなくて、<b>今の審査員全般の限界</b>ってことね。</div></div>
+  </div>
+
+  <h3>その5：回答形式の影響は小さめ</h3>
+  <div class="note">
+    <p>同じ40問のHaluEvalを<b>選択式</b>と<b>自由記述</b>で出し分けると、JEVの一致率は 100.0% → 92.5%（−7.5 [−11.7, −3.3]）。一部はラベル移植時のずれ（意味的に同じでもラベル上は誤り扱い）によるもの。ワークロード間の差（最大20ポイント）に比べれば小さい。</p>
+    <p>また、選択式の回答を「参照答えと直接照合」する代わりに「参照を見せずに最終選択肢だけ抽出してコードで比較」する方式も試したが、JEVは 91.3% → 86.0% と改善しなかった（GPT-4.1 miniは 87.3% で変わらず）。抽出方式は「曖昧」判定が増え、答えを検査できる利点はあるが、精度の得にはならない。</p>
+  </div>
+</section>
+
+<!-- COST -->
+<section id="cost">
+  <div class="sec-no">06 · RESULT 3</div>
+  <h2>結果③：速度と料金</h2>
+  <div class="fig">
+    <svg id="costfig" viewBox="0 0 720 250" role="img" aria-labelledby="costfig-t costfig-d"><title id="costfig-t">JEV、GPT-4.1 mini、GPT-6 Astraの料金とレイテンシ</title><desc id="costfig-d">1,000判定あたりの料金はJEV 0.044ドル、GPT-4.1 mini 0.390ドル、GPT-6 Astra 12.182ドル。レイテンシ中央値は0.152秒、0.548秒、1.885秒。</desc></svg>
+    <p class="cap">120判定の隔離パネル（1タスク40件、8ワーカー、開始間隔0.12秒）で計測。料金は報告されたトークン使用量×取得時点の価格による推計で、請求書ではない。料金は対数軸。出典：論文 §5「Measured latency and fees」。</p>
+  </div>
+  <div class="talk">
+    <div class="line r"><div class="av">霊</div><div class="bubble"><span class="who">霊夢</span>277倍安いって、桁が違うわね。</div></div>
+    <div class="line m"><div class="av">魔</div><div class="bubble"><span class="who">魔理沙</span>アブストラクトの「比較相手の料金の0.36%」はこの 1/277 のことだ。しかも$1/1,000判定未満のホスト型審査員の中では、JEVは JudgeBench で最高、HaluEval で同率最高、RewardBench で最高との差0.6ポイント以内。<b>安い帯では一番強い</b>と言える。</div></div>
+    <div class="line m"><div class="av">魔</div><div class="bubble"><span class="who">魔理沙</span>もう一つ地味に大事なのが<b>有効出力率</b>。JEVは1,312件すべてで契約どおりの出力を返した。Qwen3.6 27B は 1,206/1,312 で、レート制限や構造化生成エラーで落ちてる。「失敗した呼び出しは推論ミスではないが、判定でもない」という論文の言い方が的確だぜ。</div></div>
+  </div>
+</section>
+
+<!-- STABILITY -->
+<section id="stability">
+  <div class="sec-no">07 · RESULT 4</div>
+  <h2>結果④：安定性と「自信」の質</h2>
+  <h3>同じ質問を繰り返すと？ 順番を入れ替えると？</h3>
+  <div class="tbl"><table>
+    <thead><tr><th scope="col">診断</th><th scope="col">JEVの結果</th></tr></thead>
+    <tbody>
+      <tr><td>同一リクエストの繰り返し</td><td>48例×2回＝96比較で判定変化 <b>0件</b></td></tr>
+      <tr><td>ルーブリックの言い換え</td><td>48例中 <b>4件</b>で判定変化</td></tr>
+      <tr><td>候補の順序反転</td><td>RewardBench <b>3.25%</b>、JudgeBench <b>11.14%</b> の判定が変化</td></tr>
+      <tr><td>両順序とも正解の率</td><td>RewardBench 91.0%、JudgeBench 74.0%</td></tr>
+      <tr><td>1番目を選ぶ率</td><td>48.9% / 48.4%（位置バイアスはほぼなし）</td></tr>
+    </tbody>
+  </table></div>
+  <div class="talk">
+    <div class="line r"><div class="av">霊</div><div class="bubble"><span class="who">霊夢</span>順番を変えると判定が変わるのに、位置バイアスはないの？</div></div>
+    <div class="line m"><div class="av">魔</div><div class="bubble"><span class="who">魔理沙</span>JudgeBenchで不整合だった39ペアの内訳は「常に1番目」14件、「常に2番目」25件。特定の位置を好んでるわけじゃなく、<b>難しくて決めきれない問題で揺れてる</b>と読むのが自然だ。だから後で出てくるカスケードでは、両方の順序で判定して確率を平均する設計になってる。</div></div>
+  </div>
+
+  <h3>「当たる」ことと「自信が正直」なことは別</h3>
+  <div class="tbl"><table>
+    <thead><tr><th scope="col">指標</th><th scope="col" class="n">RewardBench</th><th scope="col" class="n">JudgeBench</th><th scope="col" class="n">HaluEval</th></tr></thead>
+    <tbody>
+      <tr><td>Brier（JEV）↓</td><td class="n">0.111</td><td class="n">0.297</td><td class="n"><b>0.176</b></td></tr>
+      <tr><td>Brier（GPT-6）↓</td><td class="n"><b>0.104</b></td><td class="n"><b>0.095</b></td><td class="n">0.245</td></tr>
+      <tr><td>誤り検出AUROC（JEV）↑</td><td class="n">0.869</td><td class="n">0.745</td><td class="n">0.863</td></tr>
+      <tr><td>誤り検出AUROC（GPT-6）↑</td><td class="n"><b>0.891</b></td><td class="n"><b>0.907</b></td><td class="n"><b>0.899</b></td></tr>
+    </tbody>
+  </table></div>
+  <div class="talk">
+    <div class="line m"><div class="av">魔</div><div class="bubble"><span class="who">魔理沙</span>Brierは「確率そのものの当たり具合（較正）」、AUROCは「間違いを自信の低さで<b>順位づけ</b>できるか」だ。HaluEvalではJEVの方が確率としては正直（Brierが良い）なのに、誤りの順位づけはGPT-6の方が上手い。<b>較正と誤り検出は別物</b>ってことだぜ。</div></div>
+    <div class="line m"><div class="av">魔</div><div class="bubble"><span class="who">魔理沙</span>q≥0.9 の高自信ゾーンでの誤りは、HaluEvalでJEV 199件中10件、GPT-6 233件中28件。ただしJudgeBenchではJEVの高確率判定138件中9件が誤りで、自信が高くても安心はできない。</div></div>
+  </div>
+  <div class="note warn">
+    <div class="t">温度スケーリングは使い回せない</div>
+    <p>選択セットで温度を学習して拡張セットに当てると、JEVのNLLは HaluEval で 0.333→0.284 と改善したが、JudgeBench 0.449→0.475、RewardBench 0.205→0.232 と悪化。学習された温度も RewardBench 0.65（鋭く）、JudgeBench 2.15・HaluEval 4.45（なまらせる）と方向がバラバラ。<b>ワークロードごとに検証が要る</b>。</p>
+    <p>また、同じ質問を <code>Choice</code> / <code>Noul</code> / 2値 <code>Score</code> で聞くと確率が平均0.055ずれ、48例中1件はラベル自体が食い違った。「等価なはずのインターフェースでも一致しない」点は、公式の既知の制限とも整合する。</p>
+  </div>
+</section>
+
+<!-- CASCADE -->
+<section id="cascade">
+  <div class="sec-no">08 · CORE IDEA</div>
+  <h2>本題：カスケード（採用 or 格上げ）</h2>
+  <div class="flow" aria-label="カスケードの流れ">
+    <div class="box"><b>入力</b>判定したい回答</div>
+    <div class="arr">→</div>
+    <div class="box"><b>JEV</b>判定 ＋ 自信 q<br><span class="mono">$0.044 / 1k</span></div>
+    <div class="arr">→</div>
+    <div class="split">
+      <div class="box ok"><b>q ≥ τ：採用</b>JEVの判定をそのまま使う</div>
+      <div class="box ng"><b>q &lt; τ：格上げ</b>GPT-6などに回し、その判定を採用</div>
+    </div>
+  </div>
+  <div class="talk">
+    <div class="line r"><div class="av">霊</div><div class="bubble"><span class="who">霊夢</span>JEVが苦手な問題があるのはわかった。で、どうするの？</div></div>
+    <div class="line m"><div class="av">魔</div><div class="bubble"><span class="who">魔理沙</span>まず、2人は<b>違う問題で間違える</b>。JudgeBenchではGPT-6がJEVの誤り75件のうち60件を正し、逆にJEVもGPT-6の誤り24件のうち9件を正してる。正解ラベルを見て「当たってる方」を選べる神様がいれば95.7%まで行く。でも本番ではラベルがないから、<b>判定時点で使える信号</b>で誤りを見つけないといけない。その信号が JEV の自信 q だ。</div></div>
+  </div>
+
+  <h3>JEVの自信は誤りの場所を教えてくれる</h3>
+  <div class="fig">
+    <svg id="binfig" viewBox="0 0 720 300" role="img" aria-labelledby="binfig-t binfig-d"><title id="binfig-t">JEVの自信 q の区間ごとの正答率</title><desc id="binfig-d">qが0.6未満の65件で47.7%、0.7以上0.8未満の85件で76.5%、0.95以上0.99未満の147件で93.9%、q=1の322件で99.1%。同じ問題でのGPT-6は最低区間78.5%、最高区間99.1%。</desc></svg>
+    <p class="cap">RewardBench・JudgeBench・HaluEvalの990判定をJEVの最大ラベル確率 q で区切った正答率。論文本文に数値のある4区間のみ表示（他の区間は図のみで数値未記載）。GPT-6の同じ問題での正答率は、本文に記載のある最低区間と最高区間のみ。出典：論文 §7 と Figure 5。</p>
+  </div>
+  <div class="talk">
+    <div class="line m"><div class="av">魔</div><div class="bubble"><span class="who">魔理沙</span>JEVの正答率は q とともに単調に上がる。q&lt;0.6 だと 47.7%（ほぼ当てずっぽう）、q=1 だと 99.1%。一方GPT-6は同じ問題で 78.5%→99.1% しか動かない。つまり<b>GPT-6の優位はJEVが迷っている所に集中している</b>。</div></div>
+    <div class="line m"><div class="av">魔</div><div class="bubble"><span class="who">魔理沙</span>JEVが q≥0.9 で採用する問題では 95.8% 対 96.5% とほぼ互角（人手修正ラベルでは 97.2% 対 98.5%）。格上げされる問題では 67.9% 対 82.6% とGPT-6が15ポイント上。だから「自信がある所はJEV、迷う所だけ高い審査員」が合理的になるんだ。</div></div>
+  </div>
+
+  <h3>後付け閾値での試算（単一順序）</h3>
+  <div class="note">
+    <p>τ=0.9 のとき、3タスク合算で <b>34%を格上げ</b>、精度 <b>91.3%</b>（GPT-6単体 91.7%、保持率 99.6%、差 −0.40 [−1.21, 0.31]）、費用は <b>GPT-6の47%</b>（約 $6.3 / 1,000判定）。同じ34%を<b>ランダム</b>に格上げすると 88.1%、正解を知っている<b>オラクル</b>なら 94.4%。q は得られる改善の約半分を拾えている。</p>
+    <p>タスク別では、RewardBench でカスケードが GPT-6単体を上回り（94.0% 対 93.5%、費用22%）、JudgeBench は平均 q が 0.81 と低いため 61%を格上げして保持率 98.2%（費用62%）、τ=0.95 なら 99.1%（費用74%）。HaluEval は元ラベルでは動かないが（低自信の問題の多くがラベル誤り）、人手修正ラベルでは τ=0.8 で11%格上げ、GPT-6と同じ98.3%を費用13%で達成。</p>
+    <p>格上げ先は最高級でなくてもよく、GPT-5.6 Sol を使った τ=0.9 のカスケードは合算 91.9%、約 $3.4 / 1,000判定。</p>
+    <p class="cap">注意：これらの閾値は<b>評価に使った同じデータから読み取った</b>もの（後付け）。事前に固定した検証は次の「凍結ポリシー」の方。</p>
+  </div>
+
+  <h3>本番想定：両順序平均＋凍結閾値</h3>
+  <div class="talk">
+    <div class="line r"><div class="av">霊</div><div class="bubble"><span class="who">霊夢</span>「両順序平均」って何？</div></div>
+    <div class="line m"><div class="av">魔</div><div class="bubble"><span class="who">魔理沙</span>ペア比較では、(A, B) の順と (B, A) の順の両方でJEVに聞いて、回答Aが良いという確率をそろえて平均するんだ。p₁(x, y) を「x を先に見せたとき先頭が良い確率」とすると：</div></div>
+  </div>
+  <pre class="code">p̄(A) = ½ · [ p₁(A, B) + 1 − p₁(B, A) ]</pre>
+  <div class="talk">
+    <div class="line m"><div class="av">魔</div><div class="bubble"><span class="who">魔理沙</span>この p̄ の最大値を自信として閾値判定する。閾値は選択セット96ペアで「格上げ先の精度から2ポイント以内に収まる範囲で、採用率が最大になる値」を選び、拡張セット510ペアで評価した。JEV側が無効出力なら必ず格上げだ。</div></div>
+  </div>
+  <div class="tbl"><table>
+    <thead><tr><th scope="col">格上げ先</th><th scope="col" class="n">τ</th><th scope="col" class="n">採用率</th><th scope="col" class="n">カスケード精度</th><th scope="col" class="n">格上げ先単体</th><th scope="col" class="n">差 [95%区間]</th><th scope="col" class="n">費用比</th></tr></thead>
+    <tbody>
+      <tr><td>GPT-5.4</td><td class="n">0.90</td><td class="n">53.7%</td><td class="n">91.4</td><td class="n">91.6</td><td class="n">−0.2 [−1.2, 0.8]</td><td class="n">0.639 / 1.096</td></tr>
+      <tr><td>GPT-5.6 Sol</td><td class="n">0.70</td><td class="n">81.0%</td><td class="n">91.0</td><td class="n">93.3</td><td class="n">−2.4 [−4.5, −0.2]</td><td class="n">0.288 / 0.380</td></tr>
+      <tr class="hl"><td>GPT-6 Astra</td><td class="n">0.90</td><td class="n">53.7%</td><td class="n">92.5</td><td class="n">93.1</td><td class="n">−0.6 [−1.8, 0.6]</td><td class="n">0.568 / 0.622</td></tr>
+    </tbody>
+  </table></div>
+  <p class="cap">費用比は「報告使用量ベース / 使用量欠損を保守的に見積もった上限」。JEVの2順序ぶんの費用を含む。オフラインのシミュレーション。出典：論文 Table 3。</p>
+  <div class="talk">
+    <div class="line r"><div class="av">霊</div><div class="bubble"><span class="who">霊夢</span>GPT-6なら精度 −0.6 で費用56.8%。いい感じね。でもGPT-5.6の行は差が−2.4で、許容の2ポイントを超えてるじゃない。</div></div>
+    <div class="line m"><div class="av">魔</div><div class="bubble"><span class="who">魔理沙</span>よく気づいたな。選択セットで決めた閾値が<b>いつも移植できるわけではない</b>という失敗例として、論文も正直に出してる。他にも τ=0.5 が選ばれて格上げ先を一切使わない（順序平均だけになる）ポリシーが3つあった。GPT-5.4の上限費用比が1を超えるのは、使用量が欠けた呼び出しを保守的に上乗せしてるからだ。</div></div>
+  </div>
+
+  <h3>実装イメージ（説明用の擬似コード）</h3>
+  <pre class="code"><span class="c"># 論文の手順を擬似コードにしたもの（公式実装ではありません）</span>
+<span class="k">def</span> judge_pair(question, a, b, tau=0.90):
+    r1 = jev.choice(state={<span class="s">"q"</span>: question, <span class="s">"A"</span>: a, <span class="s">"B"</span>: b}, labels=[<span class="s">"A"</span>, <span class="s">"B"</span>])
+    r2 = jev.choice(state={<span class="s">"q"</span>: question, <span class="s">"A"</span>: b, <span class="s">"B"</span>: a}, labels=[<span class="s">"A"</span>, <span class="s">"B"</span>])
+    <span class="k">if not</span> (valid(r1) <span class="k">and</span> valid(r2)):
+        <span class="k">return</span> strong_judge(question, a, b)         <span class="c"># 無効出力は必ず格上げ</span>
+    p_a = 0.5 * (r1.p[<span class="s">"A"</span>] + 1 - r2.p[<span class="s">"A"</span>])         <span class="c"># 両順序で「aが良い」確率を平均</span>
+    q = max(p_a, 1 - p_a)                            <span class="c"># 自信 = 最大ラベル確率</span>
+    <span class="k">if</span> q >= tau:
+        <span class="k">return</span> (<span class="s">"a"</span> <span class="k">if</span> p_a > 0.5 <span class="k">else</span> <span class="s">"b"</span>), <span class="s">"accepted"</span>
+    <span class="k">return</span> strong_judge(question, a, b), <span class="s">"escalated"</span>  <span class="c"># GPT-6 など</span></pre>
+</section>
+
+<!-- SIM -->
+<section id="sim">
+  <div class="sec-no">09 · INTERACTIVE</div>
+  <h2>τシミュレーター</h2>
+  <p>論文に<b>数値が記載されている</b>設定だけを収録しています。ワークロードを選び、スライダーで閾値 τ を動かすと、採用／格上げの割合、精度、費用比が切り替わります。記載のない値は「—」と表示します。</p>
+  <noscript><p class="note">シミュレーターはJavaScriptを使います。数値は「本題：カスケード」節の表と本文にすべて記載しています。</p></noscript>
+  <div class="sim">
+    <div class="ctl">
+      <label>ワークロードと格上げ先</label>
+      <div class="chips" id="presetChips" role="group" aria-label="ワークロード"></div>
+      <p class="cap" id="presetDesc"></p>
+    </div>
+    <div class="ctl">
+      <label for="tauRange">閾値 τ（右ほど慎重＝格上げが増える）</label>
+      <input type="range" id="tauRange" min="0" max="2" step="1" value="1">
+      <div class="ticks" id="tauTicks"></div>
+    </div>
+    <div class="ctl">
+      <label>判定の行き先</label>
+      <div class="split-bar" id="splitBar"></div>
+    </div>
+    <div class="ctl">
+      <label>精度（%）</label>
+      <div class="accs" id="accs"></div>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="k">格上げ先の精度に対する保持率</div><div class="v" id="stRet">—</div></div>
+      <div class="stat"><div class="k">費用比（格上げ先単体＝1）</div><div class="v" id="stFee">—</div></div>
+      <div class="stat"><div class="k">評価の種類</div><div class="v" id="stKind" style="font-size:1rem">—</div></div>
+    </div>
+    <div class="verdict info" id="verdict">—</div>
+    <div class="cost">
+      <label style="font-size:.8rem;font-weight:700;color:var(--muted)">月額の目安（自分の規模で試算）</label>
+      <div class="cost-grid">
+        <div class="ctl">
+          <label for="vol">月あたり判定数：<span class="num" id="volOut"></span></label>
+          <input type="range" id="vol" min="3" max="7" step="0.25" value="5">
+        </div>
+        <div class="ctl">
+          <label for="unit">格上げ先単体の料金（$ / 1,000判定）</label>
+          <input type="number" id="unit" min="0" step="0.01" value="12.18">
+        </div>
+      </div>
+      <div class="cost-out">
+        <div class="stat"><div class="k">JEVのみ</div><div class="v" id="cJ">—</div></div>
+        <div class="stat"><div class="k">格上げ先のみ</div><div class="v" id="cG">—</div></div>
+        <div class="stat"><div class="k">カスケード</div><div class="v" id="cC">—</div></div>
+      </div>
+      <p class="cap">JEVは $0.044 / 1,000判定、格上げ先の初期値は GPT-6 Astra の $12.18（どちらも120件パネルでの実測推計）。カスケードは「費用比 × 格上げ先単体」で概算。ワークロードで入力長が変わるため、論文の合算値（約 $6.3 / 1,000判定）とは一致しません。</p>
+    </div>
+  </div>
+</section>
+
+<!-- WEAK -->
+<section id="weak">
+  <div class="sec-no">10 · CAVEAT</div>
+  <h2>自信が当てにならない場所</h2>
+  <div class="talk">
+    <div class="line r"><div class="av">霊</div><div class="bubble"><span class="who">霊夢</span>じゃあ全部カスケードにすればいいのね？</div></div>
+    <div class="line m"><div class="av">魔</div><div class="bubble"><span class="who">魔理沙</span>そう単純じゃない。カスケードが効くのは「JEVが<b>間違えるときに迷っている</b>」からだ。<b>自信満々で騙される</b>場面では効かない。</div></div>
+  </div>
+  <div class="tbl"><table>
+    <thead><tr><th scope="col">RM-Bench の難易度</th><th scope="col" class="n">q の誤り検出 AUROC</th><th scope="col">τ=0.9 カスケードの保持率</th></tr></thead>
+    <tbody>
+      <tr><td>easy</td><td class="n">0.918</td><td>—</td></tr>
+      <tr><td>normal（同じ文体）</td><td class="n">0.902</td><td>99.6%</td></tr>
+      <tr><td>hard（不正解の方が丁寧）</td><td class="n">0.770</td><td>96.5%（90.8% 対 94.2%）</td></tr>
+    </tbody>
+  </table></div>
+  <div class="talk">
+    <div class="line m"><div class="av">魔</div><div class="bubble"><span class="who">魔理沙</span>hardペアでは、JEVが q∈[0.9, 0.95) と答えたものの<b>3分の1</b>、q∈[0.95, 0.99) でも<b>15%</b>が不正解。98.7%まで戻すには τ=0.95 にして58%を格上げする必要がある。根拠なし自由文ではAUROC 0.518で、どんな閾値も役に立たない。</div></div>
+    <div class="line r"><div class="av">霊</div><div class="bubble"><span class="who">霊夢</span>「迷ってる」は信じていいけど、「自信ある」を鵜呑みにしちゃダメ、ってことね。</div></div>
+    <div class="line m"><div class="av">魔</div><div class="bubble"><span class="who">魔理沙</span>論文の言葉では「自信は<b>格上げの信号</b>であって、<b>正しさの証明書</b>ではない」。実際に流すデータと同じ種類のペアでカスケードを検証しろ、ってのが結論だぜ。</div></div>
+  </div>
+</section>
+
+<!-- PRACTICE -->
+<section id="practice">
+  <div class="sec-no">11 · TAKEAWAYS</div>
+  <h2>実務チェックリスト</h2>
+  <p>論文の結論にある5項目です。評価パイプラインやCIでLLM審査員を回すときの設計指針としてそのまま使えます。</p>
+  <ol class="check">
+    <li><b>ペア比較は両順序で判定し、確率をそろえて平均する。</b>順序反転で JudgeBench の判定が11%変わる。</li>
+    <li><b>格上げ閾値は自分の選択セットで決め、別の保留データで再確認する。</b>GPT-5.6 のように移植に失敗する例がある。</li>
+    <li><b>審査員を比べるときは無効出力もエラーとして数える。</b>有効出力の中だけの精度は実運用を過大評価する。</li>
+    <li><b>自信は格上げの信号として扱い、証明書として扱わない。</b>文体で騙すペアで確認し、温度スケーリングもワークロードごとに検証する。</li>
+    <li><b>新しいワークロードに広げる前に、小さなローカル検証を回す。</b>運用範囲表の外では何も保証されない。</li>
+  </ol>
+  <div class="note">
+    <div class="t">使いどころの早見</div>
+    <p><span class="pill p-use">JEV単体で十分</span> 参照答えや根拠文書がある判定、普通の好み比較、最終回答の正誤チェック</p>
+    <p><span class="pill p-esc">カスケードかGPT級へ</span> コード・数学・多段推論の正誤、見栄えの良い誤答が混ざるデータ</p>
+    <p><span class="pill p-no">自動審査に頼らない</span> 参照なしの自由文のハルシネーション判定（全審査員がほぼチャンスレベル）</p>
+  </div>
+  <p class="related">Jevをテスト戦略の判断（テスト候補の選択や失敗分類）に組み込む導入案は、<a href="../testing/jev-test-strategy.html">テスト戦略のif / switchを、Jevに相談する</a>にまとめています。この論文の「自信は格上げの信号で、証明書ではない」という結果は、そこでのコード側gateの考え方を裏づけます。</p>
+  <p>論文全体の締めの一文は「<b>使える判定、正しい判定、信頼できる不確かさは3つの別物で、それぞれ確認が要る</b>」。</p>
+</section>
+
+<!-- LIMITS -->
+<section id="limits">
+  <div class="sec-no">12 · LIMITATIONS</div>
+  <h2>この論文の限界</h2>
+  <div class="talk">
+    <div class="line r"><div class="av">霊</div><div class="bubble"><span class="who">霊夢</span>いいことずくめに聞こえるけど、割り引いて読むべき点は？</div></div>
+    <div class="line m"><div class="av">魔</div><div class="bubble"><span class="who">魔理沙</span>著者ら自身がかなり細かく書いてる。主なものを挙げるぜ。</div></div>
+  </div>
+  <div class="note">
+    <p><b>JEVはブラックボックス</b>：プロプライエタリな1バージョン（1.13）の評価。学習データとベンチマークの重複（汚染）は不明。モデルサイズや推論量も揃っていないので、アーキテクチャ同士の公平な比較ではない。</p>
+    <p><b>多モデル比較は探索的</b>：初期結果を見た後にモデル群を追加しているため、拡張セット自体は保留データでも、多ファミリー比較は事前登録された検証ではない。</p>
+    <p><b>人手裁定は1人</b>：183件すべてを著者の一人が裁定（項目単位の結果は非公開状態で）。RewardBenchの好みは主観的で、人とLLMの一致度 κ=0.29、183件中36件は判定不能。</p>
+    <p><b>サンプルが小さい</b>：RewardBench 2 と RM-Bench は小さなバランス標本。レイテンシは1拠点・120件で、テール推定は粗い。料金は請求書ではなく推計。</p>
+    <p><b>カスケードはオフライン試算</b>：実際の逐次呼び出しでのレイテンシは未計測。単一順序の結果は後付け閾値で、事前固定の検証は両順序ポリシーのみ。専門領域（医療・法務など）は未検証。</p>
+    <p><b>判定のみ</b>：理由説明の生成や、その説明の忠実性は評価対象外。</p>
+  </div>
+</section>
+
+<!-- GLOSS -->
+<section id="gloss">
+  <div class="sec-no">13 · GLOSSARY</div>
+  <h2>用語集</h2>
+  <dl class="gloss">
+    <dt>LLM-as-a-judge</dt><dd>LLMにルーブリックを渡して、他のモデルの回答を採点・比較させる評価手法。</dd>
+    <dt>カスケード</dt><dd>安いモデルで先に処理し、条件を満たさない入力だけ高いモデルに回す多段構成。FrugalGPT などが先行研究。</dd>
+    <dt>q（自信）</dt><dd>最も確率の高いラベルの確率。2択なら 0.5〜1。</dd>
+    <dt>τ（閾値）</dt><dd>q がこれ以上なら採用、未満なら格上げ。</dd>
+    <dt>Brier score</dt><dd>予測確率と実際（0/1）の二乗誤差。小さいほど確率として正直。</dd>
+    <dt>NLL</dt><dd>負の対数尤度。自信満々で外すと大きく罰される。</dd>
+    <dt>ECE</dt><dd>期待較正誤差。「80%と言ったら80%当たるか」のずれを区間ごとに平均したもの。</dd>
+    <dt>AUROC（誤り検出）</dt><dd>1−q を誤りのスコアとして、誤りと正解をどれだけ分けられるか。0.5でランダム、1で完璧。</dd>
+    <dt>温度スケーリング</dt><dd>ロジットを温度 T で割って確率の鋭さを調整する事後較正。T&lt;1で鋭く、T&gt;1でなまる。</dd>
+    <dt>選択的予測</dt><dd>自信の低い入力は答えずに保留（または委譲）し、カバー率とリスクを交換する考え方。</dd>
+    <dt>クラスタ・ブートストラップ</dt><dd>同じ元問題から派生した判定をまとめて再標本化し、相関を考慮した信頼区間を出す方法。</dd>
+    <dt>凍結（frozen）</dt><dd>結果を見る前にデータ・閾値・ルールを固定し、後から都合よく変えないこと。</dd>
+  </dl>
+</section>
+
+</main>
+<footer>
+  <p><a href="../">thinking トップに戻る</a> · <a href="../testing/jev-test-strategy.html">テスト戦略のif / switchを、Jevに相談する</a></p>
+  <p>出典：Yubo Li, Yidi Miao, Ramayya Krishnan, Rema Padman. “JEV-as-a-Judge: Accept When Confident, Escalate When Unsure.” arXiv:2609.26550v1 (2026). CC BY 4.0. <a href="https://arxiv.org/abs/2609.26550v1" target="_blank" rel="noopener">arxiv.org/abs/2609.26550v1</a></p>
+  <p>本ページの数値はすべて論文本文・表からの引用です。「JEVのみ」「格上げ先のみ」の合算精度など一部は論文の数値からの算出値で、その旨を明記しています。擬似コードは説明用で公式実装ではありません。</p>
+</footer>
+</div>
+
+<script>
+(function(){
+  const NS="http://www.w3.org/2000/svg";
+  function el(tag,attrs,text){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(text!=null)e.textContent=text;return e}
+  function clearSvg(s){[].slice.call(s.childNodes).forEach(n=>{if(!(n.nodeName==="title"||n.nodeName==="desc"))s.removeChild(n)})}
+  const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+
+  // ---------- Cost figure ----------
+  function drawCost(){
+    const svg=document.getElementById("costfig"); clearSvg(svg);
+    const rows=[["JEV 1.13",0.044,0.152,true],["GPT-4.1 mini",0.390,0.548],["GPT-6 Astra",12.182,1.885]];
+    const L=120, W=260, gap=40, R2=L+W+gap, W2=720-R2-60;
+    svg.appendChild(el("text",{x:L,y:18,"font-size":13,"font-weight":700},"料金 $ / 1,000判定（対数）"));
+    svg.appendChild(el("text",{x:R2,y:18,"font-size":13,"font-weight":700},"レイテンシ中央値（秒）"));
+    const lx=v=>L+(Math.log10(v)+2)/4*W; // 0.01..100
+    [0.01,0.1,1,10,100].forEach(t=>{const x=lx(t);svg.appendChild(el("line",{x1:x,x2:x,y1:30,y2:200,stroke:css("--line")}));svg.appendChild(el("text",{x:x,y:218,"font-size":11,"text-anchor":"middle",class:"mut mono"},t<1?String(t):t.toString()))});
+    const sx=v=>R2+v/2*W2;
+    [0,0.5,1,1.5,2].forEach(t=>{const x=sx(t);svg.appendChild(el("line",{x1:x,x2:x,y1:30,y2:200,stroke:css("--line")}));svg.appendChild(el("text",{x:x,y:218,"font-size":11,"text-anchor":"middle",class:"mut mono"},t.toFixed(1)))});
+    rows.forEach((r,i)=>{
+      const y=48+i*55, col=r[3]?css("--accept"):css("--accent");
+      svg.appendChild(el("text",{x:L-10,y:y+15,"font-size":13,"text-anchor":"end","font-weight":r[3]?700:400},r[0]));
+      const w1=lx(r[1])-L; svg.appendChild(el("rect",{x:L,y:y,width:w1,height:22,rx:3,fill:col,opacity:.85}));
+      svg.appendChild(el("text",{x:L+w1+6,y:y+16,"font-size":12,class:"mono"},"$"+r[1]));
+      const w2=sx(r[2])-R2; svg.appendChild(el("rect",{x:R2,y:y,width:w2,height:22,rx:3,fill:col,opacity:.85}));
+      svg.appendChild(el("text",{x:R2+w2+6,y:y+16,"font-size":12,class:"mono"},r[2]+"s"));
+    });
+    svg.appendChild(el("text",{x:L,y:244,"font-size":12,class:"mut"},"JEVは GPT-4.1 mini の約1/9、GPT-6 の約1/277 の料金"));
+  }
+
+  // ---------- Bin figure ----------
+  function drawBins(){
+    const svg=document.getElementById("binfig"); clearSvg(svg);
+    const bins=[["q < 0.6",65,47.7,78.5],["0.7 ≤ q < 0.8",85,76.5,null],["0.95 ≤ q < 0.99",147,93.9,null],["q = 1",322,99.1,99.1]];
+    const L=56,T=24,H=210,W=640;
+    const y=v=>T+H-(v-40)/60*H; // 40..100
+    [40,50,60,70,80,90,100].forEach(t=>{svg.appendChild(el("line",{x1:L,x2:L+W,y1:y(t),y2:y(t),stroke:css("--line")}));svg.appendChild(el("text",{x:L-8,y:y(t)+4,"font-size":11,"text-anchor":"end",class:"mut mono"},t+"%"))});
+    const bw=W/bins.length;
+    bins.forEach((b,i)=>{
+      const cx=L+bw*i+bw/2, w=64;
+      const col=b[2]<70?css("--escalate"):(b[2]<90?css("--warn"):css("--accept"));
+      svg.appendChild(el("rect",{x:cx-w/2,y:y(b[2]),width:w,height:y(40)-y(b[2]),rx:3,fill:col,opacity:.8}));
+      svg.appendChild(el("text",{x:cx,y:y(b[2])-8,"font-size":13,"text-anchor":"middle","font-weight":700,class:"mono"},b[2]+"%"));
+      svg.appendChild(el("text",{x:cx,y:T+H+20,"font-size":12,"text-anchor":"middle"},b[0]));
+      svg.appendChild(el("text",{x:cx,y:T+H+38,"font-size":11,"text-anchor":"middle",class:"mut mono"},"n="+b[1]));
+      if(b[3]!=null){
+        const gx=cx+w/2+16, gy=y(b[3]);
+        svg.appendChild(el("circle",{cx:gx,cy:gy,r:6,fill:css("--accent")}));
+        const last=i===bins.length-1;
+        svg.appendChild(el("text",{x:last?gx:gx+10,y:gy+(last?22:4),"font-size":11,fill:css("--accent"),"text-anchor":last?"end":"start",class:"mono"},"GPT-6 "+b[3]+"%"));
+      }
+    });
+    svg.appendChild(el("rect",{x:L,y:4,width:12,height:12,rx:2,fill:css("--warn"),opacity:.8}));
+    svg.appendChild(el("text",{x:L+18,y:14,"font-size":11,class:"mut"},"JEVの正答率（棒）"));
+    svg.appendChild(el("circle",{cx:L+160,cy:10,r:5,fill:css("--accent")}));
+    svg.appendChild(el("text",{x:L+170,y:14,"font-size":11,class:"mut"},"同じ問題でのGPT-6"));
+  }
+
+  // ---------- Simulator ----------
+  const JEV_UNIT=0.044;
+  const P=[
+    {id:"pooled",label:"3タスク合算 → GPT-6",fb:"GPT-6 Astra",fbAcc:91.7,kind:"後付け閾値（単一順序）",
+     desc:"RewardBench・JudgeBench・HaluEval の990判定。JEVのみ・GPT-6のみの精度はTable 1から算出。τ=0.9ではランダム格上げ・オラクルとの比較あり。",
+     pts:[{t:"JEVのみ",esc:0,acc:86.3,fee:0.0036,calc:true},{t:"0.90",esc:34,acc:91.3,fee:0.47,feeHi:0.44,rand:88.1,orac:94.4},{t:"GPT-6のみ",esc:100,acc:91.7,fee:1}],start:1},
+    {id:"frozen6",label:"凍結ポリシー → GPT-6",fb:"GPT-6 Astra",fbAcc:93.1,kind:"事前固定（両順序平均）",tol:2,
+     desc:"拡張セット510ペア。閾値は選択セット96ペアで事前に決定。論文の本命の検証。",
+     pts:[{t:"0.90",esc:46.3,acc:92.5,fee:0.568,feeHi:0.622},{t:"GPT-6のみ",esc:100,acc:93.1,fee:1}],start:0},
+    {id:"frozen56",label:"凍結ポリシー → GPT-5.6（失敗例）",fb:"GPT-5.6 Sol",fbAcc:93.3,kind:"事前固定（両順序平均）",tol:2,
+     desc:"選択セットでは許容2ポイント以内だった閾値0.7が、拡張セットでは許容を超えた例。",
+     pts:[{t:"0.70",esc:19,acc:91.0,fee:0.288,feeHi:0.380},{t:"GPT-5.6のみ",esc:100,acc:93.3,fee:1}],start:0},
+    {id:"jb",label:"JudgeBench → GPT-6",fb:"GPT-6 Astra",fbAcc:93.1,kind:"後付け閾値（単一順序）",
+     desc:"JEVが苦手な難問セット。平均 q が0.81と低いため格上げが多い。τ=0.95 の格上げ率は論文に記載なし。",
+     pts:[{t:"JEVのみ",esc:0,acc:78.6,fee:0.0036,calc:true},{t:"0.90",esc:61,acc:91.4,fee:0.62},{t:"0.95",esc:null,acc:92.3,fee:0.74},{t:"GPT-6のみ",esc:100,acc:93.1,fee:1}],start:1},
+    {id:"rb",label:"RewardBench → GPT-6",fb:"GPT-6 Astra",fbAcc:93.5,kind:"後付け閾値（単一順序）",
+     desc:"2人が別の問題で間違えるため、カスケードがGPT-6単体を上回った。格上げ率は論文に記載なし。",
+     pts:[{t:"JEVのみ",esc:0,acc:92.2,fee:0.0036,calc:true},{t:"0.90",esc:null,acc:94.0,fee:0.22},{t:"GPT-6のみ",esc:100,acc:93.5,fee:1}],start:1},
+    {id:"halu",label:"HaluEval（人手修正ラベル）→ GPT-6",fb:"GPT-6 Astra",fbAcc:98.3,kind:"後付け閾値（単一順序）",
+     desc:"ラベル誤りを人手で直した後の結果。元ラベルではどの閾値でも精度が動かなかった。",
+     pts:[{t:"JEVのみ",esc:0,acc:95.8,fee:0.0036,calc:true},{t:"0.80",esc:11,acc:98.3,fee:0.13},{t:"GPT-6のみ",esc:100,acc:98.3,fee:1}],start:1},
+    {id:"rmhard",label:"RM-Bench hard → GPT-6",fb:"GPT-6 Astra",fbAcc:94.2,kind:"後付け閾値",
+     desc:"不正解の方が丁寧に書かれたペア。JEVが自信満々で間違えるため、カスケードが効きにくい。費用比は論文に記載なし。",
+     pts:[{t:"JEVのみ",esc:0,acc:74.8,fee:0.0036,calc:true},{t:"0.90",esc:null,acc:90.8,fee:null},{t:"0.95",esc:58,acc:93.0,fee:null,calc:true},{t:"GPT-6のみ",esc:100,acc:94.2,fee:1}],start:1}
+  ];
+  let cur=P[0], idx=P[0].start;
+  const chips=document.getElementById("presetChips"), range=document.getElementById("tauRange");
+  P.forEach(p=>{const b=document.createElement("button");b.type="button";b.textContent=p.label;b.dataset.id=p.id;b.addEventListener("click",()=>{cur=p;idx=p.start;range.max=p.pts.length-1;range.value=idx;render()});chips.appendChild(b)});
+  range.addEventListener("input",()=>{idx=+range.value;render()});
+  const fmt=v=>v==null?"—":v.toFixed(1);
+  function money(v){if(v==null||!isFinite(v))return"—";if(v>=1000)return"$"+Math.round(v).toLocaleString("en-US");if(v>=10)return"$"+v.toFixed(0);return"$"+v.toFixed(2)}
+  function render(){
+    chips.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.id===cur.id?"true":"false"));
+    document.getElementById("presetDesc").textContent=cur.desc;
+    range.max=cur.pts.length-1;
+    const pt=cur.pts[idx];
+    document.getElementById("tauTicks").innerHTML=cur.pts.map((p,i)=>`<span class="${i===idx?"on":""}">${/^\d/.test(p.t)?"τ="+p.t:p.t}</span>`).join("");
+    const sb=document.getElementById("splitBar");
+    if(pt.esc==null){sb.innerHTML=`<div class="u">格上げ率は論文に記載なし</div>`}
+    else{const a=100-pt.esc;sb.innerHTML=`<div class="a" style="flex-basis:${a}%">${a>=12?"採用 "+a.toFixed(1)+"%":""}</div><div class="e" style="flex-basis:${pt.esc}%">${pt.esc>=12?"格上げ "+pt.esc.toFixed(1)+"%":""}</div>`}
+    const jOnly=cur.pts.find(p=>p.t==="JEVのみ");
+    const rows=[];
+    if(jOnly) rows.push(["JEVのみ",jOnly.acc,css("--muted")]);
+    rows.push([/^\d/.test(pt.t)?"カスケード τ="+pt.t:pt.t,pt.acc,css("--accept")]);
+    if(pt.rand!=null) rows.push(["ランダム格上げ",pt.rand,css("--warn")]);
+    if(pt.orac!=null) rows.push(["オラクル（上限）",pt.orac,css("--muted")]);
+    rows.push([cur.fb+"のみ",cur.fbAcc,css("--accent")]);
+    const lo=Math.min(...rows.map(r=>r[1]))-5, lo2=Math.max(0,Math.floor(lo/5)*5);
+    document.getElementById("accs").innerHTML=rows.map(r=>`<div class="acc-row"><span>${r[0]}</span><div class="track"><div class="fill" style="width:${(r[1]-lo2)/(100-lo2)*100}%;background:${r[2]}"></div></div><span class="v">${fmt(r[1])}</span></div>`).join("")+`<p class="cap">棒の左端は ${lo2}%（差を見やすくするため）。</p>`;
+    document.getElementById("stRet").textContent=(pt.acc/cur.fbAcc*100).toFixed(1)+"%";
+    document.getElementById("stFee").textContent=pt.fee==null?"—":(pt.fee<0.01?(pt.fee*100).toFixed(2)+"%":(pt.fee*100).toFixed(1)+"%")+(pt.feeHi?" / "+(pt.feeHi*100).toFixed(1)+"%":"");
+    document.getElementById("stKind").textContent=(pt.calc?"算出値 · ":"")+cur.kind;
+    const v=document.getElementById("verdict"), d=pt.acc-cur.fbAcc;
+    if(/のみ$/.test(pt.t)){v.className="verdict info";v.textContent=pt.t==="JEVのみ"?`全件をJEVで判定。${cur.fb}単体との差 ${d.toFixed(1)} ポイント。`:`全件を${cur.fb}で判定する基準線。`}
+    else if(cur.tol){const ok=-d<=cur.tol;v.className="verdict "+(ok?"good":"bad");v.textContent=ok?`差 ${d.toFixed(1)} ポイント：事前に決めた許容（2ポイント）以内。費用は約${Math.round(pt.fee*100)}%。`:`差 ${d.toFixed(1)} ポイント：許容の2ポイントを超過。選択セットで決めた閾値が移植できなかった例。`}
+    else{v.className="verdict "+(d>=-1?"good":"bad");v.textContent=d>=0?`${cur.fb}単体と同等以上（+${d.toFixed(1)}）。`:`${cur.fb}単体との差 ${d.toFixed(1)} ポイント（保持率 ${(pt.acc/cur.fbAcc*100).toFixed(1)}%）。`}
+    // cost
+    const n=Math.pow(10,+document.getElementById("vol").value);
+    document.getElementById("volOut").textContent=Math.round(n).toLocaleString("ja-JP")+" 件";
+    let unit=parseFloat(document.getElementById("unit").value); if(!(unit>=0)) unit=NaN;
+    document.getElementById("cJ").textContent=money(n/1000*JEV_UNIT);
+    document.getElementById("cG").textContent=money(n/1000*unit);
+    const feeUse=pt.t==="JEVのみ"?null:pt.fee;
+    document.getElementById("cC").textContent=pt.t==="JEVのみ"?money(n/1000*JEV_UNIT):(feeUse==null?"—":money(n/1000*unit*feeUse));
+  }
+  document.getElementById("vol").addEventListener("input",render);
+  document.getElementById("unit").addEventListener("input",render);
+
+  (function(){
+    var root=document.documentElement,btn=document.getElementById('themeBtn');
+    try{var t=localStorage.getItem('theme');if(t)root.setAttribute('data-theme',t);}catch(e){}
+    btn.addEventListener('click',function(){
+      var cur=root.getAttribute('data-theme');
+      if(!cur)cur=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
+      var next=cur==='dark'?'light':'dark';
+      root.setAttribute('data-theme',next);
+      try{localStorage.setItem('theme',next);}catch(e){}
+    });
+  })();
+  function drawAll(){drawCost();drawBins();render()}
+  drawAll();
+  try{window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change",drawAll)}catch(e){}
+  try{new MutationObserver(drawAll).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]})}catch(e){}
+})();
+</script>
+</body>
+</html>
