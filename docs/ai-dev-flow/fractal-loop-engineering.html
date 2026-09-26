@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ループを入れ子にするのは、効く所だけ — Codexで組むフラクタル型の開発フロー</title>
+<meta name="description" content="ループエンジニアリングとフラクタルエンジニアリングの関係を整理し、Codexを使う開発組織が要件定義からリリースまでの流れに、入れ子ループを適切な範囲だけ組み込むための判断基準と導入手順をまとめたもの。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@600;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EEF2F0; --paper-2:#E3E9E6; --card:#F8FAF9;
+  --ink:#16232C; --ink-2:#4A5A63; --rule:#C6D1CC;
+  --teal:#1F6F63; --teal-soft:#D5E8E3;
+  --red:#B5392A; --red-soft:#F3DCD7;
+  --amber:#A8720C; --amber-soft:#F2E6CC;
+  --navy:#2D4A6B; --navy-soft:#DCE4EE;
+  --code-bg:#1B2830; --code-ink:#DDE7E3;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN","Yu Mincho","MS PMincho",serif;
+  --sans:"Noto Sans JP","Hiragino Sans","Yu Gothic","Meiryo",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#10191F; --paper-2:#16222A; --card:#18252E;
+    --ink:#E3EAE7; --ink-2:#9FB0AA; --rule:#2C3C45;
+    --teal:#5FBFAE; --teal-soft:#16352F;
+    --red:#EE7A68; --red-soft:#3A1F1B;
+    --amber:#E3B04F; --amber-soft:#382C14;
+    --navy:#8FB0D6; --navy-soft:#1C2B3D;
+    --code-bg:#0B1216; --code-ink:#D5E0DC;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#10191F; --paper-2:#16222A; --card:#18252E;
+  --ink:#E3EAE7; --ink-2:#9FB0AA; --rule:#2C3C45;
+  --teal:#5FBFAE; --teal-soft:#16352F;
+  --red:#EE7A68; --red-soft:#3A1F1B;
+  --amber:#E3B04F; --amber-soft:#382C14;
+  --navy:#8FB0D6; --navy-soft:#1C2B3D;
+  --code-bg:#0B1216; --code-ink:#D5E0DC;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 16px);scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.85;-webkit-font-smoothing:antialiased}
+img,svg{max-width:100%}
+a{color:var(--navy);text-underline-offset:3px}
+a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid var(--amber);outline-offset:2px;border-radius:4px}
+code{font-family:var(--mono);font-size:.88em;background:var(--paper-2);padding:.1em .35em;border-radius:4px}
+h1,h2,h3{font-family:var(--serif);line-height:1.35;letter-spacing:.01em;text-wrap:balance}
+h2{font-size:clamp(1.6rem,3.2vw,2.1rem);margin:0 0 .6em}
+h3{font-size:1.2rem;margin:2em 0 .6em}
+p{margin:0 0 1.1em}
+
+/* layout */
+.shell{display:grid;grid-template-columns:230px minmax(0,1fr);gap:48px;max-width:1180px;margin:0 auto;padding:0 24px}
+nav.toc{position:sticky;top:calc(env(safe-area-inset-top,0px) + 24px);align-self:start;padding-top:40px;font-size:.88rem;max-height:calc(100vh - 48px);overflow:auto}
+nav.toc p{font-family:var(--serif);font-weight:800;margin-bottom:.6em}
+nav.toc ol{list-style:none;margin:0;padding:0;border-left:2px solid var(--rule)}
+nav.toc li a{display:block;padding:.3em .9em;color:var(--ink-2);text-decoration:none;border-left:2px solid transparent;margin-left:-2px}
+nav.toc li a:hover,nav.toc li a.active{color:var(--ink);border-left-color:var(--teal)}
+main{min-width:0;padding-bottom:80px}
+section.block{padding:64px 0 24px;border-top:1px solid var(--rule)}
+.prose{max-width:720px}
+@media (max-width:900px){.shell{grid-template-columns:1fr;gap:0;padding:0 16px}nav.toc{display:none}}
+
+/* hero */
+.hero{padding:56px 0 48px}
+.hero h1{font-size:clamp(2rem,5vw,3.2rem);font-weight:800;margin:0 0 .5em;line-height:1.25}
+.hero .lede{font-size:1.08rem;color:var(--ink-2);max-width:38em}
+.premise{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px;padding:0;list-style:none}
+.premise li{font-size:.85rem;border:1px solid var(--rule);background:var(--card);border-radius:999px;padding:.25em .9em}
+
+/* dialogue */
+.talk{display:grid;gap:14px;margin:28px 0 32px;max-width:720px}
+.say{display:grid;grid-template-columns:52px minmax(0,1fr);gap:12px;align-items:start}
+.say.r{grid-template-columns:minmax(0,1fr) 52px}
+.say.r .who{order:2}
+.who{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;font-family:var(--serif);font-weight:800;font-size:.8rem;color:#fff;line-height:1}
+.who.reimu{background:var(--red)}
+.who.marisa{background:var(--amber)}
+.bubble{background:var(--card);border:1px solid var(--rule);border-radius:14px;padding:.8em 1.05em;font-size:.97rem}
+.say:not(.r) .bubble{border-top-left-radius:4px}
+.say.r .bubble{border-top-right-radius:4px;background:var(--paper-2)}
+.bubble p:last-child{margin-bottom:0}
+.bubble .name{display:block;font-size:.75rem;color:var(--ink-2);margin-bottom:.1em}
+
+/* tables */
+.scroll{overflow-x:auto;background:var(--card);border:1px solid var(--rule);border-radius:10px;margin:22px 0}
+table{border-collapse:collapse;width:100%;font-size:.9rem;min-width:640px}
+caption{text-align:left;font-size:.82rem;color:var(--ink-2);padding:.7em 1em;caption-side:top}
+th,td{padding:.75em 1em;text-align:left;vertical-align:top;border-bottom:1px solid var(--rule)}
+thead th{font-weight:700;background:var(--paper-2);font-size:.82rem;color:var(--ink-2)}
+tbody th{font-weight:700;width:18%}
+tr:last-child td,tr:last-child th{border-bottom:0}
+
+/* chips */
+.chip{display:inline-block;font-size:.75rem;padding:.05em .7em;border-radius:999px;white-space:nowrap;font-weight:700}
+.chip.use{background:var(--teal-soft);color:var(--teal)}
+.chip.some{background:var(--navy-soft);color:var(--navy)}
+.chip.no{background:var(--red-soft);color:var(--red)}
+.chip.human{background:var(--amber-soft);color:var(--amber)}
+
+/* callouts */
+.note{border-left:4px solid var(--teal);background:var(--teal-soft);padding:14px 18px;border-radius:0 8px 8px 0;margin:22px 0;max-width:720px;font-size:.95rem}
+.note.warn{border-color:var(--red);background:var(--red-soft)}
+.note.idea{border-color:var(--amber);background:var(--amber-soft)}
+.note b{display:block;margin-bottom:.2em}
+.note p:last-child{margin:0}
+
+/* diagram */
+.fig{margin:24px 0;background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:16px;overflow-x:auto}
+.fig svg{min-width:760px;width:100%;height:auto;display:block}
+.fig figcaption{font-size:.82rem;color:var(--ink-2);margin-top:10px}
+.fig .box{fill:var(--card);stroke:var(--teal);stroke-width:2}
+.fig .t-name{fill:var(--ink);font:800 16px var(--serif)}
+.fig .t-sub{fill:var(--ink-2);font:12px var(--sans)}
+.fig .t-outer{fill:var(--teal);font:700 13px var(--sans)}
+.fig .t-ng{fill:var(--red);font:700 12px var(--sans)}
+.fig .t-gate{fill:var(--amber);font:700 11px var(--sans)}
+.fig .flow{stroke:var(--ink-2);stroke-width:1.6;fill:none}
+.fig .outer{stroke:var(--teal);stroke-width:2;fill:none}
+.fig .inner{stroke:var(--teal);stroke-width:2;fill:none}
+.fig .ngpath{stroke:var(--red);stroke-width:1.6;fill:none;stroke-dasharray:5 4}
+.fig .gate{fill:var(--amber)}
+.fig .ah-ink{fill:var(--ink-2)} .fig .ah-acc{fill:var(--teal)} .fig .ah-ng{fill:var(--red)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 22px;font-size:.82rem;color:var(--ink-2);margin-top:10px;padding:0;list-style:none}
+
+/* phase cards */
+.phases{display:grid;gap:18px;margin:24px 0}
+.phase{background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:20px 24px}
+.phase header{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 12px;margin-bottom:12px}
+.phase h3{margin:0;font-size:1.2rem}
+.phase .n{font-family:var(--serif);font-weight:800;color:var(--teal);font-size:1.3rem}
+.phase .chips{display:flex;flex-wrap:wrap;gap:6px;margin-left:auto}
+.phase dl{display:grid;grid-template-columns:9em minmax(0,1fr);gap:.5em 1.2em;margin:0;font-size:.93rem}
+.phase dt{color:var(--ink-2);font-weight:700}
+.phase dd{margin:0}
+@media (max-width:640px){.phase dl{grid-template-columns:1fr}.phase dt{margin-top:.5em}.phase .chips{margin-left:0}}
+
+/* roadmap */
+.road{list-style:none;padding:0;margin:24px 0;counter-reset:r;max-width:760px}
+.road li{position:relative;padding:0 0 26px 58px;border-left:2px solid var(--rule);margin-left:18px}
+.road li:last-child{border-left-color:transparent}
+.road li::before{counter-increment:r;content:counter(r);position:absolute;left:-19px;top:-2px;width:36px;height:36px;border-radius:50%;background:var(--ink);color:var(--paper);display:grid;place-items:center;font-family:var(--serif);font-weight:800}
+.road h3{margin:0 0 .3em;font-size:1.08rem}
+.road p{margin:0 0 .4em;font-size:.93rem;color:var(--ink-2)}
+.road .exit{font-size:.85rem;color:var(--teal);margin:0}
+
+pre.code{background:var(--code-bg);color:var(--code-ink);font-family:var(--mono);font-size:.82rem;line-height:1.65;padding:16px 18px;border-radius:10px;overflow-x:auto;margin:18px 0}
+pre.code .c{color:#7F9A92}
+
+.checklist{columns:2 300px;column-gap:32px;margin:20px 0;padding:0;list-style:none;font-size:.93rem}
+.checklist li{break-inside:avoid;padding:.35em 0 .35em 1.7em;position:relative}
+.checklist li::before{content:"";position:absolute;left:0;top:.75em;width:12px;height:12px;border:2px solid var(--teal);border-radius:3px}
+
+details.faq{border-bottom:1px solid var(--rule);padding:.7em 0;max-width:760px}
+details.faq summary{cursor:pointer;font-weight:700;list-style:none;display:flex;gap:.6em}
+details.faq summary::-webkit-details-marker{display:none}
+details.faq summary::before{content:"+";font-family:var(--mono);color:var(--teal);width:1em;flex:0 0 auto}
+details.faq[open] summary::before{content:"−"}
+details.faq div{padding:.6em 0 0 1.6em;font-size:.94rem;color:var(--ink-2)}
+
+ol.sources{font-size:.88rem;padding-left:1.4em;max-width:760px}
+ol.sources li{margin:.3em 0}
+
+footer{border-top:1px solid var(--rule);margin-top:40px;padding-top:24px;font-size:.82rem;color:var(--ink-2)}
+.theme-toggle{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:5;background:var(--card);color:var(--ink);border:1px solid var(--rule);border-radius:999px;padding:.4em .9em;font:inherit;font-size:.82rem;cursor:pointer}
+</style>
+</head>
+<body>
+<button class="theme-toggle" id="themeBtn" type="button">表示テーマ切替</button>
+<div class="shell">
+<nav class="toc" aria-label="目次">
+  <p>目次</p>
+  <ol>
+    <li><a href="#terms">ループとフラクタル</a></li>
+    <li><a href="#shape">全体像：2層の入れ子</a></li>
+    <li><a href="#contract">どの層も同じ契約で</a></li>
+    <li><a href="#codex">Codexの機能との対応</a></li>
+    <li><a href="#phases">フェーズ別の使い方</a></li>
+    <li><a href="#judge">使う・使わないの判断</a></li>
+    <li><a href="#org">組織への導入手順</a></li>
+    <li><a href="#stops">停止条件とコスト</a></li>
+    <li><a href="#faq">よくある迷い</a></li>
+    <li><a href="#sources">出典</a></li>
+  </ol>
+</nav>
+
+<main>
+<header class="hero">
+  <h1>ループを入れ子にするのは、効く所だけ</h1>
+  <p class="lede">AIエージェントに「一回ずつ指示する」段階から、「自分で回るループを設計する」段階へ進んだ開発組織が次に迷うのが、ループを何重に重ねるかです。このページでは、ループエンジニアリングとフラクタルエンジニアリングの関係を整理し、Codexを使う開発組織が、要件定義からリリースまでの流れに入れ子のループを必要な範囲だけ組み込むための判断基準と導入手順をまとめます。</p>
+  <ul class="premise" aria-label="このページの前提">
+    <li>Codexを日常的に使う開発組織</li>
+    <li>要件定義〜リリースの一連のフロー</li>
+    <li>親＋サブエージェントの2層</li>
+    <li>2026年9月時点の情報</li>
+  </ul>
+</header>
+
+<!-- ============ TERMS ============ -->
+<section class="block" id="terms">
+  <div class="prose">
+    <h2>ループエンジニアリングと、フラクタルエンジニアリング</h2>
+    <p><strong>ループエンジニアリング</strong>は、エージェントに毎回プロンプトを打つ代わりに、エージェントが「行動する → 結果を観察する → 次を決める」を目標達成まで繰り返す仕組みを設計する考え方です。2026年6月ごろから広く使われるようになった呼び方で、プロンプト、コンテキスト、ハーネスの設計に続く層として整理されています。</p>
+    <p><strong>フラクタルエンジニアリング</strong>は、まだ定義が定まった用語ではありません。このページでは「ループの中に子のループを置き、どの層のループも同じ型（同じ契約）で設計すること」と定義して使います。フラクタル図形がどこを拡大しても同じ形に見えるのと同じで、親のループも子のループも「作る → 確かめる → 直す → 止まる」という同じ形をしています。</p>
+  </div>
+
+  <div class="talk" aria-label="対話による補足">
+    <div class="say"><div class="who reimu" aria-hidden="true">霊夢</div><div class="bubble"><span class="name">霊夢</span><p>ループの次はフラクタルって聞いたけど、ループはもう古いってこと？</p></div></div>
+    <div class="say r"><div class="who marisa" aria-hidden="true">魔理沙</div><div class="bubble"><span class="name">魔理沙</span><p>置き換わるんじゃなくて、ループを部品にして重ねる話だぜ。ループは「時間方向に何回回すか」の設計、フラクタルは「階層方向にどう重ねるか」の設計。軸が違うから掛け算になる。</p></div></div>
+    <div class="say"><div class="who reimu" aria-hidden="true">霊夢</div><div class="bubble"><span class="name">霊夢</span><p>じゃあ、全部の作業を入れ子にすれば速くなる？</p></div></div>
+    <div class="say r"><div class="who marisa" aria-hidden="true">魔理沙</div><div class="bubble"><span class="name">魔理沙</span><p>そこが落とし穴だな。重ねるほどコストも失敗も掛け算で増える。独立して分けられて、機械的に確かめられる作業だけ入れ子にするのがコツだ。</p></div></div>
+  </div>
+
+  <div class="scroll">
+    <table>
+      <caption>エージェントへの関わり方の層。下の層は上の層を含み、置き換えない。</caption>
+      <thead><tr><th scope="col">層</th><th scope="col">設計の対象</th><th scope="col">Codexでの主な成果物</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">プロンプト</th><td>1回の指示の書き方</td><td>タスクごとの指示文</td></tr>
+        <tr><th scope="row">コンテキスト</th><td>各ターンでモデルに渡す情報</td><td><code>AGENTS.md</code>、skills、参照ファイル</td></tr>
+        <tr><th scope="row">ハーネス</th><td>エージェントが動く環境と権限</td><td>サンドボックス設定、承認ポリシー、MCP</td></tr>
+        <tr><th scope="row">ループ</th><td>繰り返しの開始・検証・停止</td><td><code>/goal</code>、Automations、<code>codex exec</code></td></tr>
+        <tr><th scope="row">フラクタル（入れ子）</th><td>ループの中に子ループを置く構造</td><td>カスタムエージェント（<code>.codex/agents/</code>）、<code>agents.max_depth</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============ SHAPE ============ -->
+<section class="block" id="shape">
+  <div class="prose">
+    <h2>全体像：フェーズを回す親、作業を仕上げる子</h2>
+    <p>要件定義からリリースまでの5つのフェーズを、親セッション（外側のループ）が順に進めます。各フェーズの中で、切り出せる作業だけをサブエージェント（内側のループ）に任せます。層は2つに留めます。</p>
+  </div>
+
+  <figure class="fig">
+    <svg viewBox="0 0 1040 300" role="img" aria-labelledby="figTitle figDesc">
+      <title id="figTitle">要件定義からリリースまでの2層の入れ子ループ</title>
+      <desc id="figDesc">要件定義、設計、開発、テスト、リリースの5つのフェーズが左から右へ並ぶ。各フェーズの中に、サブエージェントが回す小さなループがある。開発は並列の3つ、テストは作る役と確かめる役の2つ。要件定義の後、設計の後、リリースの前に人の承認がある。テストで不合格なら開発へ差し戻す点線がある。リリースの後は次の要件定義へ戻る外側のループがある。</desc>
+      <defs>
+        <marker id="aInk" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ah-ink"/></marker>
+        <marker id="aAcc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ah-acc"/></marker>
+        <marker id="aNg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ah-ng"/></marker>
+      </defs>
+
+      <path class="outer" d="M925 80 V48 Q925 40 917 40 H113 Q105 40 105 48 V76" marker-end="url(#aAcc)"/>
+      <text class="t-outer" x="515" y="30" text-anchor="middle">外側のループ（親セッション）：リリースしたら次の要件へ</text>
+
+      <rect class="box" x="20" y="80" width="170" height="130" rx="8"/>
+      <text class="t-name" x="105" y="108" text-anchor="middle">要件定義</text>
+      <text class="t-sub" x="105" y="128" text-anchor="middle">子は調査だけ</text>
+      <path class="inner" d="M83 172 A22 22 0 1 1 105 194" marker-end="url(#aAcc)"/>
+
+      <rect class="box" x="225" y="80" width="170" height="130" rx="8"/>
+      <text class="t-name" x="310" y="108" text-anchor="middle">設計</text>
+      <text class="t-sub" x="310" y="128" text-anchor="middle">子は案の比較</text>
+      <path class="inner" d="M265 172 A18 18 0 1 1 283 190" marker-end="url(#aAcc)"/>
+      <path class="inner" d="M310 172 A18 18 0 1 1 328 190" marker-end="url(#aAcc)"/>
+
+      <rect class="box" x="430" y="80" width="170" height="130" rx="8"/>
+      <text class="t-name" x="515" y="108" text-anchor="middle">開発</text>
+      <text class="t-sub" x="515" y="128" text-anchor="middle">子が並列で実装</text>
+      <path class="inner" d="M455 172 A18 18 0 1 1 473 190" marker-end="url(#aAcc)"/>
+      <path class="inner" d="M497 172 A18 18 0 1 1 515 190" marker-end="url(#aAcc)"/>
+      <path class="inner" d="M539 172 A18 18 0 1 1 557 190" marker-end="url(#aAcc)"/>
+
+      <rect class="box" x="635" y="80" width="170" height="130" rx="8"/>
+      <text class="t-name" x="720" y="108" text-anchor="middle">テスト</text>
+      <text class="t-sub" x="720" y="128" text-anchor="middle">作る役と確かめる役</text>
+      <path class="inner" d="M680 172 A20 20 0 1 1 700 192" marker-end="url(#aAcc)"/>
+      <path class="inner" d="M725 172 A20 20 0 1 1 745 192" marker-end="url(#aAcc)"/>
+
+      <rect class="box" x="840" y="80" width="170" height="130" rx="8"/>
+      <text class="t-name" x="925" y="108" text-anchor="middle">リリース</text>
+      <text class="t-sub" x="925" y="128" text-anchor="middle">子は下書きだけ</text>
+      <path class="inner" d="M903 172 A22 22 0 1 1 925 194" marker-end="url(#aAcc)"/>
+
+      <path class="flow" d="M190 145 H223" marker-end="url(#aInk)"/>
+      <rect class="gate" x="201" y="139" width="12" height="12" transform="rotate(45 207 145)"/>
+      <text class="t-gate" x="207" y="232" text-anchor="middle">承認</text>
+      <path class="flow" d="M395 145 H428" marker-end="url(#aInk)"/>
+      <rect class="gate" x="406" y="139" width="12" height="12" transform="rotate(45 412 145)"/>
+      <text class="t-gate" x="412" y="232" text-anchor="middle">承認</text>
+      <path class="flow" d="M600 145 H633" marker-end="url(#aInk)"/>
+      <path class="flow" d="M805 145 H838" marker-end="url(#aInk)"/>
+      <rect class="gate" x="816" y="139" width="12" height="12" transform="rotate(45 822 145)"/>
+      <text class="t-gate" x="822" y="232" text-anchor="middle">承認</text>
+
+      <path class="ngpath" d="M720 210 V255 H515 V214" marker-end="url(#aNg)"/>
+      <text class="t-ng" x="617" y="276" text-anchor="middle">不合格なら開発へ差し戻し</text>
+    </svg>
+    <ul class="legend" aria-label="図の凡例">
+      <li>四角：フェーズ（親セッションが担当）</li>
+      <li>四角の中の小さな円：サブエージェントの内側ループ</li>
+      <li>ひし形「承認」：人が承認しないと次へ進まない</li>
+      <li>点線：差し戻し</li>
+    </ul>
+    <figcaption>図の読み方：左から右へ進み、フェーズの中の円の数がそのフェーズで並列に動かす子の目安です。</figcaption>
+  </figure>
+
+  <div class="prose">
+    <p>図は左から右へ読みます。フェーズの中の小さな円の数が、そのフェーズで入れ子を使う度合いを表しています。開発フェーズは独立したタスクを並列に任せるので円が多く、要件定義とリリースは子に調査や下書きだけを任せるので1つです。</p>
+    <p>この図に描いていないこともあります。差し戻しはテストから開発への経路だけを代表として描いていますが、設計の誤りが見つかれば設計へ、要件の誤りなら要件定義へ戻ります。また、フェーズの境界は実際には重なることがあり、小さな修正ではフェーズを省略して構いません。</p>
+  </div>
+</section>
+
+<!-- ============ CONTRACT ============ -->
+<section class="block" id="contract">
+  <div class="prose">
+    <h2>どの層のループも、同じ6項目の契約で設計する</h2>
+    <p>フラクタルな構造の利点は、層が変わっても設計の考え方が変わらないことです。親のループにも子のループにも、次の6項目を必ず決めます。どれか1つでも曖昧なループは、入れ子にする前に1層のまま直します。</p>
+  </div>
+  <div class="scroll">
+    <table>
+      <caption>外側と内側のループの契約。項目は同じで、中身の粒度だけが違う。</caption>
+      <thead><tr><th scope="col">項目</th><th scope="col">外側（親セッション）</th><th scope="col">内側（サブエージェント）</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">目的</th><td>フェーズの成果物を完成させて次へ渡す</td><td>切り出された1つの作業を仕上げる</td></tr>
+        <tr><th scope="row">入力</th><td>前のフェーズのファイル（要件書、設計書など）</td><td>親が書いた指示文と、読むべきファイルのパス</td></tr>
+        <tr><th scope="row">作る</th><td>成果物を書く、作業を分けて配る</td><td>コード、テスト、調査メモを書く</td></tr>
+        <tr><th scope="row">検証</th><td>フェーズの完了条件（要件との対応、網羅率など）</td><td>テスト、型チェック、lint などの機械的な判定</td></tr>
+        <tr><th scope="row">停止条件</th><td>差し戻し回数の上限、人の承認</td><td>試行回数の上限、同じ失敗の繰り返しの検知</td></tr>
+        <tr><th scope="row">出力</th><td>次のフェーズ用のファイルと進捗の記録</td><td>親への要約（何をして、何が残ったか）</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="note">
+    <b>受け渡しは会話ではなくファイルで行う</b>
+    <p>サブエージェントは、親との会話の流れをそのまま覚えているわけではありません。要件、設計、タスク一覧、進捗をリポジトリ内のファイルに置き、子にはそのパスを渡します。ファイルに残っていれば、途中で止まっても別の人や別のセッションが続きから再開できます。</p>
+  </div>
+<pre class="code"><span class="c"># 例：フローの作業ファイルをリポジトリに置く</span>
+docs/flow/&lt;issue番号&gt;/
+├── requirements.md   <span class="c"># 受け入れ条件（人が承認した印を残す）</span>
+├── design.md         <span class="c"># 設計と、要件との対応表</span>
+├── tasks.md          <span class="c"># タスク一覧、依存関係、担当ファイル</span>
+├── progress.md       <span class="c"># 各タスクの状態、試行回数、失敗の記録</span>
+└── test-matrix.md    <span class="c"># 受け入れ条件とテストの対応表</span></pre>
+</section>
+
+<!-- ============ CODEX ============ -->
+<section class="block" id="codex">
+  <div class="prose">
+    <h2>Codexの機能との対応</h2>
+    <p>Codexには、入れ子のループを組むための部品がひと通りそろっています。組織として押さえておきたいのは、<strong>サブエージェントの入れ子の深さは既定で1段</strong>（親の直下の子まで）という点です。このページの2層構成は、この既定値のまま組めます。</p>
+  </div>
+  <div class="scroll">
+    <table>
+      <caption>契約の項目とCodexの機能の対応（2026年9月時点の公式ドキュメントに基づく）</caption>
+      <thead><tr><th scope="col">役割</th><th scope="col">Codexの機能</th><th scope="col">このフローでの使い方</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">共通ルール</th><td><code>AGENTS.md</code></td><td>フェーズの定義、作業ファイルの置き場所、完了条件の書き方を記述する。親も子も同じ規約を読む。</td></tr>
+        <tr><th scope="row">子の役割定義</th><td>カスタムエージェント（<code>.codex/agents/</code> の TOML。<code>name</code>、<code>description</code>、<code>developer_instructions</code> が必須）</td><td>「調査役」「実装役」「レビュー役」などをプロジェクトに置き、リポジトリで管理する。<code>sandbox_mode</code> で調査役を読み取り専用にできる。</td></tr>
+        <tr><th scope="row">入れ子の深さ</th><td><code>agents.max_depth</code>（既定 1）</td><td>既定のまま使う。子がさらに子を作らないので、コストと追跡が読みやすい。</td></tr>
+        <tr><th scope="row">並列数</th><td><code>agents.max_threads</code>（既定 6）</td><td>開発フェーズの並列度の上限。タスク分割の粒度と合わせて決める。</td></tr>
+        <tr><th scope="row">子の起動</th><td>明示的な指示でのみ起動</td><td>親への指示に「このタスクごとに1つずつ子を起動し、全員の完了を待って要約する」と書く。</td></tr>
+        <tr><th scope="row">親の継続</th><td><code>/goal</code>（<code>pause</code>／<code>resume</code>／<code>clear</code>）</td><td>開発フェーズの親に「tasks.md の全タスクが完了し、テストが通るまで」のような検証できる終了条件を渡す。</td></tr>
+        <tr><th scope="row">検証役</th><td><code>/review</code></td><td>未コミットの変更、コミット、ベースブランチとの差分をレビューさせ、修正はさせずに指摘だけ受け取る。</td></tr>
+        <tr><th scope="row">CIへの組み込み</th><td><code>codex exec</code>（既定は読み取り専用、<code>--json</code>、<code>--output-schema</code>）</td><td>PRごとの検査や要約をCIから非対話で実行し、結果を構造化して次の処理に渡す。</td></tr>
+        <tr><th scope="row">定期実行</th><td>Automations（Codexアプリのスケジュール実行）</td><td>依存更新や失敗テストの調査など、決まった間隔で回す外側のループ。Gitリポジトリでは worktree で実行され、手元の変更と分かれる。</td></tr>
+        <tr><th scope="row">作業の分離</th><td>Git worktree</td><td>並列で動く子が同じ作業ツリーを書き換えないように分ける。</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="note warn">
+    <b>設定名と既定値は変わる可能性があります</b>
+    <p>Codexは更新が速く、ドキュメントの移転も続いています。導入時は<a href="#sources">出典</a>の公式ドキュメントで最新の設定名と既定値を確認してください。</p>
+  </div>
+</section>
+
+<!-- ============ PHASES ============ -->
+<section class="block" id="phases">
+  <div class="prose">
+    <h2>フェーズ別：どこまで子に任せるか</h2>
+    <p>入れ子を使う度合いはフェーズごとに違います。ラベルの意味は、<span class="chip use">積極的に使う</span>、<span class="chip some">限定して使う</span>、<span class="chip human">人が決める</span>です。</p>
+  </div>
+
+  <div class="phases">
+    <article class="phase">
+      <header><span class="n">1</span><h3>要件定義</h3><div class="chips"><span class="chip some">限定して使う</span><span class="chip human">人が承認</span></div></header>
+      <dl>
+        <dt>親がやること</dt><dd>関係者との対話で要件を固め、受け入れ条件を書く。判断そのものは親と人で行う。</dd>
+        <dt>子に任せること</dt><dd>既存コードの関連箇所、過去のIssue、似た機能の調査。読み取り専用の調査役で十分。</dd>
+        <dt>完了条件</dt><dd>受け入れ条件が「Given／When／Then」のように検証できる形になっている。「いい感じに」「なるべく」などの曖昧な言葉が残っていない。</dd>
+        <dt>入れ子を広げない理由</dt><dd>要件は利害関係者の意図で決まり、機械で合否を判定できない。ここを子に分けると、もっともらしいが誰も合意していない要件が増える。</dd>
+      </dl>
+    </article>
+
+    <article class="phase">
+      <header><span class="n">2</span><h3>設計</h3><div class="chips"><span class="chip some">限定して使う</span><span class="chip human">人が承認</span></div></header>
+      <dl>
+        <dt>親がやること</dt><dd>設計書を書き、実装を独立したタスクに分けてタスク一覧にする。分け方の基準は「触るファイルが重ならないこと」。</dd>
+        <dt>子に任せること</dt><dd>複数の設計案の並行検討、影響範囲の調査。子ごとに別の案を担当させ、親が比べる。</dd>
+        <dt>完了条件</dt><dd>すべての受け入れ条件が設計のどこかに対応している。タスクの依存関係が循環していない。</dd>
+        <dt>ポイント</dt><dd>タスクの分け方が、そのまま次の開発フェーズの並列度になる。依存のあるタスクを無理に並列にしない。</dd>
+      </dl>
+    </article>
+
+    <article class="phase">
+      <header><span class="n">3</span><h3>開発</h3><div class="chips"><span class="chip use">積極的に使う</span></div></header>
+      <dl>
+        <dt>親がやること</dt><dd>タスク一覧から依存のないものを選んで子に配り、戻ってきた要約で進捗ファイルを更新する。<code>/goal</code> で「全タスク完了かつテスト通過」まで続けさせる。</dd>
+        <dt>子に任せること</dt><dd>1タスクずつ、専用の worktree で「実装 → 単体テスト → 直す」を回す。入れ子の効果が最も出るのはここ。</dd>
+        <dt>完了条件</dt><dd>テスト、型チェック、lint が通る。子の「できました」という自己申告は完了条件にしない。</dd>
+        <dt>入れ子を使わない場合</dt><dd>変更が数ファイルで済む、またはタスク同士が同じファイルを触る場合は、親1つで進める方が速い。</dd>
+      </dl>
+    </article>
+
+    <article class="phase">
+      <header><span class="n">4</span><h3>テスト</h3><div class="chips"><span class="chip use">積極的に使う</span></div></header>
+      <dl>
+        <dt>親がやること</dt><dd>統合テストとE2Eを回し、受け入れ条件ごとに「どのテストで確かめたか」の対応表を作る。</dd>
+        <dt>子に任せること</dt><dd>受け入れ条件ごとのテスト作成と、<code>/review</code> によるレビュー。レビュー役は実装役とは別の子にする。</dd>
+        <dt>完了条件</dt><dd>すべての受け入れ条件にテストが対応し、全件通過。重大なレビュー指摘が残っていない。</dd>
+        <dt>ポイント</dt><dd>作る役と確かめる役を分けることが、入れ子の一番大事な使い道。同じ子に自分の成果を評価させない。</dd>
+      </dl>
+    </article>
+
+    <article class="phase">
+      <header><span class="n">5</span><h3>リリース</h3><div class="chips"><span class="chip some">限定して使う</span><span class="chip human">人がマージ・デプロイ</span></div></header>
+      <dl>
+        <dt>親がやること</dt><dd>PRを作り、説明文に要件、設計、テスト結果へのリンクをまとめる。</dd>
+        <dt>子に任せること</dt><dd>リリースノートと変更履歴の下書き、ロールバック手順の確認。</dd>
+        <dt>完了条件</dt><dd>CIが通っている。PRの説明から要件までたどれる。戻し方が書かれている。</dd>
+        <dt>人が決める理由</dt><dd>マージとデプロイは取り消しにくい操作。ループはここで止まり、判断材料をそろえて人に渡す。</dd>
+      </dl>
+    </article>
+  </div>
+</section>
+
+<!-- ============ JUDGE ============ -->
+<section class="block" id="judge">
+  <div class="prose">
+    <h2>入れ子を使うか、使わないかの判断</h2>
+    <p>入れ子にすると、並列化とコンテキストの分離という利点が得られる代わりに、コスト、待ち時間、要約での情報の欠落が増えます。フェーズ単位ではなく、<strong>作業ごと</strong>に次の条件で判断します。</p>
+  </div>
+  <div class="scroll">
+    <table>
+      <caption>入れ子（サブエージェント）を使う条件と、使わない方がよい条件</caption>
+      <thead><tr><th scope="col">観点</th><th scope="col"><span class="chip use">使う</span></th><th scope="col"><span class="chip no">使わない</span></th></tr></thead>
+      <tbody>
+        <tr><th scope="row">分けやすさ</th><td>作業が独立した単位に分かれ、触るファイルが重ならない</td><td>分けた作業が同じファイルや同じ判断に依存している</td></tr>
+        <tr><th scope="row">検証</th><td>テストや型チェックなど、機械的に合否を判定できる</td><td>合否が人の好みや合意でしか決まらない</td></tr>
+        <tr><th scope="row">コンテキスト</th><td>調査結果やログが大きく、親の会話に入れると埋もれる</td><td>必要な情報が少なく、親がそのまま扱える</td></tr>
+        <tr><th scope="row">規模</th><td>親1つでは時間がかかりすぎる量がある</td><td>数ファイルの修正など、分ける手間の方が大きい</td></tr>
+        <tr><th scope="row">取り消しやすさ</th><td>失敗しても worktree やブランチを捨てれば戻せる</td><td>本番操作、外部への送信など、取り消しにくい</td></tr>
+        <tr><th scope="row">視点</th><td>作る役と確かめる役を分けたい（レビュー、テスト）</td><td>1つの視点で十分な作業</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="note idea">
+    <b>迷ったら1層から</b>
+    <p>「使う」の列に当てはまるのが1つか2つなら、まず親1つのループで回し、検証と停止条件が安定してから子に分けます。1層でうまく回らないループは、入れ子にしても直りません。</p>
+  </div>
+</section>
+
+<!-- ============ ORG ============ -->
+<section class="block" id="org">
+  <div class="prose">
+    <h2>組織への導入手順</h2>
+    <p>個人の工夫として始まった入れ子のループを、組織の開発フローにするための段階です。各段階には「次へ進む条件」を置き、満たさないうちは広げません。</p>
+  </div>
+  <ol class="road">
+    <li>
+      <h3>1層のループを共通化する</h3>
+      <p>フェーズの定義、作業ファイルの置き場所、完了条件の書き方を <code>AGENTS.md</code> にまとめ、全員が同じ規約で1層のループを回す。</p>
+      <p class="exit">次へ進む条件：完了条件が機械的に判定できる形で書かれ、差し戻しの理由が記録されている。</p>
+    </li>
+    <li>
+      <h3>子の役割をリポジトリで管理する</h3>
+      <p>調査役、実装役、レビュー役などのカスタムエージェントを <code>.codex/agents/</code> に置き、コードと同じようにレビューを通して変更する。個人の設定に散らばらせない。</p>
+      <p class="exit">次へ進む条件：役割ごとの権限（読み取り専用か、書き込み可か）が決まり、変更の担当者が決まっている。</p>
+    </li>
+    <li>
+      <h3>開発とテストのフェーズだけ入れ子にする</h3>
+      <p>効果が出やすく、失敗しても戻しやすい2つのフェーズから始める。要件定義と設計は、子を調査と案の比較だけに使う。</p>
+      <p class="exit">次へ進む条件：下の表の指標が、1層のときより悪化していない。</p>
+    </li>
+    <li>
+      <h3>定期実行とCIに広げる</h3>
+      <p>依存更新や失敗テストの調査を Automations で、PRごとの検査を <code>codex exec</code> で回す。いずれも結果は人が確認できる場所に集める。</p>
+      <p class="exit">次へ進む条件：誰も見ていない定期実行がない。止め方と担当者が決まっている。</p>
+    </li>
+  </ol>
+
+  <div class="scroll">
+    <table>
+      <caption>導入の効果を見るための指標の例。数値の目標は組織ごとに決める。</caption>
+      <thead><tr><th scope="col">指標</th><th scope="col">見ること</th><th scope="col">悪化したときの疑い</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">差し戻し率</th><td>フェーズの完了後に前のフェーズへ戻った割合</td><td>完了条件が曖昧、または作業の分け方が悪い</td></tr>
+        <tr><th scope="row">人のレビュー時間</th><td>PR 1件あたりに人がかけた時間</td><td>子の成果の要約が足りない、PRが大きすぎる</td></tr>
+        <tr><th scope="row">試行回数</th><td>子が1タスクを終えるまでの試行の回数</td><td>タスクが大きすぎる、テストが不安定</td></tr>
+        <tr><th scope="row">使用量</th><td>PR 1件あたりの使用量</td><td>入れ子にしなくてよい作業まで分けている</td></tr>
+        <tr><th scope="row">リリース後の不具合</th><td>リリース後に見つかった不具合の件数</td><td>確かめる役が作る役と分かれていない</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============ STOPS ============ -->
+<section class="block" id="stops">
+  <div class="prose">
+    <h2>停止条件とコスト</h2>
+    <p>入れ子にすると、コストと失敗は層の数に応じて掛け算で増えます。止まる仕組みは層ごとに用意し、下の層で止まったら上の層に判断を返します。回数は出発点の目安で、組織で調整します。</p>
+  </div>
+  <div class="scroll">
+    <table>
+      <caption>層ごとの停止条件の例</caption>
+      <thead><tr><th scope="col">層</th><th scope="col">止める条件</th><th scope="col">止まったとき</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">内側（子）</th><td>同じテストが3回続けて失敗した。実行時間が上限を超えた。</td><td>試したことと失敗内容を進捗ファイルに書き、親へ報告して終わる。</td></tr>
+        <tr><th scope="row">外側（親）</th><td>同じフェーズへの差し戻しが2回を超えた。</td><td>自動で回すのをやめ、人に判断を求める。要件か設計に問題がある合図と考える。</td></tr>
+        <tr><th scope="row">全体</th><td>1件あたりの使用量の目安を超えた。取り消しにくい操作の直前。</td><td>人の承認を待つ。</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============ FAQ ============ -->
+<section class="block" id="faq">
+  <div class="prose"><h2>よくある迷い</h2></div>
+  <details class="faq"><summary>入れ子を3層以上にしてもよい？</summary><div>Codexでは <code>agents.max_depth</code> を上げれば可能ですが、まず2層で検証と停止条件が安定していることが前提です。層を増やすと、要約を重ねるたびに情報が落ち、どの子が何をしたかを追うのも難しくなります。3層目が必要になるのは、大規模な移行のように、子の作業自体がさらに独立した単位に分かれる場合に限られます。</div></details>
+  <details class="faq"><summary>子の数は多いほど速い？</summary><div>速くなるのは独立したタスクがある分までです。依存のあるタスクを同時に始めると、前提がそろう前に後続が進んで手戻りになります。並列にできるのは、設計フェーズで「触るファイルが重ならない」と確認できたタスクだけです。</div></details>
+  <details class="faq"><summary>子の要約だけで親は判断できる？</summary><div>成功時は要約で足ります。失敗時は要約で詳細が落ちやすいので、子には失敗ログと試したことを進捗ファイルに残させ、親と人がそこを読めるようにします。</div></details>
+  <details class="faq"><summary>要件定義を全部AIに任せられない？</summary><div>調査や整理は任せられますが、何を作るかの合意は人の仕事です。合否を機械で判定できない作業を入れ子にすると、もっともらしいが誰も承認していない判断が積み重なります。</div></details>
+  <details class="faq"><summary>フラクタルエンジニアリングは導入すべき流行語？</summary><div>名前より中身で判断してください。このページの内容は「入れ子のループを同じ契約で設計し、効く所だけ使う」という設計の話です。自組織のフローで独立して分けられ、機械的に確かめられる作業がどこにあるかを先に探すことが出発点です。</div></details>
+</section>
+
+<!-- ============ SOURCES ============ -->
+<section class="block" id="sources">
+  <div class="prose">
+    <h2>出典</h2>
+    <p>2026年9月26日時点で確認した資料です。Codexの設定名と既定値は公式ドキュメントに基づきます。</p>
+  </div>
+  <ol class="sources">
+    <li><a href="https://developers.openai.com/codex/subagents">Codex: Subagents（OpenAI）</a></li>
+    <li><a href="https://learn.chatgpt.com/use-cases/follow-goals">Follow a goal（OpenAI）</a></li>
+    <li><a href="https://learn.chatgpt.com/docs/codex/cli">Codex CLI（OpenAI）</a></li>
+    <li><a href="https://learn.chatgpt.com/codex/non-interactive-mode">Non-interactive mode / codex exec（OpenAI）</a></li>
+    <li><a href="https://learn.chatgpt.com/docs/automations?surface=app">Automations（OpenAI）</a></li>
+    <li><a href="https://www.ibm.com/think/topics/loop-engineering">What Is Loop Engineering?（IBM）</a></li>
+    <li><a href="https://adtmag.com/articles/2026/07/01/loop-engineering-emerges-as-developers-put-ai-coding-agents-on-repeat.aspx">Loop Engineering Emerges as Developers Put AI Coding Agents on Repeat（ADTmag）</a></li>
+    <li><a href="https://jp.findy-team.io/blogs/loop-engineering/">ループエンジニアリングとは？（Findy Team+）</a></li>
+    <li><a href="https://arxiv.org/pdf/2608.21884">Loop Engineering: Building Blocks, Adoption, and Impact（arXiv）</a></li>
+    <li><a href="https://medium.com/@PabTorre/the-fractal-nature-of-agentic-llms-the-next-evolution-in-artificial-intelligence-44b6e09c80ec">The Fractal Nature of Agentic LLMs（Medium）</a></li>
+  </ol>
+
+  <footer>
+    <p><a href="../">thinking トップに戻る</a></p>
+    このページは設計方針と判断基準をまとめたものです。回数の上限などの数値は出発点の目安であり、Codexの機能名や既定値はバージョンによって変わる可能性があるため、導入時は各公式ドキュメントで確認してください。
+  </footer>
+</section>
+</main>
+</div>
+
+<script>
+(function(){
+  var root=document.documentElement, btn=document.getElementById('themeBtn');
+  try{var t=localStorage.getItem('theme'); if(t) root.setAttribute('data-theme',t);}catch(e){}
+  btn.addEventListener('click',function(){
+    var cur=root.getAttribute('data-theme');
+    if(!cur){cur=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}
+    var next=cur==='dark'?'light':'dark';
+    root.setAttribute('data-theme',next);
+    try{localStorage.setItem('theme',next);}catch(e){}
+  });
+
+  var links=[].slice.call(document.querySelectorAll('nav.toc a'));
+  if('IntersectionObserver' in window){
+    var io=new IntersectionObserver(function(es){
+      es.forEach(function(e){
+        if(e.isIntersecting){
+          links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href')==='#'+e.target.id);});
+        }
+      });
+    },{rootMargin:'-40% 0px -55% 0px'});
+    document.querySelectorAll('section.block').forEach(function(s){io.observe(s);});
+  }
+})();
+</script>
+</body>
+</html>

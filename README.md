@@ -13,6 +13,10 @@ AGENTS.md                                      エージェント向けの執筆
 docs/                                           Pagesに公開する静的HTML
 ├── .nojekyll                                   Jekyll処理を無効化
 ├── index.html                                  トップページと記事一覧
+├── ai-dev-flow/                                AI開発フローカテゴリ
+│   └── fractal-loop-engineering.html
+├── oss/                                        OSS開発カテゴリ
+│   └── oss-design-philosophy.html
 └── testing/                                    テスト戦略カテゴリ
     ├── ai-coding-test-strategy.html
     └── jev-test-strategy.html
