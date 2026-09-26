@@ -14,7 +14,10 @@ docs/                                           Pagesに公開する静的HTML
 ├── .nojekyll                                   Jekyll処理を無効化
 ├── index.html                                  トップページと記事一覧
 ├── ai-dev-flow/                                AI開発フローカテゴリ
+│   ├── ai-code-modernization-prep.html
 │   └── fractal-loop-engineering.html
+├── jev/                                        Jevカテゴリ
+│   └── jev-as-a-judge.html
 ├── oss/                                        OSS開発カテゴリ
 │   └── oss-design-philosophy.html
 └── testing/                                    テスト戦略カテゴリ
