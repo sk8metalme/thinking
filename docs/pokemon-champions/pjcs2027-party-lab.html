@@ -1,365 +1,236 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>所持ポケモン不問で選ぶ4つのパーティ案 — Pokémon Champions PJCS2027</title>
-<meta name="description" content="ポケモンチャンピオンズ初心者とダブルバトル初心者向け。所持ポケモンに依存せず、4つの役割ベースのパーティ案を比較して調整する実践ガイド。">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@600;800&display=swap" rel="stylesheet">
-<style>
-:root{
-  --paper:#eef2f0; --card:#f8faf9; --ink:#16232c; --ink-2:#4a5a63; --rule:#c6d1cc;
-  --teal:#1f6f63; --teal-soft:#d5e8e3; --gold:#a36b18; --gold-soft:#f4e7c9;
-  --blue:#315f87; --blue-soft:#dce9f3; --rose:#9c4f61; --rose-soft:#f4e1e7;
-  --serif:"Noto Serif JP","Hiragino Mincho ProN","Yu Mincho","MS PMincho",serif;
-  --sans:"Noto Sans JP","Hiragino Sans","Yu Gothic","Meiryo",system-ui,sans-serif;
-  box-sizing:border-box; scroll-behavior:smooth;
-}
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){
-    --paper:#10191f; --card:#18252e; --ink:#e3eae7; --ink-2:#9fb0aa; --rule:#2c3c45;
-    --teal:#5fbfae; --teal-soft:#16352f; --gold:#e2b661; --gold-soft:#3b301d;
-    --blue:#8fb9dc; --blue-soft:#1d3141; --rose:#e39aaa; --rose-soft:#3b222b;
-  }
-}
-:root[data-theme="dark"]{--paper:#10191f;--card:#18252e;--ink:#e3eae7;--ink-2:#9fb0aa;--rule:#2c3c45;--teal:#5fbfae;--teal-soft:#16352f;--gold:#e2b661;--gold-soft:#3b301d;--blue:#8fb9dc;--blue-soft:#1d3141;--rose:#e39aaa;--rose-soft:#3b222b}
-*,*::before,*::after{box-sizing:inherit}
-body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);line-height:1.85}
-a{color:var(--teal);text-underline-offset:3px}
-a:focus-visible,button:focus-visible{outline:3px solid var(--gold);outline-offset:3px;border-radius:4px}
-.wrap{max-width:1040px;margin:0 auto;padding:34px 24px 80px}
-.back{font-size:.86rem;color:var(--ink-2);text-decoration:none}
-.back:hover{text-decoration:underline;color:var(--teal)}
-.eyebrow{margin:42px 0 10px;color:var(--teal);font-size:.82rem;font-weight:700;letter-spacing:.12em}
-h1,h2,h3{font-family:var(--serif);line-height:1.35}
-h1{max-width:850px;margin:0;font-size:clamp(2rem,5vw,3.3rem);letter-spacing:-.02em}
-.lede{max-width:780px;margin:22px 0 28px;font-size:1.08rem;color:var(--ink-2)}
-.meta{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 32px}
-.tag{display:inline-flex;align-items:center;padding:.18em .75em;border-radius:999px;background:var(--teal-soft);color:var(--teal);font-size:.78rem;font-weight:700}
-.tag.gold{background:var(--gold-soft);color:var(--gold)}
-.tag.blue{background:var(--blue-soft);color:var(--blue)}
-.tag.rose{background:var(--rose-soft);color:var(--rose)}
-.callout{margin:24px 0 42px;padding:22px 24px;border:1px solid var(--rule);border-left:5px solid var(--teal);background:var(--card);border-radius:10px}
-.callout strong{font-family:var(--serif);font-size:1.1rem}
-.callout p{margin:.5em 0 0}
-.callout.warning{border-left-color:var(--gold)}
-.contents{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 20px;margin:0 0 54px;padding:20px 24px;border:1px solid var(--rule);background:var(--card);border-radius:10px}
-.contents h2{grid-column:1/-1;margin:0 0 4px;font-size:1.2rem}
-.contents a{display:block;padding:4px 0;font-size:.92rem}
-section{margin:0 0 60px}
-h2{font-size:clamp(1.45rem,3vw,2rem);margin:0 0 18px;padding-bottom:10px;border-bottom:1px solid var(--rule)}
-h3{font-size:1.3rem;margin:0 0 10px}
-h4{font-size:1rem;margin:20px 0 8px}
-p{margin:.55em 0 1em}
-.small{font-size:.88rem;color:var(--ink-2)}
-.evidence{font-size:.76rem;color:var(--ink-2);white-space:nowrap}
-.evidence a{font-weight:700}
-.fact-grid,.plan-grid,.step-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
-.fact,.step,.plan-card{padding:20px;border:1px solid var(--rule);background:var(--card);border-radius:10px}
-.fact h3{font-size:1.08rem;margin-bottom:8px}
-.fact p:last-child,.step p:last-child{margin-bottom:0}
-.fact .label{display:block;margin-bottom:4px;color:var(--teal);font-size:.78rem;font-weight:700;letter-spacing:.06em}
-.compare{width:100%;border-collapse:collapse;background:var(--card);font-size:.9rem}
-.table-wrap{overflow-x:auto;border:1px solid var(--rule);border-radius:10px;margin:18px 0}
-.compare th,.compare td,.role-table th,.role-table td{padding:12px 14px;border-bottom:1px solid var(--rule);vertical-align:top;text-align:left}
-.compare th,.role-table th{background:var(--teal-soft);font-weight:700;white-space:nowrap}
-.compare tr:last-child td,.role-table tr:last-child td{border-bottom:0}
-.compare .recommend{color:var(--teal);font-weight:700}
-.plan-grid{grid-template-columns:repeat(2,minmax(0,1fr));align-items:stretch}
-.plan-card{display:flex;flex-direction:column}
-.plan-card h3{display:flex;align-items:flex-start;gap:10px;font-size:1.35rem}
-.plan-number{display:inline-flex;flex:0 0 auto;align-items:center;justify-content:center;width:2em;height:2em;border-radius:50%;background:var(--teal);color:#fff;font-family:var(--sans);font-size:.75rem}
-.plan-card .intent{margin:0 0 16px;color:var(--ink-2)}
-.role-table{width:100%;border-collapse:collapse;font-size:.86rem;margin-top:14px}
-.role-table th{width:27%;white-space:normal}
-.role-table td{background:transparent}
-.plan-card .test{margin-top:auto;padding-top:16px;border-top:1px dashed var(--rule)}
-.test strong{color:var(--teal)}
-.step-grid{counter-reset:step}
-.step{position:relative;padding-left:62px}
-.step::before{counter-increment:step;content:counter(step);position:absolute;left:20px;top:20px;width:28px;height:28px;display:grid;place-items:center;border-radius:50%;background:var(--teal);color:#fff;font-weight:700}
-.step h3{font-size:1.1rem}
-.checklist{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 20px;padding:0;list-style:none}
-.checklist li{position:relative;padding-left:28px}
-.checklist li::before{content:"□";position:absolute;left:0;color:var(--teal);font-size:1.2rem;line-height:1.5}
-.source-list{padding-left:1.4em}
-.source-list li{margin:.45em 0}
-blockquote{margin:22px 0;padding:14px 18px;border-left:4px solid var(--blue);background:var(--blue-soft);color:var(--ink)}
-code{padding:.1em .35em;border-radius:4px;background:var(--teal-soft);font-size:.9em}
-.download{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:18px 20px;margin-top:18px;border:1px solid var(--teal);border-radius:10px;background:var(--teal-soft)}
-.download a{font-weight:700}
-.source-table{font-size:.84rem}
-.source-table th:first-child{width:12%}
-footer{margin-top:70px;padding-top:22px;border-top:1px solid var(--rule);color:var(--ink-2);font-size:.82rem}
-footer p{margin:.35em 0}
-@media (max-width:760px){
-  .wrap{padding:24px 16px 56px}
-  .contents,.fact-grid,.plan-grid,.step-grid,.checklist{grid-template-columns:1fr}
-  .contents{padding:16px}
-  .compare{min-width:760px}
-  .role-table{font-size:.82rem}
-  .role-table th{width:31%}
-  .download{align-items:flex-start;flex-direction:column}
-}
-@media (prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important}}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Pokémon Champions初心者が、週1時間の練習からダブルバトルの構築・選出を学び、PJCS2027予選への招待権利を目指すガイド。4つの役割案、M-C大会の公開チーム事例、一次情報へのリンクを掲載。">
+  <meta name="theme-color" content="#173c58">
+  <title>Pokémon ChampionsからPJCS2027へ — 初心者のダブルバトル実践書</title>
+  <style>
+    :root{color-scheme:light dark;--bg:#f4f7f9;--paper:#fff;--ink:#17232d;--muted:#52636f;--line:#d5e0e6;--blue:#173c58;--teal:#176b8a;--soft:#eaf3f6;--gold:#8e6211;--gold-bg:#fff6df;--shadow:0 18px 52px #173c5814;font-family:system-ui,-apple-system,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);line-height:1.78}a{color:var(--teal);text-underline-offset:.18em}a:hover{text-decoration-thickness:2px}a:focus-visible{outline:3px solid #d69328;outline-offset:3px;border-radius:3px}.wrap{max-width:1040px;margin:0 auto;padding:28px 24px 76px}.back{display:inline-block;margin-bottom:22px;color:var(--muted);font-size:.92rem}.hero{padding:46px 44px;border-radius:20px;background:linear-gradient(135deg,#173c58,#176b8a);color:#fff;box-shadow:var(--shadow)}.eyebrow{margin:0 0 12px;color:#c5e2ea;font-size:.78rem;font-weight:750;letter-spacing:.12em;text-transform:uppercase}.hero h1{max-width:800px;margin:.15em 0 .35em;font-size:clamp(2rem,5vw,3.45rem);line-height:1.2;letter-spacing:-.035em}.lead{max-width:780px;margin:0;color:#edf7fa;font-size:1.07rem}.badges{display:flex;flex-wrap:wrap;gap:9px;margin-top:24px}.badge{padding:5px 11px;border:1px solid #ffffff5a;border-radius:999px;background:#ffffff16;color:#fff;font-size:.82rem}.actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:26px}.button{display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:10px 17px;border:1px solid #fff;border-radius:9px;color:#173c58;background:#fff;font-weight:750;text-decoration:none}.button.secondary{color:#fff;background:transparent}.button:hover{transform:translateY(-1px)}.toc,.panel,.section-card{margin-top:22px;padding:24px 26px;border:1px solid var(--line);border-radius:14px;background:var(--paper);box-shadow:var(--shadow)}.toc h2,.section-card h2{margin:0 0 14px;color:var(--blue);font-size:1.3rem}.toc ol{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 22px;margin:0;padding-left:1.4em}.toc li{padding:3px 0}.fact{margin-top:22px;padding:22px 24px;border:1px solid #e4c57c;border-left:5px solid #c18b20;border-radius:12px;background:var(--gold-bg)}.fact h2{margin:0 0 10px;color:var(--gold);font-size:1.25rem}.fact p:last-child{margin-bottom:0}.section-card{scroll-margin-top:16px}.section-card h2{font-size:1.55rem}.section-card h3{margin:24px 0 8px;color:var(--blue);font-size:1.16rem}.section-card p{margin:.65em 0}.kicker{margin:0 0 7px;color:var(--teal);font-size:.78rem;font-weight:800;letter-spacing:.08em}.table-wrap{overflow-x:auto;margin:17px 0;border:1px solid var(--line);border-radius:10px}.table-wrap:focus-visible{outline:3px solid #d69328}table{width:100%;border-collapse:collapse;background:var(--paper);font-size:.91rem}th,td{padding:12px 14px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{background:var(--soft);color:var(--blue);font-weight:750}tr:last-child td{border-bottom:0}.steps{counter-reset:step;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.step{position:relative;padding:18px 18px 18px 56px;border:1px solid var(--line);border-radius:11px;background:var(--paper)}.step:before{counter-increment:step;content:counter(step);position:absolute;left:17px;top:18px;width:27px;height:27px;display:grid;place-items:center;border-radius:50%;background:var(--teal);color:#fff;font-weight:800;font-size:.86rem}.step h3{margin:0 0 5px;font-size:1.03rem}.step p{margin:0;color:var(--muted);font-size:.94rem}.callout{margin:18px 0;padding:16px 19px;border-left:4px solid var(--teal);background:var(--soft)}.callout p{margin:.35em 0}.plan-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:18px}.plan{padding:20px;border:1px solid var(--line);border-radius:12px;background:var(--paper)}.plan h3{margin:0 0 9px}.plan .aim{margin:0 0 10px;color:var(--muted)}.plan ul{margin:.5em 0;padding-left:1.25em}.plan li{margin:.35em 0}.source-list{padding-left:1.4em}.source-list li{margin:.7em 0;overflow-wrap:anywhere}.source-id{display:inline-block;min-width:4.5em;color:var(--blue);font-weight:800}.small{font-size:.88rem;color:var(--muted)}.download{display:flex;justify-content:space-between;align-items:center;gap:18px;padding:20px 22px;margin-top:22px;border:1px solid var(--teal);border-radius:12px;background:var(--soft)}footer{margin-top:36px;padding:24px 4px 0;border-top:1px solid var(--line);color:var(--muted);font-size:.86rem}footer p{margin:.35em 0}
+    .hero h1 .title-source{white-space:nowrap}
+    @media(max-width:700px){.wrap{padding:16px 14px 52px}.hero{padding:30px 22px;border-radius:15px}.hero h1{font-size:clamp(1.2rem,6vw,1.8rem)}.toc,.panel,.section-card{padding:19px 17px}.toc ol,.steps,.plan-grid{grid-template-columns:1fr}.download{align-items:flex-start;flex-direction:column}table{min-width:680px}.table-wrap{margin-right:-3px;margin-left:-3px}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{transition:none!important;animation:none!important}}
+    @media(prefers-color-scheme:dark){:root{--bg:#10171d;--paper:#18232c;--ink:#e6edf1;--muted:#bac7ce;--line:#33444e;--blue:#c8e5ed;--teal:#78c6d9;--soft:#1e313b;--gold:#f2d386;--gold-bg:#302918;--shadow:0 18px 52px #0004}.hero{background:linear-gradient(135deg,#0b263b,#12546b)}.eyebrow{color:#a7dce7}.lead{color:#f1fbfd}.button{color:#102c3d;background:#e7f3f7}.button.secondary{color:#e7f3f7;background:transparent}.fact{border-color:#74602d}.callout{border-left-color:#78c6d9}th{color:#c8e5ed}}
+  </style>
 </head>
 <body>
 <div class="wrap">
   <a class="back" href="../index.html">← thinkingのトップへ戻る</a>
-
-  <header>
-    <p class="eyebrow">POKÉMON CHAMPIONS / PJCS2027 PARTY LAB</p>
-    <h1>所持ポケモン不問で選ぶ、4つのダブルパーティ案</h1>
-    <p class="lede">「手元にいるポケモンで何とかする」から一度離れ、勝ち筋と役割から6枠を組む。初心者が複数案を比べ、1時間の練習で検証し、1枠ずつ調整するための公開ワークページ。詳細版は326ページ・35週のワークブックです。</p>
-    <div class="meta" aria-label="ページの前提">
-      <span class="tag">初心者向け</span>
-      <span class="tag blue">ダブルバトル</span>
-      <span class="tag gold">現時点：2026-10-03</span>
-      <span class="tag rose">M-Cは必ず最新表示を確認</span>
+  <header class="hero">
+    <p class="eyebrow">Pokémon Champions / PJCS2027</p>
+    <h1><span class="title-source">Pokémon Championsから</span><br>PJCS2027へ</h1>
+    <p class="lead">はじめてのダブルバトルを、週1時間の練習から大会準備へ。盤面の読み方、4つの役割ベースのパーティ案、M-C大会の公開チーム事例、35週のロードマップを、根拠リンク付きでまとめた実践ガイドです。</p>
+    <div class="badges" aria-label="このページの対象">
+      <span class="badge">ポケモンバトル初心者向け</span>
+      <span class="badge">ダブルバトル</span>
+      <span class="badge">マスターカテゴリ</span>
+      <span class="badge">基準日 2026-10-04</span>
+    </div>
+    <div class="actions">
+      <a class="button" href="pokemon-champions-pjcs2027-practice-book.pdf">PDF実践書を読む</a>
+      <a class="button secondary" href="#roadmap">35週ロードマップを見る</a>
     </div>
   </header>
 
-  <div class="callout">
-    <strong>結論：最初は「案を4つ持つ」のではなく、「4案を比較して1案を固定」する。</strong>
-    <p>Pokémon Championsでは、Pokémon HOMEから連れてくる方法だけでなく、ゲーム内でのトライアル採用・恒久採用や、VPを使ったトレーニングが案内されています。だから、この記事では所持状況を前提にせず、<em>主軸候補 → 役割 → 合法性確認 → 1時間テスト</em>の順で組み立てます。［公式］</p>
-  </div>
-
-  <nav class="contents" aria-label="ページ内目次">
-    <h2>このページの読み方</h2>
-    <a href="#premise">1. 先に固定する前提</a>
-    <a href="#compare">2. 4案の比較表</a>
-    <a href="#build">3. 6枠を埋める手順</a>
-    <a href="#plans">4. 4つのパーティ案</a>
-    <a href="#official-example">4.5 公式掲載チームを教材にする</a>
-    <a href="#adjust">5. 1枠ずつ調整するルール</a>
-    <a href="#practice">6. 週1時間の検証メニュー</a>
-    <a href="#evidence">7. エビデンスと更新欄</a>
+  <nav class="toc" aria-labelledby="toc-title">
+    <h2 id="toc-title">このページの道順</h2>
+    <ol>
+      <li><a href="#route">大会ルートと現時点の条件</a></li>
+      <li><a href="#learn">一手の判断を組み立てる</a></li>
+      <li><a href="#teams">4つのパーティ案を比べる</a></li>
+      <li><a href="#practice">週1時間の練習方法</a></li>
+      <li><a href="#roadmap">2026年10月〜2027年5月</a></li>
+      <li><a href="#official-cases">公式構築を教材にする</a></li>
+      <li><a href="#sources">エビデンスと更新</a></li>
+    </ol>
   </nav>
 
+  <aside class="fact" aria-labelledby="fact-title">
+    <h2 id="fact-title">まず確認：第I回は終了。次の機会は第II回</h2>
+    <p>2026年10月4日時点で、Global Challenge 2027 I（9月25〜28日）は終了済みです。次のIIは10月30日〜11月2日、M-Cのダブルバトルとして公式シーズン案内に掲載されています。各カテゴリの上位120名に、2027年5月予定のPJCS2027予選の出場権が付与されます。III〜VIも予定されていますが、個別日程・ルールは発表後に確認します。<a href="#e-001">［E-001］</a></p>
+    <p>対象には、ゲーム内の国・地域設定が日本であることと居住国が日本であること、対象カテゴリなどの条件があります。複数アカウントでの参加や、権利を得たアカウントの変更にも公式の注意があります。順位通知とゲーム内メールで招待権利を確認してください。<a href="#e-001">［E-001］</a></p>
+    <p class="small">週1時間で上位120名に入れる確率や必要練習時間を示す公式データはありません。権利獲得は目標であり、本ページは結果を保証しません。</p>
+  </aside>
+
   <main>
-    <section id="premise" aria-labelledby="premise-title">
-      <h2 id="premise-title">1. 先に固定する前提</h2>
-      <div class="fact-grid">
-        <article class="fact">
-          <span class="label">［公式］大会ルール</span>
-          <h3>グローバルチャレンジIはダブル＋M-C</h3>
-          <p>公式案内では、PJCS2027の出場権付与対象は、ゲーム内の国・地域設定と居住国が日本であることが条件です。Mastersは2010年以前生まれで、Global Challenge I・IIは各カテゴリ上位120名に予選出場権が付与されると案内されています。複数アカウントや権利獲得後のアカウント変更にも注意します。</p>
-          <p class="evidence"><a href="https://champions-news.pokemon-home.com/ja/page/833.html" target="_blank" rel="noopener">公式：2027シーズン日本語案内</a> ／ <a href="https://www.pokemon.com/us/news/take-on-the-2027-global-challenge-i" target="_blank" rel="noopener">公式：Global Challenge I</a> ／ <a href="https://www.pokemon.com/us/news/get-ready-for-regulation-set-m-c-in-pokemon-champions" target="_blank" rel="noopener">公式：M-C告知</a></p>
-        </article>
-        <article class="fact">
-          <span class="label">［公式］所持状況</span>
-          <h3>HOME・トライアル・採用から入口を選べる</h3>
-          <p>公式のチーム案内は、HOMEからの訪問、Roster Ranchでの採用、トライアル採用、VPやチケットを使った育成を説明しています。所持ポケモンを聞かずに始める設計が可能です。</p>
-          <p class="evidence"><a href="https://champions.pokemon.com/en-us/pokemon/" target="_blank" rel="noopener">公式：チームを作る</a></p>
-        </article>
-        <article class="fact">
-          <span class="label">［考察］パーティの定義</span>
-          <h3>固定6体ではなく、役割付きの登録候補</h3>
-          <p>このページの「案」は、勝率を保証する完成品ではありません。6体登録と試合中の選出4体を分け、主軸が合法か、役割が重複していないか、選出が説明できるかを検査するための設計図です。</p>
-        </article>
-        <article class="fact">
-          <span class="label">［未発表］更新対象</span>
-          <h3>III〜VIとPJCS2027予選の細部は保留</h3>
-          <p>2027シーズンのGlobal Challengeは複数回予定されていますが、開催ごとの詳細やPJCS2027予選の最終条件は更新される可能性があります。発表前のカットラインや使用可能リストを断定しません。</p>
-          <p class="evidence"><a href="https://championships.pokemon.com/en-us/about/2027-season-changes/" target="_blank" rel="noopener">公式：2027シーズン更新</a> ／ <a href="https://championships.pokemon.com/en-us/about/pokemon-vgc-global-challenge-grand-challenge" target="_blank" rel="noopener">公式：Global Challenge一覧</a></p>
-        </article>
-      </div>
-    </section>
-
-    <section id="compare" aria-labelledby="compare-title">
-      <h2 id="compare-title">2. 4案の比較表</h2>
-      <p>「どのポケモンが強いか」ではなく、「どの判断を練習したいか」で選びます。主軸名は公式の戦略記事が扱った候補を置いていますが、M-Cで使えるかは必ずその時点のゲーム内表示で確認してください。</p>
-      <div class="table-wrap">
-        <table class="compare">
-          <thead><tr><th>案</th><th>主軸候補の例</th><th>勝ち筋の仮説</th><th>初心者が得る練習</th><th>最初のおすすめ</th></tr></thead>
+    <section class="section-card" id="route" aria-labelledby="route-title">
+      <p class="kicker">01 / ROUTE</p>
+      <h2 id="route-title">大会ルート：招待を得る段階と、5月予選を戦う段階を分ける</h2>
+      <p>グローバルチャレンジの上位入賞で得るのは、5月のPJCS2027予選へ参加するための招待権利です。招待権利を得た後、予選でさらにライブ大会へ進むことが別の目標になります。このガイドがまず目指すのは、オンライン大会で招待権利を得ることです。<a href="#e-001">［E-001］</a></p>
+      <div class="table-wrap" role="region" aria-label="大会ルート表" tabindex="0">
+        <table>
+          <thead><tr><th scope="col">大会</th><th scope="col">基準日時点の情報</th><th scope="col">この本での扱い</th></tr></thead>
           <tbody>
-            <tr><td><strong>A 先手圧力</strong></td><td>メガライチュウX</td><td>先に盤面を取り、相手の反撃の選択肢を減らす</td><td>行動順・集中攻撃・守りの価値</td><td>テンポよく試合を理解したい</td></tr>
-            <tr><td><strong>B 低速切り返し</strong></td><td>メガクチート</td><td>守りを作ってから速度を変え、終盤の火力を通す</td><td>速度操作・ターン管理・終了条件</td><td>相手の先手を受けて返したい</td></tr>
-            <tr><td><strong>C 条件操作</strong></td><td>メガカラマネロ</td><td>相手の行動をずらし、自分が有利な条件を再現する</td><td>情報整理・反証・分岐の記録</td><td>考えて選択肢を狭めたい</td></tr>
-            <tr><td><strong>D バランス差し替え</strong></td><td>メガオーダイル／メガメガニウム／メガエンブオー</td><td>2つの速度プランと交代先を持ち、相手に合わせて4体を変える</td><td>役割の重複・選出・1枠変更</td><td class="recommend">最初の1案に迷う人に推奨</td></tr>
+            <tr><th scope="row">Global Challenge I</th><td>2026年9月25〜28日、M-Cダブル。実施済み</td><td>次回に向けた経験・告知の読み方を確認</td></tr>
+            <tr><th scope="row">Global Challenge II</th><td>2026年10月30日〜11月2日、M-Cダブル</td><td>最初の未開催チャレンジ。個別告知も確認</td></tr>
+            <tr><th scope="row">III・IV</th><td>2026年12月・2027年1月開催予定</td><td>正確な日と規則の発表後に計画を移動</td></tr>
+            <tr><th scope="row">V・VI</th><td>2027年3月・4月開催予定</td><td>同上。過去回の詳細を流用しない</td></tr>
+            <tr><th scope="row">PJCS2027予選</th><td>2027年5月、招待者のみ参加予定</td><td>招待通知・登録条件・規則を確認して次段階へ</td></tr>
           </tbody>
         </table>
       </div>
-      <p class="small">主軸候補は「公式記事でチーム構築例が公開されたポケモン」を、役割を考える入口として扱っています。これは使用率ランキングでも、M-Cの最終合法性の保証でもありません。［公式］［考察］</p>
+      <p>マスターカテゴリの年齢区分は、2027シーズンでは2010年以前生まれと案内されています。招待は個人につき一つで、複数アカウント使用は禁止・ペナルティの対象になり得ます。参加前に公式告知で自分の設定とアカウントを確かめてください。<a href="#e-001">［E-001］</a></p>
     </section>
 
-    <section id="build" aria-labelledby="build-title">
-      <h2 id="build-title">3. 6枠を埋める手順</h2>
-      <div class="step-grid">
-        <article class="step"><h3>主軸を1つだけ選ぶ</h3><p>「この2体を初手に出したら、1ターン目に何を得るか」を一文にします。主軸候補を2体以上同時に育て始めないのが、週1時間で迷子にならないコツです。</p></article>
-        <article class="step"><h3>相棒を足す</h3><p>主軸が止まる条件を1つ選び、守る・交代・妨害・情報のどれかで答える枠を1つ足します。強そうという理由だけの追加は保留です。</p></article>
-        <article class="step"><h3>速度プランを決める</h3><p>速い、遅い、両方のどれを本線にするか決めます。両方を採用する場合は、切り替えの合図と失敗時の戻り先を先に書きます。</p></article>
-        <article class="step"><h3>守りとカバーを足す</h3><p>残り3枠は「被ダメージを抑える」「主軸に通らない相手へ答える」「終盤に勝ち筋を回収する」の順で埋めます。役割名が書けない枠は採用しません。</p></article>
-        <article class="step"><h3>選出4体を2組作る</h3><p>登録6体を完成させたら、初手2体＋後発2体の基本選出を2組だけ作ります。初手が崩れた後に何が回収するかまで書けなければ、まだ登録しません。</p></article>
-        <article class="step"><h3>ゲーム内表示で合法性を確認</h3><p>レギュレーション、使用可能ポケモン、技・特性・持ち物、登録期間を確認します。ここで通らない候補は、強さを評価する前に別候補へ置き換えます。</p></article>
+    <section class="section-card" id="learn" aria-labelledby="learn-title">
+      <p class="kicker">02 / BATTLE DECISIONS</p>
+      <h2 id="learn-title">一手の判断：4体の盤面から、次のターンを作る</h2>
+      <p>ダブルバトルでは、味方2体と相手2体が同時に場にいます。相手の一体だけを見るのではなく、二体の連携、後発、残り時間まで考えます。勝ち筋は「強い技を当てる」だけではなく、起点を作り、主役を動かし、相手の回答を見て、終盤の回収役を残す計画です。</p>
+      <div class="steps" aria-label="一手の判断の順序">
+        <article class="step"><h3>見えている事実</h3><p>残HP、場のポケモン、技履歴、状態、残り時間を確認する。</p></article>
+        <article class="step"><h3>止める脅威</h3><p>次に勝ち筋を止める相手を一体選び、未確認の技は推測と分ける。</p></article>
+        <article class="step"><h3>行動候補を3つ</h3><p>攻撃を続ける、守り・支援を使う、交代で並びを変える。</p></article>
+        <article class="step"><h3>外れた場合</h3><p>相手が守る・交代する・別の技を選ぶとき、次に何が残るか比べる。</p></article>
       </div>
-    </section>
-
-    <section id="plans" aria-labelledby="plans-title">
-      <h2 id="plans-title">4. 4つのパーティ案</h2>
-      <p>各案は「主軸候補1体＋役割5枠」で書いています。候補名は固定メンバーではなく、役割を理解するための入口です。ゲーム内で合法な候補へ差し替えても、同じテスト手順を使えます。</p>
-
-      <div class="plan-grid">
-        <article class="plan-card" id="plan-a">
-          <h3><span class="plan-number">A</span>先手圧力プラン</h3>
-          <p class="intent">主軸候補：メガライチュウX。先手を取れる前提が崩れたときの安全手まで、最初から6枠に含める。</p>
-          <p class="evidence"><a href="https://www.pokemon.com/us/features/pokemon-champions-how-to-build-a-mega-raichu-x-team" target="_blank" rel="noopener">公式の構築例を見る</a></p>
-          <table class="role-table"><tbody>
-            <tr><th>1 主軸</th><td>メガライチュウXなど、先手を取ったときの利益が説明できる候補</td></tr>
-            <tr><th>2 速度</th><td>行動順を確定・補助する枠。速度操作、優先度、妨害のいずれか</td></tr>
-            <tr><th>3 相棒</th><td>主軸が1ターン生き残り、攻撃または支援を通す枠</td></tr>
-            <tr><th>4 守り</th><td>集中攻撃や相手の切り返しを受ける枠。交代先も含める</td></tr>
-            <tr><th>5 カバー</th><td>主軸が止まるタイプ・特性・速度条件への別角度の打点</td></tr>
-            <tr><th>6 終盤</th><td>先手を失った後に残ったHP差や盤面を回収する枠</td></tr>
-          </tbody></table>
-          <div class="test"><strong>1時間テスト：</strong>初手の行動を3パターン記録し、先手が取れなかった試合だけを分けて、守り・交代・攻撃継続のどれが最も安全だったか比較する。</div>
-        </article>
-
-        <article class="plan-card" id="plan-b">
-          <h3><span class="plan-number">B</span>低速・切り返しプラン</h3>
-          <p class="intent">主軸候補：メガクチート。速度を変える前に相手の集中攻撃を受け、発動後の残りターンで勝ち筋を回収する。</p>
-          <p class="evidence"><a href="https://www.pokemon.com/us/features/pokemon-champions-how-to-build-a-mega-mawile-team" target="_blank" rel="noopener">公式の構築例を見る</a></p>
-          <table class="role-table"><tbody>
-            <tr><th>1 主軸</th><td>メガクチートなど、速度が下がった盤面で利益が大きい候補</td></tr>
-            <tr><th>2 発動補助</th><td>速度操作を通すための守り、妨害、交代、行動保証</td></tr>
-            <tr><th>3 高耐久</th><td>発動前の1ターンを受け、相手の集中攻撃を分散する枠</td></tr>
-            <tr><th>4 特殊側</th><td>物理対策だけで止まらないよう、別の攻撃軸を用意する枠</td></tr>
-            <tr><th>5 切り返し</th><td>速度操作が切れた後に、再発動・優先度・交代で盤面を戻す枠</td></tr>
-            <tr><th>6 終盤</th><td>残りターンとHP差を使って、無理に発動し直さず勝つ枠</td></tr>
-          </tbody></table>
-          <div class="test"><strong>1時間テスト：</strong>速度操作の発動前・発動中・終了後を分け、各試合で「残りターン」「守るべき枠」「次の安全手」を1行ずつ記録する。</div>
-        </article>
-
-        <article class="plan-card" id="plan-c">
-          <h3><span class="plan-number">C</span>条件操作プラン</h3>
-          <p class="intent">主軸候補：メガカラマネロ。相手の選択肢を観察し、こちらが有利になる条件を1つずつ作る。情報不足のまま決め打ちしない。</p>
-          <p class="evidence"><a href="https://www.pokemon.com/us/features/pokemon-champions-how-to-build-a-mega-malamar-team" target="_blank" rel="noopener">公式の構築例を見る</a></p>
-          <table class="role-table"><tbody>
-            <tr><th>1 主軸</th><td>メガカラマネロなど、相手の選択や能力変化を前提に仮説を置ける候補</td></tr>
-            <tr><th>2 観察役</th><td>相手の持ち物・行動順・守りを見て、次の判断を絞る枠</td></tr>
-            <tr><th>3 条件作り</th><td>天候・速度・位置・状態など、勝ち筋が成立する条件を作る枠</td></tr>
-            <tr><th>4 保険</th><td>相手が想定外の行動をしたとき、即負けを避ける枠</td></tr>
-            <tr><th>5 対策</th><td>主軸の弱点を突く相手へ、同じ条件に頼らない回答</td></tr>
-            <tr><th>6 回収役</th><td>条件がそろった後に、迷わず勝ちへ進める終盤枠</td></tr>
-          </tbody></table>
-          <div class="test"><strong>1時間テスト：</strong>確定情報・推測・未確認を3列に分け、同じ盤面を2回見返す。予想が外れたときの安全手を、主軸の変更より先に記録する。</div>
-        </article>
-
-        <article class="plan-card" id="plan-d">
-          <h3><span class="plan-number">D</span>バランス・主軸差し替えプラン</h3>
-          <p class="intent">主軸候補：メガオーダイル、メガメガニウム、メガエンブオーなど。最初は1体を選び、残り5枠の役割を崩さず主軸だけ比較する。</p>
-          <p class="evidence"><a href="https://www.pokemon.com/us/strategy/pokemon-champions-how-to-build-a-mega-feraligatr-team" target="_blank" rel="noopener">公式：メガオーダイル</a> ／ <a href="https://www.pokemon.com/us/strategy/pokemon-champions-how-to-build-a-mega-meganium-team" target="_blank" rel="noopener">公式：メガメガニウム</a> ／ <a href="https://www.pokemon.com/us/strategy/pokemon-champions-how-to-build-a-mega-emboar-team" target="_blank" rel="noopener">公式：メガエンブオー</a></p>
-          <table class="role-table"><tbody>
-            <tr><th>1 主軸</th><td>公式の構築例などから、今週試す候補を1体だけ選ぶ</td></tr>
-            <tr><th>2 相棒</th><td>主軸が欲しい盤面を作る枠。主軸を変えても最初は固定する</td></tr>
-            <tr><th>3 速い側</th><td>先手を取る基本選出を作る枠</td></tr>
-            <tr><th>4 遅い側</th><td>速度操作または受け回しで、先手を失ったときに戻す枠</td></tr>
-            <tr><th>5 共通対策</th><td>どの主軸でも必要な守り・カバー枠。安易に変更しない</td></tr>
-            <tr><th>6 終盤</th><td>速い側と遅い側のどちらからでも勝ちを回収できる枠</td></tr>
-          </tbody></table>
-          <div class="test"><strong>1時間テスト：</strong>同じ相手想定に主軸3体を順に当て、勝敗ではなく「初手の説明」「崩れた後の戻り先」「役割の重複」を5点満点で採点する。</div>
-        </article>
-      </div>
-    </section>
-
-    <section id="official-example" aria-labelledby="official-example-title">
-      <h2 id="official-example-title">4.5 公式掲載チームを教材にする</h2>
-      <p>抽象的な役割だけで終わらせないため、公式のMega Emboar構築記事に掲載された6体を、役割・技・特性・持ち物の読み解き教材として使います。これは公式記事のセットを紹介するもので、現在のM-CやPJCS2027予選での合法性・強さを保証するものではありません。大会用へ移す前に、現行ルールとゲーム内表示を確認してください。</p>
-      <p class="evidence"><a href="https://www.pokemon.com/us/strategy/pokemon-champions-how-to-build-a-mega-emboar-team" target="_blank" rel="noopener">一次情報：Mega Emboar team feature</a> ／ <a href="https://mcdn.pokemon.com/pokemon-prod/raw/upload/v1/live/static-assets/content-assets/cms2/pdf/play-pokemon/rules/play-pokemon-vgc-tournament-handbook-en.pdf" target="_blank" rel="noopener">一次情報：VGC Tournament Handbook</a></p>
-      <div class="table-wrap">
-        <table class="compare">
-          <thead><tr><th>ポケモン</th><th>持ち物 / 特性</th><th>掲載技</th><th>読む役割</th></tr></thead>
-          <tbody>
-            <tr><td>Emboar</td><td>Emboarite / Blaze</td><td>Heat Crash、Drain Punch、Bulk Up、Protect</td><td>積みながら耐久と打点を上げる主役</td></tr>
-            <tr><td>Primarina</td><td>Leftovers / Liquid Voice</td><td>Hyper Voice、Moonblast、Calm Mind、Protect</td><td>特殊側の積みと範囲圧力</td></tr>
-            <tr><td>Sinistcha</td><td>Sitrus Berry / Hospitality</td><td>Matcha Gotcha、Life Dew、Rage Powder、Trick Room</td><td>redirect、回復、低速切り返し</td></tr>
-            <tr><td>Weavile</td><td>King's Rock / Pickpocket</td><td>Knock Off、Ice Spinner、Fake Out、Fling</td><td>速い妨害と追加の行動機会</td></tr>
-            <tr><td>Aerodactyl</td><td>Focus Sash / Unnerve</td><td>Rock Slide、Dual Wingbeat、Tailwind、Protect</td><td>速い側の速度操作と対面圧力</td></tr>
-            <tr><td>Garchomp</td><td>White Herb / Rough Skin</td><td>Stomping Tantrum、Dragon Claw、Swords Dance、Protect</td><td>速度・積み・終盤の別軸</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="callout warning">
-        <strong>仮想2ターン再生</strong>
-        <p>Emboar＋Sinistcha 対 Mega Charizard Y＋Whimsicottを想定します。1ターン目にSinistchaがRage Powder、EmboarがBulk Up。相手がWhimsicottでTailwind、CharizardでProtectなら、2ターン目にSinistchaがTrick Room、EmboarがProtectを選ぶかを比較します。ここで記録するのはダメージではなく、<em>起動役を守る根拠・速度の残りターン・起動失敗時の代替選出</em>です。これは仮想ケースであり、実際の対戦結果ではありません。</p>
-      </div>
-    </section>
-
-    <section id="adjust" aria-labelledby="adjust-title">
-      <h2 id="adjust-title">5. 1枠ずつ調整するルール</h2>
-      <blockquote>変更するのは、負けた直後のポケモンではなく、最初に勝ち筋が分岐した役割。［考察］</blockquote>
-      <div class="table-wrap">
-        <table class="compare">
-          <thead><tr><th>見えた問題</th><th>まず疑うもの</th><th>差し替える候補</th><th>差し替えないもの</th></tr></thead>
-          <tbody>
-            <tr><td>初手から何をするか説明できない</td><td>主軸と相棒の接続</td><td>相棒または初手の速度枠</td><td>6体全体、技4つ全部</td></tr>
-            <tr><td>主軸が毎回集中攻撃で倒れる</td><td>守り・位置・情報の不足</td><td>守り枠を1体</td><td>主軸をすぐ別案にしない</td></tr>
-            <tr><td>相手の速度操作に追いつけない</td><td>速い側と遅い側の切替条件</td><td>速度枠を1体</td><td>攻撃枠を無制限に増やさない</td></tr>
-            <tr><td>終盤に残るが勝ち切れない</td><td>回収役・ターン計画</td><td>終盤枠を1体</td><td>序盤の主軸まで同時に変えない</td></tr>
-            <tr><td>合法性で登録できない</td><td>最新の大会表示・技・特性</td><td>該当候補を別の合法候補へ</td><td>未確認のまま練習を続けない</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <h3>調整ログの最小フォーマット</h3>
-      <ul class="checklist">
-        <li>固定した案と変更した枠を1行で書く</li>
-        <li>最初に分岐したターンを記録する</li>
-        <li>相手の最善応答を一つ書く</li>
-        <li>次の1時間で検証する仮説を一つに絞る</li>
+      <div class="callout"><strong>対戦後の問い：</strong>「負けた」ではなく、最初に選択肢が狭まったのは、情報・選出・操作・チーム役割のどこだった？ 次週は一つだけ変える。</div>
+      <h3>ダブルの基本になる3つの交換条件</h3>
+      <ul>
+        <li><strong>集中攻撃：</strong>危険な相手を倒せれば大きいが、守りや交代で外れた時にもう一体を自由にする場合がある。</li>
+        <li><strong>守る・支援：</strong>主役を残したり情報を得たりできるが、そのターンに相手が準備・交代する価値もある。</li>
+        <li><strong>交代：</strong>不利な対面を変えられる一方、入ったポケモンが攻撃を受けたり、後発の役割を失ったりする。</li>
       </ul>
+      <p>正解を暗記するのではなく、「その行動で何を得て、相手に何を許し、外れた時に何を残すか」を説明できるようにします。技の細かい効果・優先度・対象は、昔のシリーズの知識だけで決めず、現行のゲーム内説明を確認します。<a href="#e-004">［E-004］</a><a href="#e-006">［E-006］</a></p>
     </section>
 
-    <section id="practice" aria-labelledby="practice-title">
-      <h2 id="practice-title">6. 週1時間の検証メニュー</h2>
-      <div class="step-grid">
-        <article class="step"><h3>10分：合法性と目的</h3><p>大会名、レギュレーション、使用可能リスト、登録期限を確認し、今日の目的を「先手」「切り返し」「選出」から1つ選ぶ。</p></article>
-        <article class="step"><h3>15分：基本選出</h3><p>選んだ案の初手2体＋後発2体を2組作る。各組について、1ターン目に得たいものと、崩れたときの後発を一文で書く。</p></article>
-        <article class="step"><h3>25分：同じ条件を反復</h3><p>同じ相手想定を最低3回試す。勝敗だけでなく、最初の分岐、相手の最善応答、自分の安全手を同じ表に記録する。</p></article>
-        <article class="step"><h3>10分：1枠だけ予約</h3><p>変更するなら1枠だけ決め、採用理由と不採用理由を残す。次週までに別の枠を触らないことが比較可能性を守る。</p></article>
+    <section class="section-card" id="teams" aria-labelledby="teams-title">
+      <p class="kicker">03 / PARTY PROTOTYPES</p>
+      <h2 id="teams-title">4つのパーティ案：種族名ではなく、勝ち筋の違いで選ぶ</h2>
+      <p>以下の4案は勝ち筋の違いを学ぶためのオリジナル・プロトタイプです。公式推奨チームでも、勝率を検証した大会完成品でもありません。GC I・II向け特別ロスターは2026年9月28日に終了しており、そこに載った種族を現在スカウトできる保証はありません。基準日のスタンダードセレクトM-Cは12月2日までですが、公式ページの一覧は「このセレクトで新たに紹介される種族」であり、M-C全対象リストではありません。採用前にゲーム内「セレクト詳細」の対象、HOME訪問の可否、大会時点の技・特性・持ち物・登録条件を別々に確認し、入手できない場合は役割を保って候補を置き換えてください。<a href="#e-007">［E-007］</a> <a href="#e-017">［E-017］</a></p>
+      <div class="plan-grid">
+        <article class="plan">
+          <h3>A. 先手圧力</h3>
+          <p class="aim"><strong>6候補：</strong>リザードン、エルフーン、ガブリアス、ガオガエン、ヤバソチャ、サーフゴー</p>
+          <p><strong>練習すること：</strong>先に動けた時に誰を倒すか、先手を失った後にどの後発を残すか。</p>
+          <p><strong>仮の初手：</strong>リザードン＋エルフーン。後発にガブリアス＋サーフゴーを置く形から検討し、保護や交代が必要なら他候補へ差し替える。</p>
+          <p><strong>最初の反証：</strong>主役が動く前に支援役が倒れる、相手が守る、場の条件が変わる。</p>
+        </article>
+        <article class="plan">
+          <h3>B. 低速切り返し</h3>
+          <p class="aim"><strong>6候補：</strong>クチート、コータス、リキキリン、ヤバソチャ、ブリジュラス、ファイアロー</p>
+          <p><strong>練習すること：</strong>速度を変える前・有効な間・終了後の出口を一続きに考える。</p>
+          <p><strong>仮の初手：</strong>クチート＋リキキリン、後発候補にコータス＋ヤバソチャ。条件を使わない時の別選出も残す。</p>
+          <p><strong>最初の反証：</strong>起動役への集中、妨害、主役への集中。成功例だけで評価しない。</p>
+        </article>
+        <article class="plan">
+          <h3>C. 盤面制御</h3>
+          <p class="aim"><strong>6候補：</strong>グソクムシャ、イッカネズミ、オーロンゲ、ゴリランダー、ブリジュラス、サーフゴー</p>
+          <p><strong>練習すること：</strong>支援を重ねるだけでなく、主役が早い段階で相手へ圧力をかける。</p>
+          <p><strong>仮の初手：</strong>グソクムシャ＋攻撃役を軸に検討。支援二体を同時に選ぶ形は、攻撃の手数が足りるか比較する。</p>
+          <p><strong>最初の反証：</strong>支援を使ったターンに相手の主役が自由に動き、盤面が改善しない。</p>
+        </article>
+        <article class="plan">
+          <h3>D. 複数ルート</h3>
+          <p class="aim"><strong>6候補：</strong>ラグラージ、ペリッパー、ファイアロー、ガブリアス、ガオガエン、ヤバソチャ</p>
+          <p><strong>練習すること：</strong>相手の並びを見て、条件を使う選出と条件に頼らない選出を切り替える。</p>
+          <p><strong>仮の初手：</strong>ラグラージ＋ペリッパーの条件関係をゲーム内で確認。後発はガブリアス＋ヤバソチャなどを比較する。</p>
+          <p><strong>最初の反証：</strong>切り替え判断に迷う、条件の上書きで二つのルートが同時に崩れる。</p>
+        </article>
       </div>
-      <div class="callout warning">
-        <strong>大会直前の停止条件</strong>
-        <p>公式のルール・ゲーム内の使用可能表示・登録した6体が一致していない場合は、構築の強さを評価せず確認に戻ります。未発表条件を推測で埋めるより、更新欄を空けたままにする方が安全です。</p>
+      <p class="small">上のA〜Dは、技・特性・持ち物を確定した大会用完成パーティではなく、役割の学習プロトタイプです。詳細PDFでは、M-C大会の公開チーム4例からセットを転記し、実際の出場者の選出とは区別した仮想4体選出と切替条件を示しています。</p>
+      <div class="callout">
+        <strong>実際のセット例も照合：</strong>2026年9月のBrisbane Regionalでは、Kiran Singh選手が1位、Haruki Sato選手が2位でした。公式ページで順位を確認でき、二次データベースには両者の6体・技・特性・持ち物・性格が掲載されています。PDF実践書ではセットを表で読み、天候ルートや優先度技などの役割を比較します。これは別地域の一大会の記録で、日本のGlobal Challengeや2027年5月予選の推奨・成績保証ではありません。
+        <a href="#e-013">［E-013 順位］</a><a href="#e-014">［E-014 チーム表］</a>
       </div>
+      <div class="callout">
+        <strong>公式決勝映像を使った実戦再生：</strong>WCS 2026マスター決勝の第1ゲームを、映像で確認できる行動・そこからの解釈・自分の練習用反実仮想に分けて読みます。当時はM-Bの試合なので、M-Cや2027年大会の推奨としては扱いません。
+        <a href="#e-021">［E-021 決勝映像］</a><a href="#e-022">［E-022 公式大会記録］</a>
+      </div>
+      <div class="callout"><strong>最初はAか、自分が組める一案に絞るのがおすすめ。</strong>第II回までの準備は約4週間・週1時間で限られます。4案を並行して育成するより、基本選出二つと「主役が止まった場合」の出口を一つ説明できる方が、短い練習を比較しやすくします。</div>
+      <p>候補を使えない場合は、役割を維持して別候補へ変えます。役割、種族、技セット、現行大会での合法性は別々の情報として扱ってください。リストに候補名があることだけでは大会用のセットになりません。</p>
     </section>
 
-    <section id="evidence" aria-labelledby="evidence-title">
-      <h2 id="evidence-title">7. エビデンスと更新欄</h2>
-      <p>事実、推論、考察、未発表を分けています。リンク先の更新日やゲーム内表示が変わった場合は、パーティ案の名前ではなく、合法性と役割表を先に更新してください。</p>
-      <div class="table-wrap">
-        <table class="compare source-table">
-          <thead><tr><th>種別</th><th>参照先</th><th>このページで使った範囲</th></tr></thead>
+    <section class="section-card" id="practice" aria-labelledby="practice-title">
+      <p class="kicker">04 / WEEKLY PRACTICE</p>
+      <h2 id="practice-title">毎週60分：勝敗ではなく、次に直す判断を持ち帰る</h2>
+      <div class="table-wrap" role="region" aria-label="60分の練習配分" tabindex="0">
+        <table>
+          <thead><tr><th scope="col">時間</th><th scope="col">行うこと</th><th scope="col">残すもの</th></tr></thead>
           <tbody>
-            <tr><td>［公式］</td><td><a href="https://champions-news.pokemon-home.com/ja/page/833.html" target="_blank" rel="noopener">2027シーズン日本語案内</a></td><td>日本設定・居住国、Masters区分、各カテゴリ上位120名、アカウント条件、PJCS2027予選へのルート</td></tr>
-            <tr><td>［公式］</td><td><a href="https://www.pokemon.com/us/news/take-on-the-2027-global-challenge-i" target="_blank" rel="noopener">2027 Global Challenge I</a></td><td>M-C、ダブルバトル、オンライン大会の登録導線、公式ニュース確認</td></tr>
-            <tr><td>［公式］</td><td><a href="https://champions.pokemon.com/en-us/pokemon/" target="_blank" rel="noopener">Pokémon Champions：チームを作る</a></td><td>HOME、トライアル採用、Roster Ranch、育成の入口</td></tr>
-            <tr><td>［公式］</td><td><a href="https://championships.pokemon.com/en-us/about/2027-season-changes/" target="_blank" rel="noopener">2027 Championship Series Season Update</a></td><td>2027シーズンの更新方針と追加発表待ちの扱い</td></tr>
-            <tr><td>［公式］</td><td><a href="https://championships.pokemon.com/en-us/about/pokemon-vgc-global-challenge-grand-challenge" target="_blank" rel="noopener">Pokémon VGC Global Challenge</a></td><td>Global Challengeの公式一覧と制度の確認先</td></tr>
-            <tr><td>［公式］</td><td><a href="https://mcdn.pokemon.com/pokemon-prod/raw/upload/v1/live/static-assets/content-assets/cms2/pdf/play-pokemon/rules/play-pokemon-vgc-tournament-handbook-en.pdf" target="_blank" rel="noopener">Play! Pokémon VGC Tournament Handbook</a></td><td>チーム登録、4体選出、ルール更新の一次資料</td></tr>
-            <tr><td>［公式］</td><td><a href="https://www.pokemon.com/us/features/pokemon-champions-how-to-build-a-mega-raichu-x-team" target="_blank" rel="noopener">メガライチュウX</a> ／ <a href="https://www.pokemon.com/us/features/pokemon-champions-how-to-build-a-mega-mawile-team" target="_blank" rel="noopener">メガクチート</a> ／ <a href="https://www.pokemon.com/us/features/pokemon-champions-how-to-build-a-mega-malamar-team" target="_blank" rel="noopener">メガカラマネロ</a> ／ <a href="https://www.pokemon.com/us/strategy/pokemon-champions-how-to-build-a-mega-emboar-team" target="_blank" rel="noopener">メガエンブオー</a></td><td>主軸候補を考える入口。強さ・使用率・合法性の保証ではない</td></tr>
-            <tr><td>［公式］</td><td><a href="https://www.pokemon.com/us/news/pokemon-champions-comes-to-android-and-ios" target="_blank" rel="noopener">Pokémon Championsの公式ニュース</a> ／ <a href="https://champions.pokemon.com/en-us/news/" target="_blank" rel="noopener">公式ニュース一覧</a></td><td>Megaの仕様や規則更新の確認先</td></tr>
-            <tr><td>［補助］</td><td><a href="https://gamewith.jp/pokemon-champions/575795" target="_blank" rel="noopener">GameWith：Global Challenge 2027 I</a></td><td>初心者向けのゲーム内導線を補助的に確認。公式情報の代替にはしない</td></tr>
+            <tr><th scope="row">10分</th><td>「今週の問い」を、対戦画面で確かめられる一文にする</td><td>例：速度を失った時、主役を守るか交代するか説明できるか</td></tr>
+            <tr><th scope="row">35分</th><td>2〜4対戦、1局面の再生、公式情報確認のいずれか</td><td>一つの条件を固定して比較する</td></tr>
+            <tr><th scope="row">10分</th><td>見えた事実・推測・結果を分けて短く記録</td><td>最初に想定が外れた場所</td></tr>
+            <tr><th scope="row">5分</th><td>次週の問いと、一つだけ変える変数を予約</td><td>変更前後を比較できる状態</td></tr>
           </tbody>
         </table>
       </div>
-      <div class="download">
-        <div><strong>詳細版の326ページ本も読む</strong><br><span class="small">35章、35週、基礎、ダブルバトル、構築、練習、登録、2026年10月〜2027年5月の計画、4つのパーティ案、公式チーム例と仮想ケースをまとめたワークブック。</span></div>
-        <a href="pokemon-champions-pjcs2027-master-playbook.pdf">PDFを開く</a>
+      <p>2〜4対戦はノルマではなく時間配分の目安です。対戦相手がいない週は、リプレイ、役割表、技説明、公式ルールの確認に同じ時間を使えます。2026年9月の更新で対戦ログと選出サポートが追加されています。サポート表示は答えとして写さず、自分の予想と照らします。ログは対戦中に確認し、対戦後は保存データを利用できる場合だけ照合してください。1時間で十分な比較ができなければ、変更を保留します。試合一つでチーム全体を交換しないことが、何が効いたかを学ぶ助けになります。<a href="#e-015">［E-015］</a></p>
+      <p>大会週は、登録条件・規則・ゲーム内表示・通信環境の確認を優先。大会前日に新しいチームへ大改造せず、練習してきた基本形を使います。大会後は順位だけで権利獲得を推測せず、公式通知とゲーム内メールを確認してください。<a href="#e-001">［E-001］</a></p>
+    </section>
+
+    <section class="section-card" id="roadmap" aria-labelledby="roadmap-title">
+      <p class="kicker">05 / ROADMAP</p>
+      <h2 id="roadmap-title">2026年10月〜2027年5月：35週のステップアップ</h2>
+      <p>開始日は2026年10月3日、終了は2027年5月29日。詳しい35週の問い・作業・成果物はPDF版に収録しています。以下は各段階の目的です。開催日が月だけ公表されている回は、公式日程発表後に「開催調整枠」を実際の週へ移動します。<a href="#e-001">［E-001］</a></p>
+      <div class="table-wrap" role="region" aria-label="練習の段階" tabindex="0">
+        <table>
+          <thead><tr><th scope="col">期間</th><th scope="col">学習段階</th><th scope="col">到達点</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">第1〜5週<br>10/03〜10/31</th><td>参加と準備</td><td>大会告知とゲーム内表示を別々に確認し、自分の候補と参加条件を説明する</td></tr>
+            <tr><th scope="row">第6〜10週<br>11/07〜12/05</th><td>一手を読む</td><td>事実と推測を分け、相手の応答を二つ比べて、敗因を次の問いへ戻す</td></tr>
+            <tr><th scope="row">第11〜15週<br>12/12〜01/09</th><td>再現する</td><td>基本選出を再現し、変更を一つに絞って根拠を残す</td></tr>
+            <tr><th scope="row">第16〜20週<br>01/16〜02/13</th><td>役割を組む</td><td>役割の空白・重複・一体依存を見つけ、6体と4体選出を説明する</td></tr>
+            <tr><th scope="row">第21〜25週<br>02/20〜03/20</th><td>案を比較する</td><td>速度・条件・柔軟性のトレードオフを比べ、自分が扱える案を選ぶ</td></tr>
+            <tr><th scope="row">第26〜30週<br>03/27〜04/24</th><td>大会用へ近づける</td><td>一枠変更を検証し、招待権利と未発表条件を公式画面・告知で確認する</td></tr>
+            <tr><th scope="row">第31〜35週<br>05/01〜05/29</th><td>予選へ引き継ぐ</td><td>招待者向け条件を確かめ、実際の参加可否と次の練習を説明する</td></tr>
+          </tbody>
+        </table>
       </div>
-      <p class="small">最終確認日：2026-10-03。Global Challenge III〜VI、PJCS2027予選の細部、使用可能ポケモン、技・特性・持ち物は、公式発表とゲーム内ニュースを確認してから更新します。［未発表］</p>
+      <p class="small">Global Challenge III〜VI、5月予選の細部は基準日にすべて発表済みではありません。表の日付は練習週の基準点であり、大会開催日を断定するものではありません。</p>
+    </section>
+
+    <section class="section-card" id="official-cases" aria-labelledby="cases-title">
+      <p class="kicker">06 / OFFICIAL CASES</p>
+      <h2 id="cases-title">公式掲載チームは「完成品」ではなく、役割を読む教材</h2>
+      <p>公式のメガエンブオー記事には、エンブオー、プリマリーナ、ヤバソチャ、マニューラ、プテラ、ガブリアスの構築例があります。主役、支援、速度補助、別の攻撃軸がどう分担されるかを学べます。公式メガカラマネロの記事は、能力変化と補助役の関係を読む材料です。どちらも過去規則セットの教材で、掲載セットを現行M-Cや大会用へそのまま移してはいけません。<a href="#e-009">［E-009］</a><a href="#e-010">［E-010］</a></p>
+      <div class="steps">
+        <article class="step"><h3>主役の条件</h3><p>何が揃うと主役が動きやすいかを一文で。</p></article>
+        <article class="step"><h3>支援の価値</h3><p>支援役が使ったターンに、誰が何を得るか。</p></article>
+        <article class="step"><h3>別ルート</h3><p>主役を選ばない相手に出せる攻撃役・後発は誰か。</p></article>
+        <article class="step"><h3>反証と現行性</h3><p>主役集中、妨害、交代を試し、合法性は現在の告知へ戻って確認。</p></article>
+      </div>
+    </section>
+
+    <section class="section-card" id="sources" aria-labelledby="sources-title">
+      <p class="kicker">07 / EVIDENCE</p>
+      <h2 id="sources-title">エビデンス：主張から元の公式ページへ</h2>
+      <p>各[E-###]は出典台帳の項目へ移動し、出典名・参照範囲・正規URLを確認できます。二次情報・過去規則セットの記事・編集上の仮想例は、現行大会の公式条件と区別しています。大会に参加する直前に、告知とゲーム内表示を再確認してください。</p>
+      <ol class="source-list">
+        <li id="e-001"><span class="source-id">E-001</span><a href="https://champions-news.pokemon-home.com/ja/page/833.html" target="_blank" rel="noopener">公式：Pokémon Champions チャンピオンシップシリーズ2027シーズン</a><br><span class="small">参加ルート、カテゴリ、国・地域、招待人数、開催月。</span></li>
+        <li id="e-002"><span class="source-id">E-002</span><a href="https://champions-news.pokemon-home.com/ja/page/825.html" target="_blank" rel="noopener">公式：Global Challenge 2027 I 開催告知</a><br><span class="small">第I回の登録・大会案内。第II回の個別条件に流用しません。</span></li>
+        <li id="e-003"><span class="source-id">E-003</span><a href="https://champions.pokemon.com/en-us/pokemon/" target="_blank" rel="noopener">公式：Assembling Your Ideal Team</a><br><span class="small">HOME、ゲーム内スカウト、トライアル、VP・チケット。</span></li>
+        <li id="e-004"><span class="source-id">E-004</span><a href="https://mcdn.pokemon.com/pokemon-prod/raw/upload/v1/live/static-assets/content-assets/cms2/pdf/play-pokemon/rules/play-pokemon-vgc-tournament-handbook-en.pdf" target="_blank" rel="noopener">公式：VGC Tournament Handbook</a><br><span class="small">2026-05-21改訂版。大会固有の最新告知が優先。</span></li>
+        <li id="e-005"><span class="source-id">E-005</span><a href="https://www.pokemon.com/us/news/take-on-the-2027-global-challenge-i" target="_blank" rel="noopener">公式：Take On the 2027 Global Challenge I</a><br><span class="small">第I回の公式英語案内。</span></li>
+        <li id="e-006"><span class="source-id">E-006</span><a href="https://champions-news.pokemon-home.com/en/page/816.html" target="_blank" rel="noopener">公式：Regulation Set M-C</a><br><span class="small">規則セット・タイマー・対象リスト確認の導線。</span></li>
+        <li id="e-007"><span class="source-id">E-007</span><a href="https://champions-news.pokemon-home.com/en/page/834.html" target="_blank" rel="noopener">公式：Global Challenge I &amp; II Special Roster</a><br><span class="small">M-Cに含まれる特別スカウト候補の一部。</span></li>
+        <li id="e-008"><span class="source-id">E-008</span><a href="https://www.pokemon.com/us/news/get-ready-for-regulation-set-m-c-in-pokemon-champions" target="_blank" rel="noopener">公式：Get Ready for Regulation Set M-C</a><br><span class="small">M-Cに関する公式告知。</span></li>
+        <li id="e-009"><span class="source-id">E-009</span><a href="https://www.pokemon.com/us/strategy/pokemon-champions-how-to-build-a-mega-emboar-team" target="_blank" rel="noopener">公式戦略記事：Mega Emboar Team</a><br><span class="small">過去規則セットの掲載例。現行合法性を保証しません。</span></li>
+        <li id="e-010"><span class="source-id">E-010</span><a href="https://www.pokemon.com/uk/features/pokemon-champions-how-to-build-a-mega-malamar-team" target="_blank" rel="noopener">公式戦略記事：Mega Malamar Team</a><br><span class="small">過去規則セットの掲載例。現行合法性を保証しません。</span></li>
+        <li id="e-011"><span class="source-id">E-011</span><a href="https://gamewith.jp/pokemon-champions/575795" target="_blank" rel="noopener">GameWith：Global Challenge 2027 I ガイド（二次情報）</a><br><span class="small">日本語の補助的な導線。規則の確定は公式情報を使います。</span></li>
+        <li id="e-012"><span class="source-id">E-012</span><a href="https://champions.pokemon.com/en-us/news/" target="_blank" rel="noopener">公式：Pokémon Champions News Archive</a><br><span class="small">規則・イベント・更新のお知らせ。</span></li>
+        <li id="e-013"><span class="source-id">E-013</span><a href="https://www.pokemon.com/uk/play-pokemon/regionals/2027/brisbane/event-results" target="_blank" rel="noopener">公式：2027 Brisbane Regional Championships Event Results</a><br><span class="small">公式の順位・カテゴリ・参加人数。技セットの出典ではありません。</span></li>
+        <li id="e-014"><span class="source-id">E-014</span><a href="https://limitlessvgc.com/tournaments/442/teams" target="_blank" rel="noopener">二次データベース：Limitless VGC — Regional Brisbane Teams</a><br><span class="small">上位者の公開チーム表。公式情報ではなく、5月予選の推奨や勝率を保証しません。</span></li>
+        <li id="e-015"><span class="source-id">E-015</span><a href="https://champions-news.pokemon-home.com/ja/page/817.html" target="_blank" rel="noopener">公式：Pokémon Champions 2026年9月9日更新のお知らせ</a><br><span class="small">対戦ログと選出サポートの追加。機能の最適性や将来の表示を保証するものではありません。</span></li>
+        <li id="e-016"><span class="source-id">E-016</span><a href="https://champions-news.pokemon-home.com/ja/page/764.html" target="_blank" rel="noopener">公式：Pokémon Champions Ver.1.0.3 更新データのお知らせ</a><br><span class="small">過去の不具合修正履歴。現行の挙動に問題が残るという意味ではありません。</span></li>
+        <li id="e-017"><span class="source-id">E-017</span><a href="https://champions-news.pokemon-home.com/ja/page/821.html" target="_blank" rel="noopener">公式：「スタンダードセレクトM-C」について</a><br><span class="small">2026年9月9日〜12月2日の開催と、新たに紹介される種族の一覧。M-C全体の対象リストではありません。</span></li>
+        <li id="e-018"><span class="source-id">E-018</span><a href="https://champions.pokemon.com/en-us/gameplay/" target="_blank" rel="noopener">公式：Pokémon Champions Gameplay</a><br><span class="small">ランク・カジュアル・プライベートの対戦モードと、シーズン・規則の概要。</span></li>
+        <li id="e-019"><span class="source-id">E-019</span><a href="https://www.pokemon.com/uk/features/champions-spotlight-paul-chuas-consistency-reigns-true" target="_blank" rel="noopener">公式インタビュー：Champion’s Spotlight — Paul Chua</a><br><span class="small">VP育成と同種族間の個体差に関する選手の発言。個人の経験を一般化しません。</span></li>
+        <li id="e-020"><span class="source-id">E-020</span><a href="https://www.pokemon.com/us/strategy/pokemon-rpgs-101/" target="_blank" rel="noopener">公式入門：Pokémon RPGs 101</a><br><span class="small">シリーズ全般の能力値・技分類を説明する資料。Pokémon Champions固有の仕様はゲーム内表示を優先します。</span></li>
+        <li id="e-021"><span class="source-id">E-021</span><a href="https://www.youtube.com/watch?v=K7Io6JvtB1Y&amp;t=22321s" target="_blank" rel="noopener">公式日本語配信：2026 Pokémon World Championships VGC Masters Final</a><br><span class="small">第1ゲーム序盤の局面を確認する一次映像。選手の意図や映像にない行動理由は推定しません。</span></li>
+        <li id="e-022"><span class="source-id">E-022</span><a href="https://www.pokemon.com/uk/play-pokemon/worlds/2026/vgc-masters" target="_blank" rel="noopener">公式：2026 Pokémon World Championships VGC Masters Division</a><br><span class="small">大会がM-B・Pokémon Championsで行われたことと決勝進出者を確認。歴史的事例として扱います。</span></li>
+      </ol>
+      <div class="download">
+        <div><strong>詳細版PDF</strong><br><span class="small">26章・35週計画・4つの役割プロトタイプ・M-C公開チーム4例と仮想4体選出・盤面／速度／守り／終盤／条件分岐の再生ケース・公式決勝の実戦再生・出典台帳</span></div>
+        <a class="button" href="pokemon-champions-pjcs2027-practice-book.pdf">PDFを開く</a>
+      </div>
     </section>
   </main>
-
   <footer>
-    <p><a href="../index.html">thinkingのトップへ戻る</a> ／ <a href="https://github.com/sk8metalme/thinking" target="_blank" rel="noopener">リポジトリを見る</a></p>
-    <p>このページは初心者が仮説を比較するための学習用ガイドです。大会での結果や招待を保証するものではありません。</p>
+    <p>基準日：2026年10月4日。大会条件・規則・ポケモンの使用可否は変更される場合があります。</p>
+    <p>本ページは大会出場権・勝利を保証しません。参加直前は公式告知・ゲーム内ルールを確認してください。</p>
+    <p><a href="../index.html">thinkingのトップへ戻る</a></p>
   </footer>
 </div>
-<script>
-try{var t=localStorage.getItem('theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}
-</script>
 </body>
 </html>
