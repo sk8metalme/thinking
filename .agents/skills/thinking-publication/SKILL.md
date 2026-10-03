@@ -126,3 +126,11 @@ PDFの短いレポートや本は、本文モードとは別に配信面とボ�
 ページ数はPDFのレンダリング結果で実測する。HTMLでは文字数、主要セクション数、図表数、読了時間、必要ならPDF換算ページ数を報告する。
 
 詳細なモード定義は [references/modes.md](references/modes.md)、文量と目次案は [references/outline-and-volume.md](references/outline-and-volume.md)、コンテキスト不足と分量監査は [references/context-sufficiency.md](references/context-sufficiency.md)、出典管理は [references/evidence.md](references/evidence.md)、最終検証は [references/quality-gates.md](references/quality-gates.md) を参照する。
+
+## 再現性・トピック固有性
+
+- `book-300-plus-exhaustive` のPDFは、最終PDFだけでなく、更新可能な原稿データ、生成器、依存関係、実行コマンドを同じ変更に含める。将来の公式発表後に、対象章だけを再生成できることを確認する。
+- 章・週・付録を増やすときは、各単位に固有の読者課題、ケース、反例、練習、完了条件を一つずつ対応付ける。見出し語だけを差し替えた共通テンプレートの大量反復は採用しない。
+- 生成後にページ単位の重複監査を行い、ナビゲーション・フッターを除く長い同一文の反復と、題名に関係しないケースを抽出する。高頻度の反復は、固有の説明へ書き換えるか、ページを削る。
+- チュートリアルや対戦ガイドは、読者が実際に再生できる具体例・反例・練習課題を含める。候補の合法性が未確認なら、教材例・候補・大会採用の区別を明記する。
+- 日付のある計画は、開始日から終了日までの各週または各マイルストーンに固有の問い・成果物・縮退メニューを割り当て、計画で宣言した週数と実際のページを監査する。

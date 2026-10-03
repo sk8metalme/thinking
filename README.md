@@ -26,6 +26,8 @@ docs/                                           Pagesに公開する静的HTML
 └── testing/                                    テスト戦略カテゴリ
     ├── ai-coding-test-strategy.html
     └── jev-test-strategy.html
+output/pjcs2027-book/                           出版計画・原稿ビルド手順・検証記録
+tools/build_pjcs2027_playbook.py                PJCS2027ワークブックの再生成器
 ```
 
 公開は、PRでページ構成を検証したあと、`main`へのpushをきっかけにGitHub Actionsが`docs/`をデプロイします。記事の追加や公開準備では、リポジトリ内の `publish-github-pages` Skillを使います。
