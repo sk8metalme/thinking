@@ -1,0 +1,7 @@
+interface:
+  display_name: "Thinking Publication"
+  short_description: "考察・分析・長編PDFを出典付きで高品質に制作する"
+  default_prompt: "Use $thinking-publication to plan and create a source-backed reader-facing page or long-form PDF."
+
+policy:
+  allow_implicit_invocation: true
