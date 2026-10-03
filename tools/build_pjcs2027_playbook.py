@@ -26,7 +26,7 @@ BOTTOM = 42
 
 
 EVIDENCE = [
-    ("E-001", "official", "2027 Championship Series season update", "Master is born in 2010 or earlier; 2027 season and rating-zone updates.", "https://championships.pokemon.com/en-us/about/2027-season-changes/"),
+    ("E-001", "official", "『Pokémon Champions』チャンピオンシップシリーズ「2027シーズン」について", "PJCS2027の対象ルート、ゲーム内の国・地域設定と居住国、日本の各カテゴリ上位120名、複数アカウントのペナルティ、権利獲得アカウント、Mastersは2010年以前、Global Challenge I〜VIとPJCS2027予選の案内。", "https://champions-news.pokemon-home.com/ja/page/833.html"),
     ("E-002", "official", "2027 Global Challenge I announcement", "Registration, M-C, Double Battles, three-match reward condition, and account linkage for CP.", "https://www.pokemon.com/us/news/take-on-the-2027-global-challenge-i"),
     ("E-003", "official", "Pokémon Champions: Assembling your ideal team", "HOME transfer, Roster Ranch, Trial Recruitment, VP/tickets, training limits.", "https://champions.pokemon.com/en-us/pokemon/"),
     ("E-004", "official", "VGC Tournament Handbook, May 21 2026 revision", "Battle team, regulation updates, team list, equipment, connectivity, Double Battles, online competition.", "https://mcdn.pokemon.com/pokemon-prod/raw/upload/v1/live/static-assets/content-assets/cms2/pdf/play-pokemon/rules/play-pokemon-vgc-tournament-handbook-en.pdf"),
@@ -63,14 +63,14 @@ MODULES = [
         ("確定", "2027年のMastersは2010年以前生まれ", "年齢区分はE-001で再確認する"),
         ("開催月", "Global Challengeは2027年に複数月で予定", "日付・形式はE-005とゲーム内ニュース"),
         ("未発表", "PJCS2027予選の形式・通過人数", "空欄のまま更新欄へ渡す")),
-        "Masterで参加する読者は、まず生年区分を確認し、次に自分のrating zoneと大会ページを確認する。『参加できる』と『招待条件を満たす』は別欄に置く。［事実:E-001］",
+        "Masterで参加する読者は、まず生年区分を確認し、ゲーム内の国・地域設定と居住国が日本であること、権利獲得後に同じアカウントを使うことを確認する。各カテゴリ上位120名、複数アカウントのペナルティ、2027年5月の予選は、公式の対象大会案内として別欄に置く。『参加できる』と『招待条件を満たす』は分ける。［事実:E-001］",
         "大会名だけで、対象地域・年齢・CPの条件まで決まったと解釈するのが典型的な失敗。未発表の予選を確定日程として練習計画に埋め込まず、更新週を予約する。［未発表:E-005］",
         "公式ページを開き、①参加資格、②登録窓口、③ルールセット、④結果確認の4欄を埋める。最後に『次に発表されたら変わる行』を一つ書く。", "E-001,E-005"),
     M("公式情報の鮮度を管理する", "古い記事を練習の根拠にせず、公式発表とゲーム内表示を同じ更新手順で照合する。", "更新の入口", (
         ("日付", "公開日と大会実施日を別に記録", "日付の変化を見落とさない"),
         ("媒体", "Web、ゲーム内ニュース、登録画面", "公式の一次表示を優先"),
         ("差分", "ルール・対象・報酬の変更", "変更箇所だけを台帳へ追加")),
-        "2027 Global Challenge Iの公式告知は、登録期間、M-C、Double Battles、3試合以上の報酬条件を示した。一方、次の大会の詳細は同じページをコピーせず、更新された告知を探す。［事実:E-002］",
+        "公式の日本語シリーズ案内は、Global Challenge I・IIの開催予定、M-Cのダブルバトル、各カテゴリ上位120名、5月のPJCS2027予選を示す。個別の登録方法や報酬は、各告知とゲーム内ニュースで更新する。［事実:E-001,E-002］",
         "GameWithの導線が分かりやすくても、ランキング条件や対象ポケモンを二次記事だけで決めない。記事のリンクを入口にし、最終判断はゲーム内ニュースと公式規則に戻す。［注意:E-006］",
         "同じ大会を公式Web・ゲーム内ニュース・登録画面で見比べ、食い違いを『確認待ち』として記録する。確認できない日は構築を固定せず、情報確認だけで1時間を終えてよい。", "E-002,E-006"),
     M("CPを目的に組み立てる", "大会参加、結果確認、Championship Points獲得の条件を一つの手順にする。", "登録と結果", (
@@ -269,13 +269,13 @@ MODULES = [
         "公式のMega Malamar例は、Contraryで自己強化し、回復・pivot・天候対策を組み合わせる長期戦の考え方を示す。条件操作案は、強化量ではなく『何ターン維持できるか』を測る。［事実:E-009］",
         "積みを急ぐと、相手の集中攻撃で主役を失う。最初のターンを回復・交代・相手の支援阻止に使う価値を比較する。",
         "強化が1回・2回・0回の3状態で、相手の最善対策と自分の残り役割を表にする。積み回数より、次に確定する選択を評価する。", "E-009"),
-    M("バランス案を主軸差し替えする", "Mega Feraligatr・Mega Meganium・Mega Emboarなど、主役を差し替えても役割表を壊さない。", "プランD", (
+    M("バランス案を主軸差し替えする", "Mega Raichu X・Mega Mawile・Mega Malamar・Mega Emboarなど、主役を差し替えても役割表を壊さない。", "プランD", (
         ("主軸", "火力・耐久・場のどれを担うか", "主軸候補を比較"),
         ("共通枠", "速度・支援・保険", "主軸を替えても残す"),
         ("差替枠", "相手への回答", "新しい弱点を検証")),
-        "公式戦略記事にはMega Feraligatr、Mega Meganium、Mega Emboarなど複数の構築例がある。主役の知名度ではなく、既存の速度・支援・対面回答が差し替えでどう変わるかを測る。［事実:E-010,E-013］",
+        "公式戦略記事にはMega Raichu X、Mega Mawile、Mega Malamar、Mega Emboarの構築例がある。主役の知名度ではなく、既存の速度・支援・対面回答が差し替えでどう変わるかを測る。［事実:E-007〜E-010］",
         "主軸だけを入れ替え、他の5体をそのままにすると、タイプ・速度・支援の目的がずれる。差し替え後に役割表と初手2組を作り直す。",
-        "4案を同じ6軸で採点し、主軸変更前後で『最も悪化した対面』を一つ選ぶ。そこを補う候補だけを次週の変更にする。", "E-010,E-013"),
+        "4案を同じ6軸で採点し、主軸変更前後で『最も悪化した対面』を一つ選ぶ。そこを補う候補だけを次週の変更にする。", "E-007,E-008,E-009,E-010"),
     M("役割スロットから6体へ落とす", "抽象的な役割を、候補・技・持ち物・検証条件の6体へ変換する。", "構築の組立", (
         ("役割", "主役・速度・支援・対面・保険・情報", "空欄を見える化"),
         ("候補", "種族・特性・技の組み合わせ", "候補2〜3体"),
@@ -359,10 +359,10 @@ PLANS = [
     {
         "name": "D バランス・主軸差し替え",
         "thesis": "主軸を一体に固定せず、共通の速度・支援・対面回答を残して、相手に応じて勝ち筋を変える。",
-        "core": "Mega Feraligatr／Mega Meganium／Mega Emboar候補。公式戦略記事の複数例を役割の比較材料にし、使用率やM-C合法性の根拠にはしない。［E-010,E-013］",
+        "core": "Mega Raichu X／Mega Mawile／Mega Malamar／Mega Emboar候補。公式戦略記事の複数例を役割の比較材料にし、使用率やM-C合法性の根拠にはしない。［E-007〜E-010］",
         "slots": [
-            ("主軸1", "Feraligatr候補", "直接的な水圧力", "場なしでの終盤"),
-            ("主軸2", "Meganium候補", "場と支援", "火力の不足"),
+            ("主軸1", "Raichu X候補", "場と先手圧力", "逆順・場の上書き"),
+            ("主軸2", "Mawile／Malamar候補", "低速・条件操作", "火力または強化前の不足"),
             ("主軸3", "Emboar候補", "Bulk Up・耐久", "中速の順番"),
             ("共通速度", "Tailwind／Trick Room候補", "主軸に合わせる", "両方の出口"),
             ("共通支援", "Fake Out・redirect候補", "主軸の一手", "重複を検証"),
@@ -370,7 +370,7 @@ PLANS = [
         ],
         "tests": ["主軸1で速い相手", "主軸2で場の取り合い", "主軸3で低速盤面"],
         "replace": "主軸を一体ずつ変更し、共通枠が本当に機能しているか、対面マトリクスを更新する。",
-        "evidence": "E-010,E-013",
+        "evidence": "E-007,E-008,E-009,E-010",
     },
 ]
 
@@ -440,6 +440,8 @@ APPENDIX_PAGES = [
     ("読者の質問ログ", "分からなかった言葉、公式で確認するURL、次の練習を記録する。"),
     ("索引：ポケモンと役割", "Raichu X、Mawile、Malamar、Emboarなどを役割と出典から探す。"),
     ("索引：判断と更新", "守る、速度、選出、合法性、公式発表、登録の参照先を探す。"),
+    ("公式掲載チーム例を読む", "Mega Emboar、Primarina、Sinistcha、Weavile、Aerodactyl、Garchompの掲載セットを教材として分解する。"),
+    ("公式例の仮想ケース", "公式例の技・特性・持ち物を使い、Mega Charizard Y＋Whimsicottを相手に2ターンを再生する。現行ルールでの合法性は別途確認する。"),
 ]
 
 
@@ -475,8 +477,8 @@ def validate_source() -> None:
         for evidence_id in re.findall(r"E-\d{3}", plan["core"]):
             if evidence_id not in ids:  # pragma: no cover
                 raise ValueError(f"unknown evidence ID: {evidence_id}")
-    if len(APPENDIX_PAGES) != 25:  # pragma: no cover
-        raise ValueError("the appendix must contain 25 topic-specific pages")
+    if len(APPENDIX_PAGES) != 27:  # pragma: no cover
+        raise ValueError("the appendix must contain 27 topic-specific pages")
 
 
 def find_font() -> str:
@@ -675,13 +677,15 @@ def build_pdf(output: Path) -> int:
         from reportlab.pdfgen import canvas as pdf_canvas
         from reportlab.lib.colors import HexColor
     except ImportError as exc:  # pragma: no cover - exercised by the CLI environment, not source validation
-        raise RuntimeError("install reportlab with: uv run --with reportlab python tools/build_pjcs2027_playbook.py") from exc
+        raise RuntimeError("install reportlab with: uv run --with 'reportlab==5.0.1' python tools/build_pjcs2027_playbook.py") from exc
 
     font_path = find_font()
     pdfmetrics.registerFont(TTFont("JP", font_path, subfontIndex=0))
     font = pdfmetrics
     output.parent.mkdir(parents=True, exist_ok=True)
-    canvas = pdf_canvas.Canvas(str(output), pagesize=(PAGE_WIDTH, PAGE_HEIGHT), pageCompression=1)
+    # Keep timestamps and document IDs stable so a rebuild is byte-reproducible
+    # when the same pinned ReportLab/font environment is used.
+    canvas = pdf_canvas.Canvas(str(output), pagesize=(PAGE_WIDTH, PAGE_HEIGHT), pageCompression=1, invariant=1)
     canvas.setTitle("Pokémon Champions 2027 Global ChallengeからPJCS2027へ")
     canvas.setAuthor("thinking-publication")
     canvas.setSubject("初心者向けダブルバトル、複数パーティ案、週1時間の実践計画")
@@ -689,9 +693,9 @@ def build_pdf(output: Path) -> int:
 
     front = [
         ("表紙", "Pokémon ChampionsからPJCS2027へ", "所持ポケモン不問・ダブルバトル初心者向けの実践ワークブック", [("text", "2026年10月〜2027年5月｜週1日・1時間｜4つのパーティ案を比較し、公式情報の更新に合わせて調整する。"), ("lines", ["名前／開始日", "いまの経験と困っていること", "この本を読み終えた時にできたいこと"])]),
-        ("目次", "この本の全体像", "35章・35週・4案・25付録を、目的から選ぶ", [("table", ([['区分', '内容', '到達点'], ['第I部', '参加・情報・登録（1〜6章）', '公式情報と参加準備を確認できる'], ['第II部', '判断・ダブル盤面（7〜24章）', '1ターンと4体選出を説明できる'], ['第III部', '構築・4つの案（25〜35章）', '一枠ずつ調整できる'], ['35週', '2026-10-03〜2027-05-29', '週1時間の問いを実行できる'], ['付録', '記録票・証拠・用語・索引', '更新と再利用ができる']], [70, 200, 140])), ("toclinks", [("第1章｜参加ルート", 11), ("35週カレンダー", 186), ("A 先手圧力｜設計図", 256), ("付録｜記録と証拠", 300)]), ("text", "ページ番号は生成後に確定する。PDFのしおりと上のリンクから各部へ直接移動できる。")]),
+        ("目次", "この本の全体像", "35章・35週・4案・27付録を、目的から選ぶ", [("table", ([['区分', '内容', '到達点'], ['第I部', '参加・情報・登録（1〜6章）', '公式情報と参加準備を確認できる'], ['第II部', '判断・ダブル盤面（7〜24章）', '1ターンと4体選出を説明できる'], ['第III部', '構築・4つの案（25〜35章）', '一枠ずつ調整できる'], ['35週', '2026-10-03〜2027-05-29', '週1時間の問いを実行できる'], ['付録', '記録票・証拠・用語・索引', '更新と再利用ができる']], [70, 200, 140])), ("toclinks", [("第1章｜参加ルート", 11), ("35週カレンダー", 186), ("A 先手圧力｜設計図", 256), ("付録｜記録と証拠", 300)]), ("text", "ページ番号は生成後に確定する。PDFのしおりと上のリンクから各部へ直接移動できる。")]),
         ("読者契約", "この本が約束すること、約束しないこと", "結果を保証せず、判断と更新の手順を保証する", [("text", "本書は大会の出場権や勝利を保証しない。公式発表、現在の規則、登録情報、対戦結果、通信環境で結果は変わる。代わりに、初心者が『何を確認し、何を練習し、どこを一つだけ変えるか』を再現できる形にする。"), ("table", ([['約束する', '約束しない'], ['一次情報へ辿れる証拠ID', '将来の未発表条件の断定'], ['4案を調整する比較手順', '特定候補の現在の強さ'], ['週1時間の実行メニュー', '出場権獲得の保証']], [205, 205]))]),
-        ("ルート", "最初に見る地図", "確定・更新対象・個人確認を別の欄へ置く", [("text", "公式に確定している年齢区分やGlobal Challengeの開催月と、PJCS2027予選の形式・通過人数のような未発表情報を混ぜない。空欄を残すことは未完成ではなく、発表後に誤情報を持ち込まないための設計である。［E-001,E-005］"), ("table", ([['層', 'この本で行うこと'], ['確定', '根拠を読み、練習へ変換する'], ['更新対象', '公式発表後に差分を反映する'], ['個人確認', 'アカウント、地域、機器、時間を確認する']], [100, 310]))]),
+        ("ルート", "最初に見る地図", "確定・更新対象・個人確認を別の欄へ置く", [("text", "公式案内では、PJCS2027の対象はゲーム内の国・地域設定と居住国が日本であること、各カテゴリ上位120名、権利を得たアカウントの継続利用で管理される。Mastersは2010年以前生まれ。Global Challenge III〜VIと5月予選の細部は後日発表なので、確定情報と更新対象を混ぜない。［事実:E-001］"), ("table", ([['層', 'この本で行うこと'], ['確定', '根拠を読み、練習へ変換する'], ['個人確認', 'ゲーム内の国・地域、居住国、アカウントを確認する'], ['更新対象', '公式発表後に形式・試合数・対象人数を差分反映する']], [100, 310]))]),
         ("使い方", "まず目次を選び、全部を順番に読まない", "今週の問いから必要な章へ入る", [("text", "毎週は『今週の問い→必要な前提→25分の試行→短い記録→次週の一変更』で進める。勝率が動かない週も、情報の確認や対戦後の分類ができれば前進である。"), ("table", ([['困りごと', '読む場所'], ['登録・合法性', '第1〜6章、付録のチェック票'], ['盤面・選出', '第7〜24章、1ターン比較票'], ['構築の調整', '第25〜32章、4案の調整カード'], ['時間がない', '35週カレンダーの縮退メニュー']], [150, 260]))]),
         ("証拠", "証拠IDの読み方", "事実・推論・考察・未発表を明示する", [("text", "本文の［事実:E-004］は、巻末のE-004から一次情報へ辿れることを示す。［考察］は筆者の設計判断、［未発表］は公式発表前に確定していない事項である。二次記事は導線として使えても、規則の代替にはしない。"), ("table", ([['表示', '読者の行動'], ['事実', 'リンクの参照箇所と日付を見る'], ['推論', '前提が変わると結論も変わると理解する'], ['考察', '自分の環境で小さく試す'], ['未発表', '公式発表後に更新する']], [100, 310]))]),
         ("4案", "4つのパーティ案を先に比較する", "所持ポケモンではなく、勝ち筋の違いから選ぶ", [("table", ([['案', '主な考え方', '最初の検証'], ['A', '先手圧力', '場・速度・後発'], ['B', '低速切り返し', '起動成功・失敗・起動なし'], ['C', '条件操作', '強化を急がず維持'], ['D', 'バランス差し替え', '主軸を替えても共通枠が機能']], [55, 190, 165])), ("text", "最初から一案に固定しない。各案を同じ6軸で採点し、最も悪化した対面を次の練習テーマにする。候補の合法性は大会時点で必ず確認する。")]),
@@ -718,12 +722,12 @@ def build_pdf(output: Path) -> int:
         ], font); page_number += 1
         page(canvas, page_number, f"第{index}章", f"{module.title}｜ケース再生", "具体的な盤面で2ターン先まで書く", [
             ("label", "ケース"), ("text", module.case),
-            ("label", "再生手順"), ("text", "①見えていた事実を3つ書く。②候補をA/B/Cで並べる。③相手の最善応答を一つ置く。④2ターン後に残る勝ち筋を比較する。"),
+            ("label", "再生手順"), ("text", f"{module.title}の盤面で、①見えていた事実を3つ書く。②候補をA/B/Cで並べる。③相手の最善応答を一つ置く。④2ターン後に残る勝ち筋を比較する。"),
             ("lines", ["候補Aと相手の返し", "候補Bと相手の返し", "採用した手と理由"]),
         ], font); page_number += 1
         page(canvas, page_number, f"第{index}章", f"{module.title}｜反例と修正", "うまくいかない条件を先に作る", [
             ("label", "反例"), ("text", module.counter),
-            ("table", ([['崩れた前提', '観察する合図', '次の修正'], ['相手の最善応答を一つしか考えていない', '守る・交代・速度操作のどれかが出る', '候補を2つ以上残す'], ['結果だけで構築を評価している', '理由が説明できない', 'ログを因果へ戻す'], ['公式情報を古いまま使う', '日付・規則・対象が違う', 'E-IDsの確認日を更新']], [135, 150, 125])),
+            ("table", ([['崩れた前提', '観察する合図', '次の修正'], [f'{module.rows[0][0]}の条件を一つに決めつける', '別の回答や分岐が現れる', f'{module.rows[0][0]}の候補を2つ以上残す'], [f'{module.rows[1][0]}の結果だけで評価する', '理由や再現条件が説明できない', f'{module.rows[1][0]}を観測・判断・結果へ戻す'], [f'{module.rows[2][0]}の情報を古いまま使う', '日付・規則・対象が違う', 'E-IDsの確認日を更新']], [135, 150, 125])),
             ("lines", ["今回の反例", "反例が出たときに変える一つ"]),
         ], font); page_number += 1
         page(canvas, page_number, f"第{index}章", f"{module.title}｜1時間ラボ", "練習後に次の週へ成果物を渡す", [
@@ -754,12 +758,12 @@ def build_pdf(output: Path) -> int:
         ], font, outline=f"{name}｜設計図"); page_number += 1
         page(canvas, page_number, "パーティ案", f"{name}｜初手と後発", "4体選出を主役の都合から切り離す", [
             ("table", ([['相手の軸', '初手2体', '後発2体', '捨てる情報'], ['高速圧力', '支援＋主役', '保険＋後発', '相手の未知技'], ['低速・起動', '起動＋守る役', '主役＋保険', '一手目の火力'], ['範囲攻撃', '分散回答＋主役', '回復＋対面', '単体KOの誘惑'], ['積み・長期戦', '観察役＋支援', '主役＋終盤', '早期の強化回数']], [105, 105, 105, 150])),
-            ("text", "表は完成した選出ではない。相手の6体を見た時、初手の役割と後発の役割が重複していないかを一行で説明する。"),
+            ("text", f"{name}の表は完成した選出ではない。相手の6体を見た時、初手の役割と後発の役割が重複していないかを一行で説明する。"),
             ("lines", ["この案の初手候補1", "この案の初手候補2", "後発へ残す理由"]),
         ], font); page_number += 1
         page(canvas, page_number, "パーティ案", f"{name}｜3つのテスト", "同じ6体で条件だけを変える", [
             ("table", ([['テスト', '相手の行動', '観察点'], ["1：理想展開", plan["tests"][0], "勝ち筋が何ターン続くか"], ["2：反証", plan["tests"][1], "最初に崩れる役割"], ["3：主役不在", plan["tests"][2], "残り5体からの出口"]], [115, 180, 170])),
-            ("text", "各テストで変更するのは一つだけ。『負けた』ではなく、どの役割が機能しなかったかを記録する。"),
+            ("text", f"{name}の各テストで変更するのは一つだけ。『負けた』ではなく、どの役割が機能しなかったかを記録する。"),
             ("lines", ["理想展開の観察", "反証で崩れた場所", "主役不在の出口"]),
         ], font); page_number += 1
         page(canvas, page_number, "パーティ案", f"{name}｜枠の調整", "1枠ずつ差し替え、目的を失わない", [
@@ -768,12 +772,12 @@ def build_pdf(output: Path) -> int:
             ("lines", ["変更前の仮説", "3試合後の観察", "次に残す一枠"]),
         ], font); page_number += 1
         page(canvas, page_number, "パーティ案", f"{name}｜初心者用の操作順", "考える順番を固定して迷いを減らす", [
-            ("text", "初手前は『相手の勝ち筋→自分の主役→支援の一手→後発の出口』の順に見る。ターン中は『対象→相手の守る／交代→2ターン後』の順に戻る。順番を守れば、知識が不足していても未知を未知として扱える。"),
+            ("text", f"{name}の初手前は『相手の勝ち筋→自分の主役→支援の一手→後発の出口』の順に見る。ターン中は『対象→相手の守る／交代→2ターン後』の順に戻る。順番を守れば、知識が不足していても未知を未知として扱える。"),
             ("table", ([['順番', '質問'], ['1', '相手は何を通したいか？'], ['2', '自分は何を残したいか？'], ['3', 'この手が外れたら次は何か？'], ['4', '今週の問いに関係する記録は何か？']], [55, 355])),
             ("lines", ["今日の最初の質問", "今ターンの安全手", "次ターンへ残すポケモン"]),
         ], font); page_number += 1
         page(canvas, page_number, "パーティ案", f"{name}｜合法性ゲート", "公式例と大会用チームを分ける", [
-            ("text", "この案の候補は、公式の戦略記事・ニュースを起点にした役割候補である。現行regulation set、対象ポケモン、技・特性・持ち物、Team List、ゲーム内の表示は、大会前に別途確認する。公式例の存在は、現在の大会での合法性や強さを保証しない。［E-004,E-013］"),
+            ("text", f"{name}の候補は、公式の戦略記事・ニュースを起点にした役割候補である。現行regulation set、対象ポケモン、技・特性・持ち物、Team List、ゲーム内の表示は、大会前に別途確認する。公式例の存在は、現在の大会での合法性や強さを保証しない。［E-004,E-013］"),
             ("lines", ["現行regulation setと確認日", "対象リストのURLまたはゲーム内画面", "Team List照合日", "未確認の候補と扱い"]),
         ], font); page_number += 1
         page(canvas, page_number, "パーティ案", f"{name}｜初週の1時間", "案を選ぶ前に比較する", [
@@ -787,21 +791,21 @@ def build_pdf(output: Path) -> int:
             ("lines", ["公式発表のURL", "変更前／変更後", "影響範囲", "再検証の完了日"]),
         ], font); page_number += 1
         page(canvas, page_number, "パーティ案", f"{name}｜独立レビュー", "自分の理想展開を壊してから採用する", [
-            ("text", "レビューでは、主役が1ターン目に倒れる、支援役が挑発される、速度操作が逆になる、場が上書きされる、という4つの反証を置く。どれか一つで全てが崩れる案は、強い主役ではなく、狭い勝ち筋として扱う。"),
+            ("text", f"{name}のレビューでは、主役が1ターン目に倒れる、支援役が挑発される、速度操作が逆になる、場が上書きされる、という4つの反証を置く。どれか一つで全てが崩れる案は、強い主役ではなく、狭い勝ち筋として扱う。"),
             ("lines", ["最も危険な反証", "それでも残る一手", "残らない場合の一枠差し替え", "採用／保留"]),
         ], font); page_number += 1
         page(canvas, page_number, "パーティ案", f"{name}｜採用判定", "構築を選んだ理由を再現可能にする", [
             ("table", ([['基準', '0', '1', '2'], ['勝ち筋を説明', '言えない', '一文で言える', '相手の対策まで言える'], ['選出を説明', '種族で選ぶ', '役割で選ぶ', '分岐まで選べる'], ['反証への出口', 'なし', '一手', '複数の出口'], ['更新可能性', '根拠なし', 'URLあり', '影響範囲まで記録']], [140, 85, 85, 100])),
-            ("text", "合計点で機械的に決めず、0がある基準を次の練習にする。採用は『強そう』ではなく、『いまの情報で説明・検証・更新ができる』を満たしたときに行う。"),
+            ("text", f"{name}は合計点で機械的に決めず、0がある基準を次の練習にする。採用は『強そう』ではなく、『いまの情報で説明・検証・更新ができる』を満たしたときに行う。"),
             ("lines", ["4案の点数", "0を解消する次の実験", "大会用へ移す条件"]),
         ], font); page_number += 1
         page(canvas, page_number, "パーティ案", f"{name}｜引き継ぎ", "次の週に、変更を一つだけ渡す", [
-            ("text", "この案を使った週の最後に、全てを評価し直さない。最も大きく判断を変えた情報、最も再現できなかった選択、一枠だけの修正候補を残す。次の週はその一つを固定条件として再試験する。"),
+            ("text", f"{name}を使った週の最後に、全てを評価し直さない。最も大きく判断を変えた情報、最も再現できなかった選択、一枠だけの修正候補を残す。次の週はその一つを固定条件として再試験する。"),
             ("lines", ["最も大きかった観察", "捨てる仮説", "次週の固定条件", "次週の一変数", "公式確認が必要なURL"]),
         ], font); page_number += 1
 
     evidence_rows = [["ID", "区分", "この本で使う範囲"]] + [[item[0], item[1], item[3]] for item in EVIDENCE]
-    for i in range(25):
+    for i in range(len(APPENDIX_PAGES)):
         title, description = APPENDIX_PAGES[i]
         blocks: list[tuple[str, object]] = [("text", description)]
         if i == 0:
@@ -814,6 +818,13 @@ def build_pdf(output: Path) -> int:
             blocks.append(("table", ([['差分', '確認先', '影響'], ['日程', '公式カレンダー／ゲーム内ニュース', '該当週'], ['形式', '大会ページ／Handbook', '構築・選出'], ['対象', 'HOME／ゲーム内表示', '合法性ゲート'], ['報酬・CP', '公式告知／Access', '登録カード']], [100, 180, 100])))
         elif i in (18, 19, 20):
             blocks.append(("table", ([['語', '初心者の一文'], ['Battle Team', '大会で固定する6体の登録単位'], ['Team List', '提出する情報の基準'], ['redirect', '攻撃対象を別の枠へ向ける支援'], ['pivot', '交代で次の有利な盤面を作る']], [115, 265])))
+        elif i == 25:
+            blocks.append(("text", "以下は公式のMega Emboar戦略記事に掲載された教材例。技・特性・持ち物・能力値は記事の参照用であり、現行のM-CやPJCS2027予選でそのまま合法とは限らない。［E-004,E-010］"))
+            blocks.append(("table", ([['ポケモン', '持ち物／特性', '技の例'], ['Emboar', 'Emboarite／Blaze', 'Heat Crash、Drain Punch、Bulk Up、Protect'], ['Primarina', 'Leftovers／Liquid Voice', 'Hyper Voice、Moonblast、Calm Mind、Protect'], ['Sinistcha', 'Sitrus Berry／Hospitality', 'Matcha Gotcha、Life Dew、Rage Powder、Trick Room'], ['Weavile', "King's Rock／Pickpocket", 'Knock Off、Ice Spinner、Fake Out、Fling'], ['Aerodactyl', 'Focus Sash／Unnerve', 'Rock Slide、Dual Wingbeat、Tailwind、Protect'], ['Garchomp', 'White Herb／Rough Skin', 'Stomping Tantrum、Dragon Claw、Swords Dance、Protect']], [90, 145, 145])))
+        elif i == 26:
+            blocks.append(("text", "仮想ケース：Emboar＋Sinistcha対Mega Charizard Y＋Whimsicott。これは公式記事の役割を練習するための再生で、ダメージ・現行合法性・相手の実際の選出を保証しない。"))
+            blocks.append(("table", ([['ターン', '自分の選択', '相手の選択', '読むポイント'], ['1', 'Sinistcha：Rage Powder／Emboar：Bulk Up', 'Whimsicott：Tailwind／Charizard：Protect', '攻撃を受けず、速度の次のターンを買う'], ['2', 'Sinistcha：Trick Room／Emboar：Protect', 'Charizard：Heat Wave／Whimsicott：Encore候補', '起動成功後に主役を守り、残りターンを数える'], ['反証', '起動役が集中される場合', '挑発・集中攻撃・交代', '起動しない選出と代替の速い枠を比較']], [35, 165, 145, 135])))
+            blocks.append(("text", "再生後は、Bulk Upの回数ではなく、どの情報で2ターン目のTrick Roomを選んだか、起動役が倒れた場合にどの枠が勝ち筋を引き継ぐかを記録する。"))
         else:
             blocks.append(("lines", ["いま分かっていること", "まだ確認できないこと", "次に行う1時間の実験", "更新・判断への影響"]))
         if 13 <= i <= 15:

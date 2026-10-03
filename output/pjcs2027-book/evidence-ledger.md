@@ -6,7 +6,7 @@
 
 | ID | 種別 | 組織・著者 | タイトル | 参照範囲 | 正規URL | 使用箇所 |
 | --- | --- | --- | --- | --- | --- | --- |
-| E-001 | official | Play! Pokémon | What’s New in the 2027 Championship Series Season | 2027シーズン、Masters（2010年以前）、rating zone、更新方針 | https://championships.pokemon.com/en-us/about/2027-season-changes/ | 第1章、前付け |
+| E-001 | official | 株式会社ポケモン／Pokémon HOME公式 | 『Pokémon Champions』チャンピオンシップシリーズ「2027シーズン」について | PJCS2027の対象ルート、ゲーム内の国・地域設定と居住国、日本の各カテゴリ上位120名、複数アカウントのペナルティ、権利獲得アカウント、Masters（2010年以前）、Global Challenge I〜VI、5月予選 | https://champions-news.pokemon-home.com/ja/page/833.html | 第1〜3章、前付け、35週 |
 | E-002 | official | Pokémon公式サイト | Take On the 2027 Global Challenge I | 登録期間、M-C、Double Battles、3試合以上の報酬条件、CPアカウント連携 | https://www.pokemon.com/us/news/take-on-the-2027-global-challenge-i | 第1〜3章、前付け |
 | E-003 | official | Pokémon Champions | Assembling your ideal team | HOME、Roster Ranch、Trial Recruitment、VP・Ticket、訓練 | https://champions.pokemon.com/en-us/pokemon/ | 第4章 |
 | E-004 | official | Play! Pokémon | Video Game Championships Tournament Handbook（2026-05-21 revision） | Battle Team、4〜6体、regulation、Team List、機器、接続、Double Battle、オンライン競技 | https://mcdn.pokemon.com/pokemon-prod/raw/upload/v1/live/static-assets/content-assets/cms2/pdf/play-pokemon/rules/play-pokemon-vgc-tournament-handbook-en.pdf | 第5〜6章、第9〜16章、第35章 |

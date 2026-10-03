@@ -15,29 +15,32 @@
 
 | 項目 | 結果 |
 | --- | --- |
-| 総ページ数 | 324ページ |
-| 構成 | 前付け10、35章175、35週70、4案44、付録25 |
+| 総ページ数 | 326ページ |
+| 構成 | 前付け10、35章175、35週70、4案44、付録27 |
 | ページサイズ | B5（498.898 × 708.661pt） |
 | 暗号化 | なし |
 | 文字フォント | BIZ UDGothicを埋め込み。日本語の検索・選択を確認 |
-| PDFしおり | 107件。前付け、章、週、4案、付録、証拠台帳へ移動可能 |
+| PDFしおり | 109件。前付け、章、週、4案、付録、証拠台帳へ移動可能 |
 | PDF内部リンク | 4件。目次から第1章、週、4案、付録へ移動可能 |
 | 外部リンク | 13件。E-001〜E-013の正規URLへ移動可能 |
-| ソース監査 | 35章、35週、4案、25付録を生成元データに対応付け |
+| バイト再現性 | 同一環境で2回生成しSHA-256一致。`1b97d76ff89dc358f9d5969061131d722619ea95a352de04b3c925ab912890a4` |
+| ソース監査 | 35章、35週、4案、27付録を生成元データに対応付け |
 
 ## 実行した確認
 
-- `python3 tools/build_pjcs2027_playbook.py --validate-only`: `modules=35 weeks=35 plans=4 appendix=25`
-- `uv run --with reportlab python tools/build_pjcs2027_playbook.py`: 324ページを生成
-- `pdfinfo`: 324ページ、B5、暗号化なし
-- `pdftotext -enc UTF-8`: 324ページ分のフォームフィード、NUL文字なし、置換文字なし
+- `python3 tools/build_pjcs2027_playbook.py --validate-only`: `modules=35 weeks=35 plans=4 appendix=27`
+- `uv run --with 'reportlab==5.0.1' python tools/build_pjcs2027_playbook.py`: 326ページを生成
+- `invariant=1`、ReportLab 5.0.1、BIZ UDGothic（フォントファイルSHA-256: `d2f2db81fdec9783be68610b62b0d28320cdb4c5bc77cd3fd68881f57481e9c1`）で2回生成し、PDFのSHA-256が一致
+- `pdfinfo`: 326ページ、B5、暗号化なし
+- `pdftotext -enc UTF-8`: 326ページ分のフォームフィード、NUL文字なし、置換文字なし
 - `pdffonts`: BIZ UDGothicの埋め込みを確認
-- `pypdf`: 107件のしおり、4件の内部リンク、13 URLの外部リンク注釈を確認
+- `pypdf`: 109件のしおり、4件の内部リンク、13 URLの外部リンク注釈を確認
 - ページごとの長い同一文を監査。ナビゲーション・フッターを除き、旧版のように章題だけを差し替えた35回以上の長文反復を残していないことを確認
 - 公式の具体例（Mega Emboar、Primarina、Sinistcha、Weavile、Aerodactyl、Garchomp）と、Mega Raichu X／Mawile／Malamar等の候補を、教材例・候補・大会用合法性確認前として区別
+- 公式掲載チームの技・特性・持ち物と、Mega Charizard Y＋Whimsicottを相手にした仮想2ターン再生を付録へ収録。現行M-Cでの合法性・ダメージ結果は断定しない
 - 35週すべてに日付、固有の問い、成果物、対戦できない場合の縮退メニューを配置
 - `git diff --check`、HTML必須要素、相対リンク、アンカー、公開物スキャンを実行
-- `pdftoppm`で全324ページをPNG化し、表紙、目次、章、週、4案、証拠台帳、索引の代表ページを目視確認
+- `pdftoppm`で全326ページをPNG化し、表紙、目次、章、週、4案、証拠台帳、公式チーム例、仮想ケース、索引の代表ページを目視確認
 
 ## エビデンスと限界
 
