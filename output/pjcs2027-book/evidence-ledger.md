@@ -11,6 +11,10 @@
 | E-003 | primary / official | Play! Pokémon | Video Game Championships Tournament Handbook, last revision May 21, 2026 | チーム構築、4〜6体、登録、ルール更新、ダブルバトル、オンライン大会、接続 | https://mcdn.pokemon.com/pokemon-prod/raw/upload/v1/live/static-assets/content-assets/cms2/pdf/play-pokemon/rules/play-pokemon-vgc-tournament-handbook-en.pdf | 第I部、第III部、第IV部、第VI部 |
 | E-004 | secondary | GameWith | グローバルチャレンジ2027Ⅰの大会結果と報酬 | ゲーム内導線、2027Ⅰの個別条件、対戦可能数など。公式情報の代替にはしない | https://gamewith.jp/pokemon-champions/575795 | 第VI部の補助欄 |
 | E-005 | official | Pokémon公式サイト | Get Ready for Regulation Set M-C in Pokémon Champions | M-Cに関する公式告知への導線 | https://www.pokemon.com/us/news/get-ready-for-regulation-set-m-c-in-pokemon-champions | 第I部、第IV部、第VII部 |
+| E-006 | official | Pokémon Champions | Assembling your ideal team | Pokémon HOME、トライアル採用、Roster Ranch、VP・チケットによる育成 | https://champions.pokemon.com/en-us/pokemon/ | 追加付録、公開HTML |
+| E-007 | official | Pokémon公式サイト | Take On the 2027 Global Challenge I | M-C、ダブルバトル、オンライン大会の登録導線、ゲーム内ニュース確認 | https://www.pokemon.com/us/news/take-on-the-2027-global-challenge-i | 追加付録、公開HTML |
+| E-008 | official | Pokémon公式サイト | Pokémon Champions strategy features | メガライチュウX、メガクチート、メガカラマネロ等を主軸候補として考える入口。強さ・使用率・合法性の保証ではない | https://www.pokemon.com/us/features/pokemon-champions-how-to-build-a-mega-raichu-x-team / https://www.pokemon.com/us/features/pokemon-champions-how-to-build-a-mega-mawile-team / https://www.pokemon.com/us/features/pokemon-champions-how-to-build-a-mega-malamar-team | 追加付録、公開HTML |
+| E-009 | official | Play! Pokémon / Pokémon Champions | 2027 Championship Series Season Update / Pokémon VGC Global Challenge | 2027シーズンの追加発表待ち、Global Challengeの確認先 | https://championships.pokemon.com/en-us/about/2027-season-changes/ / https://championships.pokemon.com/en-us/about/pokemon-vgc-global-challenge-grand-challenge | 追加付録、公開HTML |
 
 ## 引用監査ルール
 

@@ -16,6 +16,9 @@ docs/                                           Pagesに公開する静的HTML
 ├── ai-dev-flow/                                AI開発フローカテゴリ
 │   ├── ai-code-modernization-prep.html
 │   └── fractal-loop-engineering.html
+├── pokemon-champions/                          Pokémon Championsカテゴリ
+│   ├── pjcs2027-party-lab.html
+│   └── pokemon-champions-pjcs2027-master-playbook.pdf
 ├── jev/                                        Jevカテゴリ
 │   └── jev-as-a-judge.html
 ├── oss/                                        OSS開発カテゴリ
