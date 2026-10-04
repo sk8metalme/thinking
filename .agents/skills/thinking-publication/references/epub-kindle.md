@@ -21,7 +21,7 @@ EPUB 3のリフロー型を、Apple BooksやKindle端末・アプリで読みや
 2. ZIP内の `mimetype`、container、OPF manifest/spine、nav、全資産を確認する。
 3. 本文・目次・出典の内部リンクとフラグメントを全件確認し、外部出典リンクの到達先を記録する。
 4. 画面幅約390 CSS px程度と大きな文字サイズを想定してレンダリングし、見出し、表、長いURL、リンク、コード等が読みやすいか確認する。
-5. Kindle Previewerが利用可能ならEPUBを開き、スマートフォン相当と電子ペーパー相当の複数表示で、ナビゲーション・画像・表・改ページを確認する。Previewerがないときは未実施と明記し、EPUBCheck合格だけで実機表示済みと主張しない。
+5. Kindleが対象なら、Kindle Previewerが利用可能な環境でEPUBを開き、スマートフォン相当と電子ペーパー相当の複数表示で、ナビゲーション・画像・表・改ページを確認する。Apple Booksが対象なら、利用可能なMacのApple BooksでBook Proofingを行い、必要に応じてiOS端末へ同期して確認する。対象アプリや端末が利用できないときは未実施と明記し、EPUBCheck合格だけで対象アプリの表示確認済みと主張しない。
 6. PDF併行版がある場合は、章構成・本文・出典の一致を確認する。ただし、EPUBの見開きやページ区切りをPDFに合わせて固定しない。
 
 ## 公式資料
@@ -29,8 +29,10 @@ EPUB 3のリフロー型を、Apple BooksやKindle端末・アプリで読みや
 - W3C, [EPUB 3.3](https://www.w3.org/TR/epub-33/) — パッケージ文書、ナビゲーション文書、EPUB文書の仕様。
 - W3C, [EPUBCheck](https://github.com/w3c/epubcheck) — EPUB準拠を検証する公式ツール。
 - Apple, [EPUB file format](https://help.apple.com/itc/booksassetguide/en.lproj/itcff6dc14a2.html) — Apple Booksで扱うEPUBとリフロー型の案内。
-- Amazon, [Send to Kindle](https://digprjsurvey.amazon.com/csad/help/node/TCUBEdEkbIhK07ysFu) — 個人端末へ送る対応ファイル形式。
-- Amazon KDP, [Supported eBook formats](https://kdp.amazon.com/en_US/help/topic/G202131170) — KDP受付形式とKindle Previewerによる確認。
+- Apple, [Using the Book Proofing Tool](https://help.apple.com/itc/booksassetguide/en.lproj/itc073460726.html) — Apple Books上でEPUBを校正し、iOS端末と同期して確認する方法。
+- Amazon, [Learn About Sending Documents to Your Kindle Library](https://digprjsurvey.amazon.com/csad/help/node/G5WYD9SAF7PGXRNA) — Send to Kindleの利用方法と個人文書の対応形式。
+- Amazon KDP, [Supported eBook formats](https://kdp.amazon.com/en_US/help/topic/G200634390/) — KDPが受け付けるeBook原稿形式。Kindle Previewerとは別ページ。
+- Amazon KDP, [Kindle Previewer](https://kdp.amazon.com/en_US/help/topic/G202131170) — EPUBを開けるPreviewerと対象デバイスの案内。
 - Amazon KDP, [Format the text of your Kindle eBook](https://kdp.amazon.com/en_US/help/topic/GH4DRT75GWWAGBTU) — リフロー本文の文字サイズと行間を読者設定に委ねる指針。
 - Amazon KDP, [Create a Table of Contents](https://kdp.amazon.com/en_US/help/topic/GY3AD8C6C6GAG42N) — ナビゲーション用目次と階層の推奨。
 - Amazon KDP, [Tables in Kindle books](https://kdp.amazon.com/en_US/help/topic/GZ8BAXASXKB5JVML) — 狭い画面を考慮した表の指針。
