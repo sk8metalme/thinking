@@ -12,8 +12,8 @@ cp output/pdf/pokemon-champions-pjcs2027-practice-book.pdf \
 
 生成環境は Python 3.11 以上、ReportLab 5.0.1、pypdf 6.19.0、Poppler（`pdfinfo`・`pdftotext`・`pdftoppm`）、`fc-match`、BIZ UDGothicを想定する。再生成後は次を確認する。
 
-- `--validate-only` が章数、原稿文字数、証拠ID、35週の日付と行数を検証する
-- `pdfinfo` でページ数、B5、暗号化、メタデータを確認する
+- `--validate-only` が32章、原稿文字数、出典ID、240日分の連続した日付、35学習ユニットを検証する
+- `pdfinfo` でページ数、ISO B5（176×250mm）、暗号化、メタデータを確認する
 - `pdftotext` で日本語選択・検索、目次、本文、リンクラベルを確認する
 - pypdfでPDFしおり、内部リンク、全出典リンクを確認する
 - `pdftoppm` で全ページを描画し、サムネイル一覧と代表ページを目視する

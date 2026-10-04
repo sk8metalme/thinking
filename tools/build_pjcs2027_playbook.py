@@ -21,6 +21,17 @@ MARGIN_LEFT = 48
 MARGIN_RIGHT = 48
 MARGIN_TOP = 48
 MARGIN_BOTTOM = 46
+MINIMUM_BOOK_PAGES = 300
+TARGET_BOOK_PAGES = 300
+EXPECTED_CHAPTER_COUNT = 32
+MINIMUM_UNIT_INSTRUCTION_CHARS = 800
+DAILY_LESSON_PART_MINIMUM_CHARS = {
+    "目的：": 20,
+    "解説：": 120,
+    "実習：": 65,
+    "振り返り：": 30,
+    "対戦できない場合：": 20,
+}
 EVIDENCE = [
     (
         "E-001",
@@ -95,8 +106,8 @@ EVIDENCE = [
     (
         "E-011",
         "secondary",
-        "GameWith: Global Challenge 2027 I guide",
-        "日本語の導線・補助情報。大会規則の確定には公式告知を使う。",
+        "GameWith: Global Challenge 2027 I results and rewards",
+        "2026-10-03更新の結果・報酬・画面導線。本文のGC I開催年に公式告知との不一致があるため、開催条件・上位120名は公式告知を優先する。",
         "https://gamewith.jp/pokemon-champions/575795",
     ),
     (
@@ -176,12 +187,112 @@ EVIDENCE = [
         "WCS 2026 Mastersの規則セットがM-Bで、対戦にPokémon Championsを使用したこと、決勝進出者と公開チームを確認する公式ページ。E-021の映像を歴史的大会事例として位置づける根拠。",
         "https://www.pokemon.com/uk/play-pokemon/worlds/2026/vgc-masters",
     ),
+    (
+        "E-023",
+        "secondary",
+        "GameWith: Pokémon Champions double team ranking",
+        "GameWith編集部による二次評価。2026-10-01更新、10-04確認。掲載Tierは編集上の比較で、公式大会順位・使用率統計・初心者向け最適解を意味しない。",
+        "https://gamewith.jp/pokemon-champions/558167",
+    ),
+    (
+        "E-024",
+        "secondary",
+        "GameWith: Mega Golisopod build and counters",
+        "2026-10-03更新。M-6ダブルの集計日は10-02。技・持ち物の個別割合であり、同時採用・勝率を示さず、参照箇所に分母・母集団の説明はない。",
+        "https://gamewith.jp/pokemon-champions/575652",
+    ),
+    (
+        "E-025",
+        "community self-report",
+        "KEIBO: Dual Weather Psycho Beat (self-reported 110th place)",
+        "2026-09-29公開の本人執筆note。順位・対戦経験は自己申告。雨・天候・選出案・苦手対面の説明を、構築仮説と反証の学習例として要約する。公式順位確認とは別の根拠。",
+        "https://note.com/keibo_poke/n/nbbdf60b8f705",
+    ),
+    (
+        "E-026",
+        "community self-report",
+        "Beiri: Global Challenge 2027 I reflection",
+        "2026-09-28公開の本人執筆note。構築変更、対面理解、練習量、本人の結果認識を振り返るケース。順位・因果関係は独立検証されておらず、本人の評価として扱う。",
+        "https://note.com/beiry_note/n/n656ddd3b9eac",
+    ),
+    (
+        "E-027",
+        "community video",
+        "CybertronVGC: Mega Salamence is BACK & ALREADY WON a tournament",
+        "2026-09-13公開の英語動画。構築の使い方・弱点の説明と対戦映像を教材にする。動画内の大会実績・制作者説明は公式結果で照合できた範囲以外、投稿者の説明として扱う。",
+        "https://www.youtube.com/watch?v=mo-qCv7wfD4",
+    ),
+    (
+        "E-028",
+        "community self-report",
+        "k-moou: Global Challenge 2027 I reflection",
+        "2026-09-29公開の本人執筆note。上位配信者の構築観察を重視した準備、採用構築、自己申告の結果を読む。観察情報の偏りと本人の経験を区別する教材。",
+        "https://note.com/k_moou/n/nc29d78e63fef",
+    ),
+    (
+        "E-029",
+        "official",
+        "『Pokémon Champions』バトルについて",
+        "ランク・カジュアル・プライベートの3モード、各モードのシングル・ダブル、シーズン・レギュレーション、VPについての日本語公式概要。",
+        "https://www.pokemonchampions.jp/ja/battle/",
+    ),
+    (
+        "E-030",
+        "community self-report",
+        "りべら: はじめてのグローバルチャレンジ！",
+        "2026-09-29公開。初めての競技対戦からGC Iへ参加した経験、本人申告の45戦27勝18敗・約12,000位／約336,000人、チーム変更の理由と反省。大会条件は本人も曖昧と記しているため、公式情報の根拠にしない。",
+        "https://note.com/libera44/n/n65ad9318b3ea",
+    ),
+    (
+        "E-031",
+        "community self-report",
+        "あんせむ: グローバルチャレンジ2027 I 166位 最終レート1806 フラエッテスタン",
+        "2026-09-29公開。構築の準備・選出・反省を扱う本人執筆記事。タイトルと前半は166位、終盤は日本人116位と記載が食い違うため、順位は自己申告の不整合を含む未確認情報としてのみ教材にする。",
+        "https://note.com/4n__7hem/n/n4d2892c7842c",
+    ),
+    (
+        "E-032",
+        "community video",
+        "TheBattleRoom: This World Champion’s Mega Salamence Team is BUSTED",
+        "2026-09公開の英語動画。チーム解説と複数の対戦映像を、役割・説明・画面上の事実を分けて読む教材。動画の評価や大会実績を独立した公式結果として扱わない。",
+        "https://www.youtube.com/watch?v=WT0IArOek0s",
+    ),
+    (
+        "E-033",
+        "official",
+        "Pokémon HOME: Special Select Global Challenge 2027 I & II",
+        "2026-09-18〜09-28 10:59の公式特別セレクト告知。対象ポケモン例と開催期間を示す。終了後の入手可能性、M-C全体の対象一覧、次回大会の合法性は示さない。",
+        "https://news.pokemon-home.com/ja/page/834.html",
+    ),
+    (
+        "E-034",
+        "secondary compilation",
+        "Liberty Note: Global Challenge 2027 I Top 150",
+        "2026-09-28公開、10-02更新。マスターカテゴリ上位として掲載した順位と一部の6体を集約する二次資料。公式順位の確定、掲載の完全性、技・特性・持ち物・選出・採用理由を保証しない。",
+        "https://liberty-note.com/2026/09/28/gc2027-i-top150/",
+    ),
+    (
+        "E-035",
+        "community self-report",
+        "らむじゃがー: Global Challenge 2027 I 雨滅びパ アブソルを添えて",
+        "2026-09-28公開の本人構築記事。45戦30勝15敗・最終1491位を本人申告し、雨・滅び軸の構築変更、選出、技選択の反省を記す。順位・成績は公式確認ではなく、変更と結果の因果も証明しない。",
+        "https://note.com/brave_snipe6636/n/nb48c2fbc77d4",
+    ),
+    (
+        "E-036",
+        "community self-report",
+        "直線: Global Challenge 2027 I 62位・最終レート1816.742",
+        "本人の構築変更・相手別選出・苦手対面の説明。順位・予選進出は独立確認されず、変更との因果や環境全体の分布も示さない。",
+        "https://note.com/gostraightvgc/n/n6e1611b3a6ec",
+    ),
 ]
 EVIDENCE_BY_ID = {item[0]: item for item in EVIDENCE}
 CITATION_RE = re.compile(r"[\[［]((?:E-\d{3})(?:\s*[,、〜～\-]\s*E-\d{3})*)[\]］]")
 EVIDENCE_TOKEN_RE = re.compile(r"E-\d{3}")
-HEADING_RE = re.compile(r"^(#{2,4})\s+(.+?)\s*$")
-LIST_RE = re.compile(r"^\s*(?:[-*+]\s+|\d+[.)]\s+)(.+)$")
+HEADING_RE = re.compile(r"^(#{2,5})\s+(.+?)\s*$")
+DAILY_HEADING_RE = re.compile(r"^第(\d{3})日　(\d{4}-\d{2}-\d{2})（([月火水木金土日])）　(.+)$")
+CHAPTER_HEADING_RE = re.compile(r"^(?:第\d+章(?:　|\s|[:：])|Chapter\s+\d+\b)", re.IGNORECASE)
+LIST_RE = re.compile(r"^\s*(?:(\d+[.)])|[-*+])\s+(.+)$")
 
 
 @dataclass(frozen=True)
@@ -190,6 +301,7 @@ class Block:
     text: str = ""
     level: int = 0
     rows: tuple[tuple[str, ...], ...] = ()
+    marker: str = ""
 
 
 @dataclass(frozen=True)
@@ -201,11 +313,11 @@ class Manuscript:
     body_text: str
 
 
-def weekly_dates(start: date = date(2026, 10, 3), count: int = 35) -> list[date]:
-    """Return the agreed weekly review dates, inclusive of both endpoints."""
+def daily_dates(start: date = date(2026, 10, 4), count: int = 240) -> list[date]:
+    """Return the agreed daily study dates, inclusive of both endpoints."""
     if count < 0:
         raise ValueError("count must not be negative")
-    return [start + timedelta(days=7 * index) for index in range(count)]
+    return [start + timedelta(days=index) for index in range(count)]
 
 
 def normalize(text: str) -> str:
@@ -227,16 +339,22 @@ def _citation_ids(text: str) -> set[str]:
 
 
 def _expand_citation_group(group: str) -> tuple[str, ...]:
-    tokens = EVIDENCE_TOKEN_RE.findall(group)
-    if not tokens:
-        return ()
-    if re.search(r"[〜～]", group) and len(tokens) == 2:
-        first = int(tokens[0].split("-")[1])
-        last = int(tokens[1].split("-")[1])
-        if last < first:
-            raise ValueError(f"evidence range is reversed: {group}")
-        return tuple(f"E-{number:03d}" for number in range(first, last + 1))
-    return tuple(tokens)
+    identifiers: list[str] = []
+    for segment in re.split(r"\s*[,、]\s*", group):
+        tokens = EVIDENCE_TOKEN_RE.findall(segment)
+        if not tokens:
+            continue
+        if re.search(r"[〜～]", segment):
+            if len(tokens) != 2:
+                raise ValueError(f"malformed evidence range: {segment}")
+            first = int(tokens[0].split("-")[1])
+            last = int(tokens[1].split("-")[1])
+            if last < first:
+                raise ValueError(f"evidence range is reversed: {segment}")
+            identifiers.extend(f"E-{number:03d}" for number in range(first, last + 1))
+        else:
+            identifiers.extend(tokens)
+    return tuple(dict.fromkeys(identifiers))
 
 
 def parse_markdown_text(source: str, evidence_ids: Iterable[str] | None = None) -> Manuscript:
@@ -307,8 +425,9 @@ def parse_markdown_text(source: str, evidence_ids: Iterable[str] | None = None) 
         list_item = LIST_RE.match(line)
         if list_item:
             flush_paragraph()
-            item_text = list_item.group(1).strip()
-            blocks.append(Block("list_item", text=item_text))
+            marker = list_item.group(1) or ""
+            item_text = list_item.group(2).strip()
+            blocks.append(Block("list_item", text=item_text, marker=marker))
             citations.update(_citation_ids(item_text))
             cursor += 1
             continue
@@ -336,16 +455,35 @@ def parse_markdown_text(source: str, evidence_ids: Iterable[str] | None = None) 
     return Manuscript(title, subtitle, tuple(blocks), frozenset(citations), body_text)
 
 
-def _section_text(blocks: tuple[Block, ...], start: int) -> str:
+def _section_text(blocks: tuple[Block, ...], start: int, stop_level: int = 2) -> str:
     collected: list[str] = []
     for block in blocks[start + 1 :]:
-        if block.kind == "heading" and block.level <= 2:
+        if block.kind == "heading" and block.level <= stop_level:
             break
         if block.text:
             collected.append(block.text)
         if block.kind == "table":
             collected.extend(cell for row in block.rows for cell in row)
     return " ".join(collected)
+
+
+def _daily_lesson_part_lengths(text: str) -> dict[str, int]:
+    """Measure instructional components, not a page-filling total character quota."""
+    starts = {label: text.find(label) for label in DAILY_LESSON_PART_MINIMUM_CHARS}
+    lengths: dict[str, int] = {}
+    for label, start in starts.items():
+        if start < 0:
+            continue
+        content_start = start + len(label)
+        following = [candidate for candidate in starts.values() if candidate > start]
+        content_end = min(following, default=len(text))
+        lengths[label] = len(normalize(text[content_start:content_end]))
+    return lengths
+
+
+def is_substantive_chapter(title: str) -> bool:
+    """Distinguish numbered book chapters from same-level case-study headings."""
+    return bool(CHAPTER_HEADING_RE.match(title))
 
 
 def validate_source(path: Path = MANUSCRIPT_PATH) -> Manuscript:
@@ -356,15 +494,27 @@ def validate_source(path: Path = MANUSCRIPT_PATH) -> Manuscript:
     chapters = [
         (index, block)
         for index, block in enumerate(manuscript.blocks)
-        if block.kind == "heading" and block.level == 2
+        if block.kind == "heading" and block.level == 2 and is_substantive_chapter(block.text)
     ]
-    if len(chapters) < 14:
-        raise ValueError(f"expected at least 14 substantive chapters, got {len(chapters)}")
+    if len(chapters) != EXPECTED_CHAPTER_COUNT:
+        raise ValueError(
+            f"expected exactly {EXPECTED_CHAPTER_COUNT} substantive chapters, got {len(chapters)}"
+        )
     if len(manuscript.body_text) < 30_000:
         raise ValueError(f"manuscript is too short to meet the agreed depth: {len(manuscript.body_text)} characters")
     for index, chapter in chapters:
         if len(normalize(_section_text(manuscript.blocks, index))) < 500:
             raise ValueError(f"chapter lacks explanatory substance: {chapter.text}")
+    curriculum_units = [
+        (index, block)
+        for index, block in enumerate(manuscript.blocks)
+        if block.kind == "heading" and block.level == 3 and block.text.startswith("学習ユニット")
+    ]
+    if len(curriculum_units) != 35:
+        raise ValueError(f"expected 35 instructional units, got {len(curriculum_units)}")
+    for index, unit in curriculum_units:
+        if len(_section_text(manuscript.blocks, index, stop_level=4)) < MINIMUM_UNIT_INSTRUCTION_CHARS:
+            raise ValueError(f"curriculum unit lacks explanatory substance: {unit.text}")
     heading_titles = [block.text for block in manuscript.blocks if block.kind == "heading"]
     if len(heading_titles) != len(set(heading_titles)):
         raise ValueError("heading titles must be unique")
@@ -373,21 +523,53 @@ def validate_source(path: Path = MANUSCRIPT_PATH) -> Manuscript:
     for evidence_id, _kind, title, _scope, url in EVIDENCE:
         if not evidence_id or not title or not url.startswith("https://"):
             raise ValueError(f"incomplete evidence record: {evidence_id}")
-    weekly_tables = [
-        block for block in manuscript.blocks
-        if block.kind == "table" and block.rows and block.rows[0][0] == "週・日付"
-    ]
-    if len(weekly_tables) != 1:
-        raise ValueError("exactly one 35-week schedule table is required")
-    rows = weekly_tables[0].rows[1:]
-    if len(rows) != 35:
-        raise ValueError(f"expected 35 weekly schedule rows, got {len(rows)}")
-    expected_dates = weekly_dates()
-    for index, (row, expected_date) in enumerate(zip(rows, expected_dates), start=1):
-        if not row[0].startswith(f"{index}・") or expected_date.strftime("%m/%d") not in row[0]:
-            raise ValueError(f"schedule row {index} does not match {expected_date.isoformat()}")
-    if not {"E-001", "E-003", "E-006", "E-009", "E-010"}.issubset(manuscript.citations):
-        raise ValueError("core official sources are not cited in the manuscript")
+    daily_sections = []
+    for block_index, block in enumerate(manuscript.blocks):
+        if block.kind != "heading" or block.level != 4:
+            continue
+        match = DAILY_HEADING_RE.fullmatch(block.text)
+        if match:
+            daily_sections.append((block_index, match))
+    expected_dates = daily_dates()
+    if len(daily_sections) != len(expected_dates):
+        raise ValueError(f"expected {len(expected_dates)} daily sessions, got {len(daily_sections)}")
+    day_titles: set[str] = set()
+    normalized_sessions: set[str] = set()
+    weekday_names = "月火水木金土日"
+    for expected_index, ((block_index, match), expected_date) in enumerate(
+        zip(daily_sections, expected_dates),
+        start=1,
+    ):
+        day_number, date_text, weekday_text, title = match.groups()
+        if int(day_number) != expected_index or date_text != expected_date.isoformat():
+            raise ValueError(f"daily session {expected_index} does not match {expected_date.isoformat()}")
+        if weekday_text != weekday_names[expected_date.weekday()]:
+            raise ValueError(f"daily session {expected_index} has an incorrect weekday")
+        if title in day_titles:
+            raise ValueError(f"daily session titles must be unique: {title}")
+        day_titles.add(title)
+        raw_session_text = _section_text(manuscript.blocks, block_index, stop_level=4)
+        required_lesson_parts = ("目的：", "解説：", "実習：", "振り返り：", "対戦できない場合：")
+        if not all(part in raw_session_text for part in required_lesson_parts):
+            raise ValueError(f"daily session must state its objective, exercise, reflection, and fallback: {day_number}")
+        session_text = normalize(raw_session_text)
+        part_lengths = _daily_lesson_part_lengths(raw_session_text)
+        for label, minimum in DAILY_LESSON_PART_MINIMUM_CHARS.items():
+            if part_lengths.get(label, 0) < minimum:
+                raise ValueError(
+                    f"daily session lacks instructional substance: {day_number} ({label})"
+                )
+        if session_text in normalized_sessions:
+            raise ValueError(f"daily session content is duplicated: {day_number}")
+        normalized_sessions.add(session_text)
+    required_sources = {
+        "E-001", "E-003", "E-006", "E-009", "E-010",
+        "E-023", "E-024", "E-025", "E-026", "E-027", "E-028",
+        "E-029", "E-030", "E-031", "E-032", "E-033", "E-034", "E-035", "E-036",
+    }
+    if not required_sources.issubset(manuscript.citations):
+        missing_sources = ", ".join(sorted(required_sources - manuscript.citations))
+        raise ValueError(f"required official and case-study sources are not cited: {missing_sources}")
     return manuscript
 
 
@@ -417,7 +599,16 @@ def _without_citations(text: str) -> str:
 
 def _plain_inline(text: str) -> str:
     """Escape source text and retain only the small inline syntax used here."""
-    return escape(text.replace("**", "").replace("`", ""))
+    escaped = escape(text.replace("**", "").replace("`", ""))
+
+    def link_citations(match: re.Match[str]) -> str:
+        links = (
+            f'<link href="{escape(EVIDENCE_BY_ID[item][4])}" color="#176b8a">[{item}]</link>'
+            for item in _expand_citation_group(match.group(1))
+        )
+        return "　".join(links)
+
+    return CITATION_RE.sub(link_citations, escaped)
 
 
 def _append_citations(story: list, text: str, note_style) -> None:
@@ -504,8 +695,8 @@ def _source_index_flowable(available_width: float, font_name: str):
         ("VALIGN", (0, 0), (-1, -1), "TOP"),
         ("LEFTPADDING", (0, 0), (-1, -1), 5),
         ("RIGHTPADDING", (0, 0), (-1, -1), 5),
-        ("TOPPADDING", (0, 0), (-1, -1), 5),
-        ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+        ("TOPPADDING", (0, 0), (-1, -1), 3),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
     ]))
     return table
 
@@ -522,9 +713,12 @@ def _make_styles(font_name: str):
         "part": ParagraphStyle("PartHeading", **common, fontSize=20, leading=29, textColor=colors.HexColor("#173c58"), spaceBefore=6, spaceAfter=16, keepWithNext=1),
         "chapter": ParagraphStyle("ChapterHeading", **common, fontSize=15, leading=23, textColor=colors.HexColor("#176b8a"), spaceBefore=14, spaceAfter=9, keepWithNext=1),
         "section": ParagraphStyle("SectionHeading", **common, fontSize=11.5, leading=18, textColor=colors.HexColor("#245c70"), spaceBefore=10, spaceAfter=5, keepWithNext=1),
-        "body": ParagraphStyle("Body", **common, fontSize=9.5, leading=16.2, textColor=colors.HexColor("#17232d"), spaceAfter=8, allowWidows=0, allowOrphans=0, splitLongWords=1),
+        "daily_heading": ParagraphStyle("DailyHeading", **common, fontSize=10.5, leading=14.5, textColor=colors.HexColor("#245c70"), spaceBefore=4, spaceAfter=3, keepWithNext=1),
+        "body": ParagraphStyle("Body", **common, fontSize=10.5, leading=17.5, textColor=colors.HexColor("#17232d"), spaceAfter=8, allowWidows=0, allowOrphans=0, splitLongWords=1),
+        "daily_body": ParagraphStyle("DailyBody", **common, fontSize=10, leading=15, textColor=colors.HexColor("#17232d"), spaceAfter=3, allowWidows=0, allowOrphans=0, splitLongWords=1),
         "note": ParagraphStyle("EvidenceNote", fontName=font_name, fontSize=7.7, leading=11, textColor=colors.HexColor("#176b8a"), spaceBefore=-3, spaceAfter=8, splitLongWords=1),
-        "list": ParagraphStyle("ListItem", **common, fontSize=9.4, leading=15.8, leftIndent=14, firstLineIndent=-10, bulletIndent=0, spaceAfter=4, splitLongWords=1),
+        "daily_note": ParagraphStyle("DailyEvidenceNote", fontName=font_name, fontSize=7.2, leading=9, textColor=colors.HexColor("#176b8a"), spaceBefore=-2, spaceAfter=3, splitLongWords=1),
+        "list": ParagraphStyle("ListItem", **common, fontSize=10.2, leading=17, leftIndent=14, firstLineIndent=-10, bulletIndent=0, spaceAfter=4, splitLongWords=1),
         "quote": ParagraphStyle("Quote", **common, fontSize=9.2, leading=15, leftIndent=12, rightIndent=10, borderColor=colors.HexColor("#6fa6b6"), borderWidth=1, borderPadding=8, backColor=colors.HexColor("#f1f7f8"), spaceBefore=4, spaceAfter=9, splitLongWords=1),
         "toc_title": ParagraphStyle("TOCTitle", **common, fontSize=19, leading=27, textColor=colors.HexColor("#173c58"), spaceAfter=16),
         "toc_part": ParagraphStyle("TOCPart", fontName=font_name, fontSize=9.4, leading=15, leftIndent=0, firstLineIndent=0, spaceBefore=2, wordWrap="CJK", textColor=colors.HexColor("#173c58")),
@@ -586,7 +780,7 @@ def _document_class():
                 bottomMargin=MARGIN_BOTTOM,
                 title=title,
                 author="thinking-publication",
-                subject="初心者向けダブルバトルとPJCS2027準備",
+                subject="初心者向けダブルバトルとPJCS2027準備。ISO B5, 176 x 250 mm",
                 pageCompression=1,
             )
             frame = Frame(
@@ -618,14 +812,16 @@ def _document_class():
             if not hasattr(flowable, "_book_heading_level"):
                 return
             heading_level = flowable._book_heading_level
-            if heading_level not in (1, 2):
-                return
             text = flowable.getPlainText()
+            is_course_unit = heading_level == 3 and text.startswith("学習ユニット")
+            if heading_level not in (1, 2) and not is_course_unit:
+                return
             key = flowable._book_heading_key
             self.canv.bookmarkPage(key)
             outline_level = heading_level - 1
-            self.canv.addOutlineEntry(text, key, level=outline_level, closed=False)
-            self.notify("TOCEntry", (outline_level, text, self.page, key))
+            self.canv.addOutlineEntry(text, key, level=outline_level, closed=is_course_unit)
+            if heading_level in (1, 2):
+                self.notify("TOCEntry", (outline_level, text, self.page, key))
 
     return JapaneseBookDocTemplate
 
@@ -639,7 +835,7 @@ def _make_story(manuscript: Manuscript, styles):
         Spacer(1, 100),
         Paragraph(_plain_inline(manuscript.title).replace("からPJCS2027へ", "から<br/>PJCS2027へ"), styles["title"]),
         Paragraph(_plain_inline(manuscript.subtitle), styles["subtitle"]),
-        Paragraph("基準日：2026年10月4日<br/>初心者向け・マスターカテゴリ・週1時間", styles["meta"]),
+        Paragraph("基準日：2026年10月4日<br/>初心者向け・マスターカテゴリ・毎日60分×240日＋大会日追加枠", styles["meta"]),
         Spacer(1, 26),
         Paragraph("大会結果を約束する本ではなく、判断を更新する手順を身につける本", styles["meta"]),
         PageBreak(),
@@ -651,9 +847,14 @@ def _make_story(manuscript: Manuscript, styles):
     story.extend([toc, PageBreak()])
     width = PAGE_WIDTH - MARGIN_LEFT - MARGIN_RIGHT
     heading_index = 0
+    in_daily_session = False
     for block in manuscript.blocks:
         if block.kind == "heading":
-            if block.level == 1:
+            is_daily_heading = block.level == 4 and DAILY_HEADING_RE.fullmatch(block.text)
+            in_daily_session = bool(is_daily_heading)
+            if is_daily_heading:
+                style = styles["daily_heading"]
+            elif block.level == 1:
                 style = styles["part"]
             elif block.level == 2:
                 style = styles["chapter"]
@@ -667,10 +868,13 @@ def _make_story(manuscript: Manuscript, styles):
         elif block.kind == "paragraph":
             paragraph = _without_citations(block.text)
             if paragraph:
-                story.append(Paragraph(_plain_inline(paragraph), styles["body"]))
-            _append_citations(story, block.text, styles["note"])
+                body_style = styles["daily_body"] if in_daily_session else styles["body"]
+                story.append(Paragraph(_plain_inline(paragraph), body_style))
+            note_style = styles["daily_note"] if in_daily_session else styles["note"]
+            _append_citations(story, block.text, note_style)
         elif block.kind == "list_item":
-            story.append(Paragraph(f"・{_plain_inline(_without_citations(block.text))}", styles["list"]))
+            marker = f"{block.marker} " if block.marker else "・"
+            story.append(Paragraph(f"{marker}{_plain_inline(_without_citations(block.text))}", styles["list"]))
             _append_citations(story, block.text, styles["note"])
         elif block.kind == "quote":
             story.append(Paragraph(_plain_inline(_without_citations(block.text)), styles["quote"]))
@@ -719,6 +923,10 @@ def build_pdf(output: Path, manuscript_path: Path = MANUSCRIPT_PATH) -> int:
         return Canvas(*args, **kwargs)
 
     doc.multiBuild(story, maxPasses=5, canvasmaker=stable_canvas)
+    if doc.page < MINIMUM_BOOK_PAGES:
+        raise ValueError(
+            f"book output has {doc.page} pages; the agreed minimum is {MINIMUM_BOOK_PAGES}"
+        )
     return doc.page
 
 
@@ -733,11 +941,15 @@ def main() -> int:
     parser.add_argument("--validate-only", action="store_true")
     args = parser.parse_args()
     manuscript = validate_source(args.manuscript)
-    chapters = sum(block.kind == "heading" and block.level == 2 for block in manuscript.blocks)
+    chapters = sum(
+        block.kind == "heading" and block.level == 2 and is_substantive_chapter(block.text)
+        for block in manuscript.blocks
+    )
     if args.validate_only:
         print(
             f"source-ok chapters={chapters} characters={len(manuscript.body_text)} "
-            f"citations={len(manuscript.citations)} weeks={len(weekly_dates())}"
+            f"citations={len(manuscript.citations)} sessions={len(daily_dates())} "
+            f"target-pages={TARGET_BOOK_PAGES} minimum-pages={MINIMUM_BOOK_PAGES}"
         )
         return 0
     pages = build_pdf(args.output, args.manuscript)
