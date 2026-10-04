@@ -1,13 +1,13 @@
 ---
 name: thinking-publication
-description: "Create and revise evidence-backed Japanese pages and long-form PDF books for the thinking repository, with preflight outlines, page budgets, traceable source links, and format-specific quality checks."
+description: "Create and revise evidence-backed Japanese pages, long-form PDF books, and reflowable EPUB books for Apple Books and Kindle, with preflight outlines, traceable source links, and format-specific quality checks."
 metadata:
-  short-description: "考察・分析・長編PDFを根拠付きで高品質に制作"
+  short-description: "考察・分析・PDF・EPUB/Kindle本を根拠付きで高品質に制作"
 ---
 
 # thinking-publication
 
-`thinking` リポジトリで、読者向けの考察ページ、分析レポート、比較・意思決定ページ、手順書、長編PDFを設計・執筆・検証する。本文を書く前に、読者・目的・範囲・出力形式・文量・目次・エビデンス計画を確定する。
+`thinking` リポジトリで、読者向けの考察ページ、分析レポート、比較・意思決定ページ、手順書、長編PDF、リフロー型EPUB（Apple Books/Kindle向け）を設計・執筆・検証する。本文を書く前に、読者・目的・範囲・出力形式・文量・目次・エビデンス計画を確定する。
 
 ## 適用範囲
 
@@ -19,7 +19,7 @@ metadata:
 - `comparison-decision`：複数案を基準で比較し、条件付きの推奨を示すページ
 - `tutorial-playbook`：読者が手順を実行し、結果を検証できる実践ガイド
 
-PDFの短いレポートや本は、本文モードとは別に配信面とボリュームプロファイルを選ぶ。目次、ページ配分、出典台帳が必要な長編では、全体を一度に書かず章単位で進める。
+固定ページのPDFとリフロー型EPUBは、本文モードとは別に配信面を選ぶ。ページ数プロファイルはPDFにだけ適用し、EPUB/Kindleではページ数を約束せず、文字数・読了時間・章節の粒度で規模を計画する。目次、ページ配分、出典台帳が必要な長編では、全体を一度に書かず章単位で進める。
 
 次の依頼は主目的が異なるため、このSkillだけで完結させない。
 
@@ -106,9 +106,10 @@ PDFの「本」は、依頼者がワークブックを希望していない限�
 6. 図解が必要な場合は `$diagram-design` を使い、図だけで主張を伝えようとしない。
 7. `docs/` のHTML記事は `$publish-github-pages` の単一HTML・相対リンク・一覧登録の規約に従う。公開設定変更、commit、pushは明示依頼なしに行わない。
 8. PDFは静的な入力から生成し、ページ数、文字の選択性、リンク注釈、図表の欠落、改ページを確認する。
-9. 目標ページ数に届かない場合は、まず不足台帳に戻って必要な情報の有無を確認する。必要な情報を追加できない状態で、文体・余白・改ページだけを変更して目標を達成してはならない。
-10. ユーザー指定の最低ページ数を満たせず、調査可能な不足も残っていない場合は、短い版を完成品として扱わず、実測値と残る読者課題を示して追加範囲の判断をユーザーへ戻す。
-11. 日付のある学習・実行計画は、頻度（毎日／毎週）、1回の時間、対象期間、休止日、イベント日の追加時間を別々に記録し、実日数と総時間を数える。通常練習時間へ大会当日の追加時間を混ぜない。
+9. EPUB/Kindle本は [references/epub-kindle.md](references/epub-kindle.md) に従ってリフロー型で生成し、EPUBCheckと内部リンク検証を行う。EPUB/Kindleを端末へ送信したりKDPで公開したりする外部操作は、個別に明示依頼された場合だけ行う。
+10. 目標ページ数に届かない場合は、まず不足台帳に戻って必要な情報の有無を確認する。必要な情報を追加できない状態で、文体・余白・改ページだけを変更して目標を達成してはならない。
+11. ユーザー指定の最低ページ数をPDFで満たせず、調査可能な不足も残っていない場合は、短い版を完成品として扱わず、実測値と残る読者課題を示して追加範囲の判断をユーザーへ戻す。EPUBのページ数は端末・画面・文字設定で変わるため、固定ページの達成条件にしない。
+12. 日付のある学習・実行計画は、頻度（毎日／毎週）、1回の時間、対象期間、休止日、イベント日の追加時間を別々に記録し、実日数と総時間を数える。通常練習時間へ大会当日の追加時間を混ぜない。
 
 ### Review
 
@@ -121,6 +122,7 @@ PDFの「本」は、依頼者がワークブックを希望していない限�
 - 図表に本文の読み方、出典、限界がある
 - HTMLの見出し、表、リンク、キーボード、モバイル、ダークモード、縮小モーションを確認した
 - PDFの全ページで文字・図表・脚注・リンク・改ページを確認した
+- EPUBはEPUBCheckに合格し、目次・NCX・本文内外リンクと狭い画面での表の読みやすさを確認した。Kindle Previewerを使えない場合は端末表示を未検証と明記した
 - 未解決のTODO、ローカルパス、秘密情報、認証情報を公開成果物に残していない
 
 `book-300-plus-exhaustive` では、章ごとの引用監査、用語・相互参照の統一、図表番号、参考文献、ページ単位の視覚確認を完了しない限り完成扱いにしない。目標ページ数を満たすために追加した各章・節・付録が、どの読者課題または不足台帳の項目を解決するか記録し、対応する課題がない増量は採用しない。
@@ -136,9 +138,11 @@ PDFの「本」は、依頼者がワークブックを希望していない限�
 5. 変更ファイル、commit・push・公開の有無
 6. 次にできるタスク候補
 
-ページ数はPDFのレンダリング結果で実測する。HTMLでは文字数、主要セクション数、図表数、読了時間、必要ならPDF換算ページ数を報告する。
+ページ数はPDFのレンダリング結果で実測する。HTMLとEPUBでは文字数、主要セクション数、図表数、読了時間を報告し、EPUB/Kindleの端末依存ページ数を固定値として約束しない。
 
 詳細なモード定義は [references/modes.md](references/modes.md)、文量と目次案は [references/outline-and-volume.md](references/outline-and-volume.md)、コンテキスト不足と分量監査は [references/context-sufficiency.md](references/context-sufficiency.md)、出典管理は [references/evidence.md](references/evidence.md)、最終検証は [references/quality-gates.md](references/quality-gates.md) を参照する。
+
+EPUB/Kindle本の制作、検証、Previewerの使い分けは [references/epub-kindle.md](references/epub-kindle.md) を参照する。
 
 ## 再現性・トピック固有性
 
