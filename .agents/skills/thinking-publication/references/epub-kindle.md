@@ -6,6 +6,14 @@ EPUB 3のリフロー型を、iPhone/Apple BooksやKindle端末・アプリで�
 
 「Kindle対応」は、Kindleで読み込めるEPUBを作ることを意味し、Amazon KDPで販売・公開することを意味しない。Send to Kindleへの送信、KDP登録、販売設定、著作権・権利表明などを伴う操作は、ユーザーが明示的に依頼した場合にだけ行う。配信条件は変わりうるため、実行時にはAmazonの最新公式案内を再確認する。
 
+## 出版物IDと版管理
+
+W3C EPUB 3.3は、`dc:identifier` に一つのEPUB出版物だけを特定するIDを置き、IDの永続性を保ち、メタデータ更新・誤植修正などの軽微な改訂では新しいIDを発行しないよう勧めている。規格は「大改訂」の一律な境界を定義していないため、別の版として流通・参照する実質的な改訂（例：大幅な章構成変更、内容の大幅な追加・削除、抄録版の発行）では、編集方針として新しいUUID等を割り当てる。これは規格文の直接的な必須要件ではなく、異なる版を混同させないための出版判断である。
+
+- 誤植、メタデータ修正、限定的な明確化は既存IDを維持し、`dcterms:modified` を更新する。
+- 独立した新版・改訂版として扱う場合は新しいIDを発行し、版名と旧版との差分を記録する。
+- 再ビルドのたびにIDを変えない。生成器がIDを固定値として持つ場合は、版を分けると判断した改訂時だけ更新する。
+
 ## 執筆と組版
 
 - 章・節を意味的なHTML見出しと本文で表し、読書順をOPF spineに正しく登録する。
@@ -28,7 +36,8 @@ EPUB 3のリフロー型を、iPhone/Apple BooksやKindle端末・アプリで�
 
 ## 公式資料
 
-- W3C, [EPUB 3.3](https://www.w3.org/TR/epub-33/) — パッケージ文書、ナビゲーション文書、EPUB文書の仕様。出版物IDは小改訂で不用意に変更せず、`dcterms:modified` は内容更新ごとにUTCで更新する。
+- W3C, [EPUB 3.3 — `dc:identifier`](https://www.w3.org/TR/epub-33/#sec-opf-dcidentifier) — 一つのEPUB出版物を特定する一意IDと、軽微な改訂でIDを変更しない方針。大改訂の一律な区分は規格が定めていない。
+- W3C, [EPUB 3.3](https://www.w3.org/TR/epub-33/) — パッケージ文書、ナビゲーション文書、EPUB文書の仕様。`dcterms:modified` は内容更新ごとにUTCで更新する。
 - W3C, [EPUB 3.3 — NCX](https://www.w3.org/TR/epub-33/#sec-opf2-ncx) — NCXはEPUB 2読書システム向けの後方互換機能で、EPUB 3のナビゲーション文書が置き換える。
 - W3C, [EPUBCheck](https://github.com/w3c/epubcheck) — EPUB準拠を検証する公式ツール。
 - Apple, [EPUB file format](https://help.apple.com/itc/booksassetguide/en.lproj/itcff6dc14a2.html) — Apple Booksで扱うEPUBとリフロー型の案内。
