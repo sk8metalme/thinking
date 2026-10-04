@@ -53,7 +53,7 @@
 - ダークモードと `prefers-reduced-motion` で情報が失われない
 - すべてのローカルリンクとページ内アンカーが解決する
 
-`docs/` の記事は、追加で `$publish-github-pages` の検証手順を実行する。
+`docs/` の記事は、`publish-github-pages` が利用可能なら追加の検証手順も実行する。未導入なら、上記のローカルHTML・リンク・アクセシビリティ検証を実行したうえで、リポジトリの `AGENTS.md` と公開workflowの条件を確認する。
 
 ## PDF
 
