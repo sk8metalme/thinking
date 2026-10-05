@@ -1,0 +1,1483 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>「AI ready」は宣言ではなく、測り続けるもの</title>
+<meta name="description" content="AI readyな環境とは何か。言えるのか、言えないのか。研究論文・業界調査・公式ドキュメント・実践ブログ・SNSの議論を横断し、開発環境・データ・組織の3軸で定義、証拠、ベストプラクティス、アンチパターン、自己診断、導入手順を整理した調査と考察。">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🕸️</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EEF2F0; --paper-2:#E3E9E6; --card:#F8FAF9;
+  --ink:#16232C; --ink-2:#4A5A63; --rule:#C6D1CC;
+  --teal:#1F6F63; --teal-soft:#D5E8E3;
+  --red:#B5392A; --red-soft:#F3DCD7;
+  --amber:#A8720C; --amber-soft:#F2E6CC;
+  --navy:#2D4A6B; --navy-soft:#DCE4EE;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN","Yu Mincho","MS PMincho",serif;
+  --sans:"Noto Sans JP","Hiragino Sans","Yu Gothic","Meiryo",system-ui,sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#10191F; --paper-2:#16222A; --card:#18252E;
+    --ink:#E3EAE7; --ink-2:#9FB0AA; --rule:#2C3C45;
+    --teal:#5FBFAE; --teal-soft:#16352F;
+    --red:#EE7A68; --red-soft:#3A1F1B;
+    --amber:#E3B04F; --amber-soft:#382C14;
+    --navy:#8FB0D6; --navy-soft:#1C2B3D;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#10191F; --paper-2:#16222A; --card:#18252E;
+  --ink:#E3EAE7; --ink-2:#9FB0AA; --rule:#2C3C45;
+  --teal:#5FBFAE; --teal-soft:#16352F;
+  --red:#EE7A68; --red-soft:#3A1F1B;
+  --amber:#E3B04F; --amber-soft:#382C14;
+  --navy:#8FB0D6; --navy-soft:#1C2B3D;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 16px);scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.85;-webkit-font-smoothing:antialiased}
+img,svg{max-width:100%}
+a{color:var(--navy);text-underline-offset:3px}
+a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid var(--amber);outline-offset:2px;border-radius:4px}
+code{font-size:.88em;background:var(--paper-2);padding:.1em .35em;border-radius:4px}
+h1,h2,h3,h4{font-family:var(--serif);line-height:1.35;letter-spacing:.01em}
+h2{font-size:clamp(1.5rem,3.2vw,2rem);margin:0 0 .6em}
+h3{font-size:1.18rem;margin:2em 0 .6em}
+p{margin:0 0 1.1em}
+.en{font-family:var(--sans);font-size:.72em;font-weight:500;color:var(--ink-2);letter-spacing:0}
+
+/* layout */
+.shell{display:grid;grid-template-columns:230px minmax(0,1fr);gap:48px;max-width:1180px;margin:0 auto;padding:0 24px}
+nav.toc{position:sticky;top:calc(env(safe-area-inset-top,0px) + 24px);align-self:start;padding-top:40px;font-size:.88rem;max-height:calc(100vh - 48px);overflow:auto}
+nav.toc p{font-family:var(--serif);font-weight:800;margin-bottom:.6em}
+nav.toc ol{list-style:none;margin:0;padding:0;border-left:2px solid var(--rule)}
+nav.toc li a{display:block;padding:.3em .9em;color:var(--ink-2);text-decoration:none;border-left:2px solid transparent;margin-left:-2px}
+nav.toc li a:hover,nav.toc li a.active{color:var(--ink);border-left-color:var(--teal)}
+main{min-width:0;padding-bottom:80px}
+section.block{padding:64px 0 24px;border-top:1px solid var(--rule)}
+.prose{max-width:720px}
+@media (max-width:900px){.shell{grid-template-columns:1fr;gap:0}nav.toc{display:none}}
+@media (max-width:480px){.shell{padding:0 16px}}
+
+/* hero */
+.hero{padding:56px 0 40px;max-width:780px}
+.hero .kicker{font-size:.85rem;color:var(--teal);font-weight:700;margin-bottom:.6em}
+.hero h1{font-size:clamp(1.9rem,4.6vw,3rem);font-weight:800;margin:0 0 .5em;line-height:1.25}
+.hero .lede{font-size:1.06rem;color:var(--ink-2)}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px;padding:0;list-style:none}
+.meta li{font-size:.82rem;border:1px solid var(--rule);background:var(--card);border-radius:999px;padding:.2em .9em}
+
+/* dialogue */
+.talk{display:grid;gap:14px;margin:28px 0 32px;max-width:720px}
+.talk-title{font-family:var(--serif);font-weight:800;font-size:.95rem;color:var(--ink-2);margin:0}
+.say{display:grid;grid-template-columns:52px minmax(0,1fr);gap:12px;align-items:start}
+.say.r{grid-template-columns:minmax(0,1fr) 52px}
+.say.r .who{order:2}
+.who{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;font-family:var(--serif);font-weight:800;font-size:.8rem;color:#fff;line-height:1}
+.who.reimu{background:var(--red)}
+.who.marisa{background:var(--amber)}
+.bubble{background:var(--card);border:1px solid var(--rule);border-radius:14px;padding:.8em 1.05em;font-size:.97rem}
+.say:not(.r) .bubble{border-top-left-radius:4px}
+.say.r .bubble{border-top-right-radius:4px;background:var(--paper-2)}
+.bubble .name{display:block;font-size:.75rem;color:var(--ink-2);margin-bottom:.1em}
+
+/* figures */
+figure.dia{margin:26px 0;background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:16px}
+figure.dia .scroll{overflow-x:auto}
+figure.dia svg{display:block;min-width:680px;width:100%;height:auto}
+figure.dia figcaption{font-size:.85rem;color:var(--ink-2);margin-top:10px}
+.dia text{font-family:var(--sans);font-size:12.5px;fill:var(--ink)}
+.dia .ttl{font-family:var(--serif);font-weight:800;font-size:14px}
+.dia .sub{font-size:11.5px;fill:var(--ink-2)}
+.dia .num{font-family:var(--serif);font-weight:800;font-size:18px;fill:var(--teal)}
+.dia .phase{font-family:var(--serif);font-weight:800;font-size:13px;fill:var(--ink-2)}
+.dia rect.box{fill:var(--paper-2);stroke:var(--rule);stroke-width:1.2}
+.dia rect.box.g{fill:var(--teal-soft);stroke:var(--teal)}
+.dia rect.box.a{fill:var(--amber-soft);stroke:var(--amber)}
+.dia rect.box.n{fill:var(--navy-soft);stroke:var(--navy)}
+.dia rect.box.r{fill:var(--red-soft);stroke:var(--red)}
+.dia .ln{fill:none;stroke:var(--ink-2);stroke-width:1.4}
+.dia .ln.dash{stroke-dasharray:5 4}
+.dia .brace{fill:none;stroke:var(--rule);stroke-width:2}
+.dia .arrowhead{fill:var(--ink-2)}
+
+/* tables */
+.tbl{overflow-x:auto;margin:22px 0;background:var(--card);border:1px solid var(--rule);border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:.9rem;min-width:640px}
+th,td{padding:.75em 1em;text-align:left;vertical-align:top;border-bottom:1px solid var(--rule)}
+thead th{font-weight:700;background:var(--paper-2);font-size:.82rem;color:var(--ink-2)}
+tbody th{font-family:var(--serif);font-weight:800;width:17%}
+tr:last-child td,tr:last-child th{border-bottom:0}
+caption{caption-side:top;text-align:left;padding:.8em 1em .2em;font-size:.85rem;color:var(--ink-2)}
+
+/* callouts & panels */
+.note{border-left:4px solid var(--teal);background:var(--teal-soft);padding:14px 18px;border-radius:0 8px 8px 0;margin:22px 0;max-width:720px;font-size:.95rem}
+.note.warn{border-color:var(--red);background:var(--red-soft)}
+.note.idea{border-color:var(--amber);background:var(--amber-soft)}
+.note b{display:block;margin-bottom:.2em}
+.note p:last-child{margin:0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:16px;margin:22px 0}
+.panel{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:18px 20px}
+.panel h4{margin:0 0 .5em;font-size:1.03rem}
+.panel ul{margin:0;padding-left:1.2em;font-size:.92rem}
+.panel li{margin:.3em 0}
+.panel p{font-size:.92rem;margin:0}
+.rules{list-style:none;padding:0;margin:22px 0;counter-reset:r;max-width:760px}
+.rules li{position:relative;padding:0 0 22px 56px;border-left:2px solid var(--rule);margin-left:18px}
+.rules li:last-child{border-left-color:transparent}
+.rules li::before{counter-increment:r;content:counter(r);position:absolute;left:-19px;top:-2px;width:36px;height:36px;border-radius:50%;background:var(--ink);color:var(--paper);display:grid;place-items:center;font-family:var(--serif);font-weight:800}
+.rules h4{margin:0 0 .3em;font-size:1.05rem}
+.rules p{margin:0;font-size:.93rem;color:var(--ink-2)}
+.checklist{columns:2 300px;column-gap:32px;margin:14px 0;padding:0;list-style:none;font-size:.93rem}
+.checklist li{break-inside:avoid;padding:.3em 0 .3em 1.7em;position:relative}
+.checklist li::before{content:"";position:absolute;left:0;top:.72em;width:12px;height:12px;border:2px solid var(--teal);border-radius:3px}
+.spectrum{display:grid;grid-template-columns:1fr 1fr;gap:0;margin:22px 0;border:1px solid var(--rule);border-radius:10px;overflow:hidden;max-width:760px}
+.spectrum div{padding:16px 18px;background:var(--card);font-size:.92rem}
+.spectrum div+div{border-left:1px solid var(--rule);background:var(--paper-2)}
+.spectrum h4{margin:0 0 .4em;font-size:1rem}
+@media (max-width:560px){.spectrum{grid-template-columns:1fr}.spectrum div+div{border-left:0;border-top:1px solid var(--rule)}}
+.sources{font-size:.9rem}
+.sources li{margin:.3em 0}
+footer{border-top:1px solid var(--rule);margin-top:40px;padding-top:24px;font-size:.82rem;color:var(--ink-2)}
+footer a{color:var(--ink-2)}
+.theme-toggle{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:5;background:var(--card);color:var(--ink);border:1px solid var(--rule);border-radius:999px;padding:.4em .9em;font:inherit;font-size:.82rem;cursor:pointer}
+/* --- page specific --- */
+:root{--amber-ink:#805808;--red-ink:#9A2C20}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--amber-ink:#E3B04F;--red-ink:#EE7A68}}
+:root[data-theme="dark"]{--amber-ink:#E3B04F;--red-ink:#EE7A68}
+.panel h3{margin:0 0 .5em;font-size:1.03rem}
+a.ev{display:inline-block;font-size:.72em;font-weight:700;line-height:1;padding:.25em .45em;margin:0 .15em;border-radius:4px;background:var(--navy-soft);color:var(--navy);text-decoration:none;vertical-align:.12em;white-space:nowrap}
+a.ev:hover{text-decoration:underline}
+.lbl{display:inline-block;font-size:.7em;font-weight:700;line-height:1;padding:.28em .5em;margin-right:.35em;border-radius:4px;vertical-align:.12em;white-space:nowrap}
+.lbl.inf{background:var(--amber-soft);color:var(--amber-ink);border:1px solid var(--amber)}
+.lbl.op{background:var(--teal-soft);color:var(--teal);border:1px solid var(--teal)}
+.lbl.sec{background:var(--paper-2);color:var(--ink-2);border:1px solid var(--rule)}
+.legend{display:flex;flex-wrap:wrap;gap:10px 18px;font-size:.88rem;margin:10px 0 0;padding:0;list-style:none}
+.tldr{background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:20px 22px;margin:22px 0;max-width:760px}
+.tldr h3{margin:0 0 .6em;font-size:1.08rem}
+.tldr ol{margin:0;padding-left:1.3em}
+.tldr li{margin:.45em 0}
+.vs{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:22px 0}
+.vs .panel h3 .tag{font-family:var(--sans);font-size:.72rem;font-weight:700;padding:.15em .6em;border-radius:999px;margin-left:.4em;vertical-align:.15em}
+.vs .no h3 .tag{background:var(--red-soft);color:var(--red-ink)}
+.vs .yes h3 .tag{background:var(--teal-soft);color:var(--teal)}
+@media (max-width:640px){.vs{grid-template-columns:1fr}}
+.principle{background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:6px 22px 14px;margin:28px 0;max-width:760px}
+.principle h3{margin-top:1em}
+.principle .why,.principle .how,.principle .pit{font-size:.94rem}
+.principle dl{margin:10px 0 0}
+.principle dt{font-weight:700;font-size:.85rem;color:var(--ink-2);margin-top:.9em}
+.principle dd{margin:.2em 0 0}
+.principle ul{margin:.3em 0 0;padding-left:1.2em}
+.principle li{margin:.25em 0}
+pre.code{background:var(--paper-2);border:1px solid var(--rule);border-radius:8px;padding:12px 14px;overflow-x:auto;font-size:.82rem;line-height:1.6;max-width:760px}
+pre.code code{background:none;padding:0}
+/* self check */
+.diag{margin:22px 0;max-width:820px}
+.diag fieldset{border:1px solid var(--rule);border-radius:12px;background:var(--card);padding:10px 20px 16px;margin:0 0 16px}
+.diag legend{font-family:var(--serif);font-weight:800;padding:0 .4em;font-size:1.02rem}
+.diag label{display:grid;grid-template-columns:22px minmax(0,1fr);gap:8px;align-items:start;padding:.4em 0;font-size:.93rem;border-bottom:1px dashed var(--rule);cursor:pointer}
+.diag label:last-of-type{border-bottom:0}
+.diag input[type=checkbox]{width:18px;height:18px;margin:.3em 0 0;accent-color:var(--teal)}
+.diag .lv{font-size:.7rem;font-weight:700;color:var(--ink-2);background:var(--paper-2);border-radius:4px;padding:.1em .4em;margin-right:.4em}
+.diag-out{background:var(--teal-soft);border:1px solid var(--teal);border-radius:12px;padding:14px 18px;margin:0 0 16px}
+.diag-out h3{margin:0 0 .4em;font-size:1.02rem}
+.diag-out table{min-width:0}
+.tbl:focus-visible,figure.dia .scroll:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.diag-out td,.diag-out th{padding:.45em .7em}
+.diag-out .bar{display:block;height:8px;border-radius:4px;background:var(--rule);overflow:hidden;margin-top:.3em;min-width:80px}
+.diag-out .bar i{display:block;height:100%;background:var(--teal);width:0}
+@media (prefers-reduced-motion: no-preference){.diag-out .bar i{transition:width .3s ease}}
+.btn{font:inherit;font-size:.85rem;background:var(--card);color:var(--ink);border:1px solid var(--rule);border-radius:999px;padding:.35em 1em;cursor:pointer}
+.ledger td,.ledger th{font-size:.82rem}
+.ledger td:first-child{white-space:nowrap;font-weight:700}
+.ledger tbody th{width:auto;font-family:var(--sans);font-weight:700;font-size:.82rem;white-space:nowrap}
+.ledger tr:target{background:var(--amber-soft)}
+.ledger-wrap{max-height:none}
+.antis{list-style:none;padding:0;margin:22px 0;display:grid;gap:14px;max-width:780px}
+.antis li{background:var(--card);border:1px solid var(--rule);border-left:4px solid var(--red);border-radius:0 10px 10px 0;padding:12px 18px}
+.antis h3{margin:0 0 .3em;font-size:1rem}
+.antis p{margin:.2em 0;font-size:.92rem}
+.antis .fix{color:var(--teal)}
+.antis .fix b{font-weight:700}
+.steps-tl{list-style:none;padding:0;margin:22px 0;max-width:780px}
+.steps-tl>li{border:1px solid var(--rule);background:var(--card);border-radius:12px;padding:6px 20px 14px;margin-bottom:16px}
+.steps-tl h3{margin:.8em 0 .4em;font-size:1.08rem}
+.steps-tl .when{font-size:.78rem;font-weight:700;color:var(--teal)}
+.steps-tl ul{margin:.2em 0 .6em;padding-left:1.2em;font-size:.93rem}
+.steps-tl p{font-size:.93rem}
+.maturity td{font-size:.84rem}
+.maturity thead th:first-child{width:12%}
+</style>
+</head>
+<body>
+<button class="theme-toggle" id="themeBtn" type="button">表示テーマ切替</button>
+<div class="shell">
+<nav class="toc" aria-label="目次">
+  <p>目次</p>
+  <ol>
+    <li><a href="#summary">結論を先に</a></li>
+    <li><a href="#words">言葉の使われ方</a></li>
+    <li><a href="#debate">言えるのか、言えないのか</a></li>
+    <li><a href="#evidence">証拠の地図</a></li>
+    <li><a href="#dev">開発環境の軸</a></li>
+    <li><a href="#data">データの軸</a></li>
+    <li><a href="#org">組織の軸</a></li>
+    <li><a href="#usecases">用途別の当てはめ</a></li>
+    <li><a href="#maturity">成熟度と自己診断</a></li>
+    <li><a href="#anti">アンチパターン</a></li>
+    <li><a href="#roadmap">導入ステップ</a></li>
+    <li><a href="#measure">何を測るか</a></li>
+    <li><a href="#faq">よくある疑問</a></li>
+    <li><a href="#view">筆者の見解</a></li>
+    <li><a href="#sources">出典台帳</a></li>
+  </ol>
+</nav>
+<main>
+<header class="hero">
+  <p class="kicker">AI開発フロー ／ 調査と考察</p>
+  <h1>「AI ready」は宣言ではなく、測り続けるもの</h1>
+  <p class="lede">「うちの環境はAI readyだ」と言える条件はあるのか。それとも、この言葉は売り文句にすぎないのか。研究論文、業界調査、ツール提供元の公式ドキュメント、実践者のブログ、Hacker Newsの議論までを横断して、開発環境・データ・組織の3つの軸から整理しました。結論を先に言うと、AI readyは「状態」ではなく「特定の用途について、検証できる条件を満たし続けている関係」として扱えば、言えます。ただし、ひとつのスコアや一度きりの整備では言えません。</p>
+  <ul class="meta" aria-label="このページの前提">
+    <li>調査日：2026-10-05</li>
+    <li>対象：開発環境・データ・組織</li>
+    <li>想定読者：AIコーディングを使い始めたチームのエンジニアとEM</li>
+    <li>読了目安：約100分（章ごとに独立して読めます）</li>
+  </ul>
+</header>
+
+<section class="block" id="summary" aria-labelledby="h-summary">
+  <div class="prose">
+    <h2 id="h-summary">結論を先に</h2>
+    <p>このページは長いので、要点を最初にまとめます。各項目の根拠は後の章で、出典IDつきで説明します。</p>
+  </div>
+  <div class="tldr">
+    <h3>7つの要点</h3>
+    <ol>
+      <li><strong>「AI ready」には共通の定義がない。</strong>調査会社はデータの話として、ネットワーク機器ベンダーはインフラと組織の話として、開発ツールの提供元はリポジトリの話として、それぞれ別の意味で使っています。まず「何について、何のためのreadyか」を決めないと議論がかみ合いません。</li>
+      <li><strong>単一のスコアでは言えない。</strong>Gartnerの定義そのものが「用途に対して代表的なデータか」で決まり、一般的に高品質なデータでもAI readyとは限らないとしています<a class="ev" href="#e02">E-02</a>。準備度の枠組みの多くは現状を記述するだけで、次へ進む方法を示していないという批判もあります<a class="ev" href="#e27">E-27</a>。</li>
+      <li><strong>用途ごとに、検証できる条件として言えば意味を持つ。</strong>「このリポジトリのバグ修正タスクなら、エージェントが人の介入なしにテストで合否を判定できる」のように書けば、確かめられ、改善できます。Factoryの成熟度モデルのように、測定可能な基準として提示する動きも出ています<a class="ev" href="#e19">E-19</a>。</li>
+      <li><strong>AIは土台を増幅する。</strong>DORAは、AIの導入が強いチームの強みも弱いチームの弱みも増幅すると報告しています<a class="ev" href="#e05">E-05</a>。個人の作業量は増えても、レビュー待ちが増えて組織の成果に結びつかない例も観測されています<a class="ev" href="#e34">E-34</a>。</li>
+      <li><strong>開発環境で最も効くのは「検証ループ」。</strong>テスト、型、lint、起動できる環境、観測できるログなど、エージェントが自分で合否を確かめられる仕組みが中心です<a class="ev" href="#e16">E-16</a><a class="ev" href="#e18">E-18</a>。説明ファイル（AGENTS.md等）は効果の研究結果が割れており、短く、地図として書くのが現時点の妥当な線です<a class="ev" href="#e12">E-12</a><a class="ev" href="#e13">E-13</a><a class="ev" href="#e15">E-15</a>。</li>
+      <li><strong>組織とデータが追いつかないと、個人の加速は消える。</strong>成果を出している組織は全体の約6〜13%にとどまり、共通して業務フローの再設計、測定、経営の関与があると報告されています<a class="ev" href="#e03">E-03</a><a class="ev" href="#e04">E-04</a>。</li>
+      <li><strong>AI readyは一度きりの整備ではなく、運用である。</strong>コンテキストもルールも腐ります。測る、直す、記録するというループを回し続けることが、最も実践的な定義です。</li>
+    </ol>
+  </div>
+  <div class="prose">
+    <h3>このページの読み方</h3>
+    <p>本文では、主張の性質を次のラベルで区別しています。出典のある事実には出典ID（<a class="ev" href="#e01">E-01</a>の形式）を付け、ページ末尾の出典台帳から原典へ辿れるようにしました。出典の多くは英語の一次情報ですが、一部は一次情報にアクセスできなかったため要約記事を使っています。その場合は台帳の種別欄に「二次」と明記しています。</p>
+    <ul class="legend" aria-label="ラベルの凡例">
+      <li><a class="ev" href="#e01">E-01</a>出典で確認できる事実</li>
+      <li><span class="lbl inf">推論</span>複数の事実から筆者が導いたこと</li>
+      <li><span class="lbl op">考察</span>筆者の評価や提案</li>
+    </ul>
+    <p>数字はそれぞれ調査の対象・期間・定義が異なります。異なる調査の数字を並べて単純に比較することはできないため、比較している箇所では前提の違いも併記しています。</p>
+  </div>
+  <div class="talk">
+    <div class="say"><div class="who reimu" aria-hidden="true">霊夢</div><div class="bubble"><span class="name">霊夢</span>最近「AI readyな環境を作ろう」ってよく聞くけど、結局何をすればAI readyなの？</div></div>
+    <div class="say r"><div class="who marisa" aria-hidden="true">魔理沙</div><div class="bubble"><span class="name">魔理沙</span>そこが一番ややこしいところなんだぜ。言ってる人によって指してるものが違う。データの話だったり、ネットワークの話だったり、リポジトリにAGENTS.mdを置く話だったりする。</div></div>
+    <div class="say"><div class="who reimu" aria-hidden="true">霊夢</div><div class="bubble"><span class="name">霊夢</span>じゃあ「AI ready」なんて言えないってこと？</div></div>
+    <div class="say r"><div class="who marisa" aria-hidden="true">魔理沙</div><div class="bubble"><span class="name">魔理沙</span>「全部まとめてAI ready」とは言えない。でも「この用途なら、この条件を満たしてる」とは言えるし、それなら測って直せる。このページは、その言い方を作るための材料集だと思ってくれ。</div></div>
+  </div>
+</section>
+
+<section class="block" id="words" aria-labelledby="h-words">
+  <div class="prose">
+    <h2 id="h-words">「AI ready」という言葉は、誰が何の意味で使っているか</h2>
+    <p>最初に、言葉の使われ方を整理します。同じ「AI ready」でも、使う主体によって対象がまったく違います。ここを混ぜたまま「うちはAI readyか」を議論すると、データ基盤の担当者とアプリ開発者と経営層が、それぞれ別のものを思い浮かべたまま話すことになります。</p>
+
+    <h3>調査会社の文脈：AI-ready data</h3>
+    <p>この言葉を広めた代表的な主体はGartnerです。Gartnerは2025年2月、データ管理のリーダー1,203人への調査（2024年7月実施）をもとに、63%の組織がAIのためのデータ管理の実践を持っていないか、持っているか分からないと回答したと発表しました。あわせて、AI-readyなデータに支えられていないAIプロジェクトの60%が2026年までに放棄されると予測しています<a class="ev" href="#e01">E-01</a>。</p>
+    <p>ここで重要なのは、Gartnerの定義が「データ一般の品質」ではなく「用途」を起点にしていることです。AI-readyなデータとは、特定の用途に対して代表性があり、それを揃え（align）、適格性を確かめ（qualify）、統制する（govern）ためのメタデータがあるデータだとされます。さらに、分析の観点で「きれいな」データがAI-readyとは限らず、AIモデルには分析者なら取り除くような誤りや外れ値を含んだ代表的なデータが必要な場合がある、とまで書いています<a class="ev" href="#e02">E-02</a>。</p>
+
+    <h3>インフラ・ネットワークの文脈：AI Readiness Index</h3>
+    <p>Ciscoは2023年から「AI Readiness Index」を毎年公表しています。2025年版は30の市場、26の業種の上級ITリーダーとビジネスリーダー8,000人を対象とし、最も準備が整った「Pacesetters」は約13%で、この割合は3年間ほぼ変わっていないとしています<a class="ev" href="#e03">E-03</a>。ここでの準備度は、AIのロードマップや変更管理の計画、AIの成長を見込んだネットワーク設計、ユースケースを量産する仕組み、投資効果の測定、AI特有の脅威への備えといった、戦略・インフラ・運用・セキュリティを束ねた指標です。</p>
+    <p>Ciscoはさらに「AIインフラ負債」という概念を提示しています。先送りされたアップグレードや資金不足のアーキテクチャといった妥協の蓄積が、時間とともにAIの価値を削っていくという考え方です<a class="ev" href="#e03">E-03</a>。技術的負債の延長線上でAI readyを捉えている点は、後で触れる開発環境の議論と通じています。</p>
+
+    <h3>開発ツールの文脈：Agent Readiness</h3>
+    <p>AIコーディングエージェントの提供元は、リポジトリそのものの準備度を語ります。Factoryは2026年1月に「Agent Readiness」を発表し、コードベースを9つの技術的な柱と5段階の成熟度で評価する仕組みを公開しました<a class="ev" href="#e19">E-19</a>。OpenAIは、人が1行も手で書かずに約100万行のプロダクトを作った社内実験を「ハーネスエンジニアリング」として公開し、エージェントがリポジトリを読み解ける状態を作ることが中心的な仕事になったと述べています<a class="ev" href="#e16">E-16</a>。AnthropicやGitHubも、エージェントが成果を出しやすい環境の条件を公式ドキュメントとして整理しています<a class="ev" href="#e18">E-18</a><a class="ev" href="#e23">E-23</a>。</p>
+    <p>この文脈を後押ししたのが標準化の動きです。2025年12月、Linux FoundationはAgentic AI Foundationを設立し、AnthropicのModel Context Protocol（MCP）、OpenAIのAGENTS.md、BlockのGooseが最初のプロジェクトとして寄贈されました。発表時点でAGENTS.mdは4万以上のオープンソースプロジェクトとエージェントで採用されていたとされます<a class="ev" href="#e51">E-51</a>。</p>
+
+    <h3>研究者の文脈：組織の準備度</h3>
+    <p>経営学や情報システム学では、AI導入に対する「組織の準備度（organizational readiness）」が以前から研究されています。2026年の論文は、AI readinessを技術の購入ではなく組織学習の問題として捉え直すべきだと主張し、既存の準備度フレームワーク15件を分析しています<a class="ev" href="#e27">E-27</a>。この論文は後の章で詳しく扱います。</p>
+
+    <h3>日本での使われ方</h3>
+    <p>日本語圏でも「AI Ready」は、データ基盤、クラウド戦略、開発組織のそれぞれの文脈で使われています。IVRyのデータ基盤チームは2026年7月の登壇で、セマンティックレイヤーを中心に「AI Readyなはず」として設計したアーキテクチャが、運用してみると課題を生んだ経緯を共有しています<a class="ev" href="#e25">E-25</a>。Kyndrylの日本版調査では、IT基盤の準備が十分と答えた日本企業は31%で、グローバル平均の40%を下回りました<a class="ev" href="#e32">E-32</a>。</p>
+  </div>
+
+  <div class="tbl" tabindex="0" role="region" aria-label="表1（横にスクロールできます）">
+    <table>
+      <caption>表1　「AI ready」の主な使われ方（主体・対象・測る問いの違い）</caption>
+      <thead><tr><th scope="col">文脈</th><th scope="col">代表的な主体</th><th scope="col">対象</th><th scope="col">測ろうとしている問い</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">データ</th><td>Gartner、データ基盤ベンダー</td><td>データとメタデータ</td><td>この用途に対して、代表的で、検証でき、統制されたデータがあるか<a class="ev" href="#e02">E-02</a></td></tr>
+        <tr><th scope="row">インフラ・組織</th><td>Cisco、Kyndryl</td><td>戦略、ネットワーク、運用、セキュリティ</td><td>AIを試験導入から本番へ移し、価値を測れる体制があるか<a class="ev" href="#e03">E-03</a></td></tr>
+        <tr><th scope="row">経営成果</th><td>McKinsey</td><td>業務フロー、経営の関与、投資</td><td>AIが利益に結びつく組織の特徴は何か<a class="ev" href="#e04">E-04</a></td></tr>
+        <tr><th scope="row">開発環境</th><td>Factory、OpenAI、Anthropic、GitHub</td><td>リポジトリ、CI、実行環境</td><td>エージェントが自力で作業し、結果を検証できるか<a class="ev" href="#e19">E-19</a><a class="ev" href="#e16">E-16</a></td></tr>
+        <tr><th scope="row">ソフトウェア開発の組織</th><td>DORA</td><td>チームの能力と文化</td><td>AIの効果を増幅する土台があるか<a class="ev" href="#e06">E-06</a></td></tr>
+        <tr><th scope="row">学術</th><td>組織研究</td><td>組織の学習能力</td><td>準備度は静的な状態か、発達する能力か<a class="ev" href="#e27">E-27</a></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="prose">
+    <p><span class="lbl inf">推論</span>表1を並べると、主体ごとに「AI ready」の範囲が自社の製品やサービスの範囲と重なっていることが分かります。データ基盤のベンダーはデータを、ネットワーク機器のベンダーはネットワークを、エージェントの提供元はリポジトリを、それぞれ準備度の中心に置いています。これは不誠実というより、各社が見えている範囲で問題を語っている結果です。ただし読み手の側は、ある調査の「AI ready」が何を含み、何を含まないかを確認してから使う必要があります。</p>
+    <p>このページでは、以降「AI ready」を次の3つの軸に分けて扱います。</p>
+    <ul>
+      <li><strong>開発環境の軸</strong>：リポジトリ、ビルド、テスト、CI、実行環境、権限。エージェントが作業し、自分で結果を確かめられるか。</li>
+      <li><strong>データの軸</strong>：AIが参照・学習・検索するデータとその意味づけ。用途に対して代表的で、意味が揃い、権限が守られているか。</li>
+      <li><strong>組織の軸</strong>：方針、業務フロー、レビュー、人材、規制対応。AIが生んだ変化を受け止めて、成果に変えられるか。</li>
+    </ul>
+  </div>
+  <div class="talk">
+    <div class="say"><div class="who reimu" aria-hidden="true">霊夢</div><div class="bubble"><span class="name">霊夢</span>同じ言葉なのに、データの人とネットワークの人とエージェントの人で全然違う話をしてるのね。</div></div>
+    <div class="say r"><div class="who marisa" aria-hidden="true">魔理沙</div><div class="bubble"><span class="name">魔理沙</span>そうなんだ。だから社内で「AI readyにしよう」って言い出す前に、どの軸の話か、何に使うための準備かを先に決めておかないと、会議が空回りするんだぜ。</div></div>
+  </div>
+</section>
+
+<section class="block" id="debate" aria-labelledby="h-debate">
+  <div class="prose">
+    <h2 id="h-debate">「AI readyだ」と言えるのか、言えないのか</h2>
+    <p>ここが本題です。結論から言うと、両方の立場にそれぞれ根拠があります。まず「言えない」とする側の論拠を4つ、次に「言える」とする側の論拠を4つ取り上げ、最後に両者を両立させる言い方を提案します。</p>
+  </div>
+
+  <div class="vs">
+    <div class="panel no">
+      <h3>言えない側の論拠<span class="tag">懐疑</span></h3>
+      <ul>
+        <li>準備度は用途に依存し、汎用の合格ラインがない</li>
+        <li>静的なチェックリストは現状を記述するだけで、変化を捉えない</li>
+        <li>「準備できたはず」の状態が、使われることで崩れる</li>
+        <li>同じ施策の効果が、条件や測り方で逆転する</li>
+      </ul>
+    </div>
+    <div class="panel yes">
+      <h3>言える側の論拠<span class="tag">肯定</span></h3>
+      <ul>
+        <li>成果を出す組織と出せない組織の差は実在する</li>
+        <li>測定可能な基準と段階が提案されている</li>
+        <li>効く土台は、昔から知られる良いエンジニアリングと重なる</li>
+        <li>エージェントの制約が明確なので、必要条件を導ける</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="prose">
+    <h3>言えない側①：準備度は用途に依存する</h3>
+    <p>最も根本的な論拠は、定義そのものです。Gartnerは、AI-readyなデータとは「用途に対して代表的」なデータであり、伝統的な基準で高品質なデータがそのままAI-readyになるわけではないと明言しています<a class="ev" href="#e02">E-02</a>。不正検知モデルを学習させるなら、分析では除外するような異常値こそが必要になる、というのが典型例です。</p>
+    <p>開発環境でも同じことが言えます。GitHubは、コーディングエージェントに任せるべきでない作業として、複雑なリファクタリング、セキュリティ上重要な作業、要件があいまいな作業、障害対応を挙げています<a class="ev" href="#e23">E-23</a>。つまり、同じリポジトリでも「依存ライブラリの小さな更新なら任せられるが、認証まわりの設計変更は任せられない」ということが普通に起こります。用途を指定しない「このリポジトリはAI readyだ」という言明は、どの作業についての話なのかが分からないため、検証しようがありません。</p>
+
+    <h3>言えない側②：静的なチェックリストは変化を捉えない</h3>
+    <p>McClureとGerdauによる2026年の論文は、AI readinessを技術の購入ではなく組織学習の問題として捉えるべきだと主張しています。分析した既存の準備度フレームワーク15件のうち13件は現状を評価する記述型で、段階の間をどう進むかを示す処方的な指針を持つものは6件にとどまったと報告しています<a class="ev" href="#e27">E-27</a>。チェックリストは「今、何を持っているか」を測れても、「変化に合わせて学習し続けられるか」は測れない、という批判です。</p>
+    <p>この論文は、2024年に世界で2,523億ドルがAIに投資されたにもかかわらず、大きな利益への影響を得た企業は6%にとどまったという数字を出発点にしています。資金や技術が足りないのではなく、組織の側に原因があるという立場です<a class="ev" href="#e27">E-27</a>。</p>
+
+    <h3>言えない側③：準備できたはずの状態が、使われることで崩れる</h3>
+    <p>IVRyのデータ基盤チームの事例は示唆に富みます。人やダッシュボードがセマンティックレイヤーを参照し、用途ごとのデータマートで正確さを保つ3層構造を「AI Readyなはず」として設計しました。ところが運用してみると、利用者がAIを使ってセマンティックレイヤーを迂回し、生データから独自のロジックを組み立てるようになり、「人によって見ている数字が違う」問題が再発しました。さらに、各自がAIで問題を解決するためデータチームへの依頼が減り、資産として整備する工程が消えてしまったこと、個人の作業は速くなってもトークン費用や処理費用を含めた組織全体の費用対効果が不明瞭になったことが報告されています<a class="ev" href="#e25">E-25</a>。</p>
+    <p><span class="lbl inf">推論</span>この事例は、AI readyが「構築した時点の性質」ではなく「使われ方との関係」で決まることを示しています。AIが便利になるほど、整備された経路を通らずに目的を達成する手段が増えます。迂回のほうが楽なら、準備された基盤は使われなくなります。</p>
+
+    <h3>言えない側④：同じ施策の効果が、条件や測り方で逆転する</h3>
+    <p>「AGENTS.mdを置けばAI ready」という単純な理解は、研究によって揺らいでいます。ETH ZurichのGloaguenらは2026年2月、SWE-benchの課題と、開発者がコンテキストファイルをコミットしているリポジトリの課題の両方で複数のエージェントを評価しました。その結果、コンテキストファイルはリポジトリの説明を何も与えない場合と比べてタスクの成功率を下げ、推論コストを20%以上増やしたと報告しています。LLMが生成したファイルでも、開発者が書いたファイルでも、エージェントの探索を広げる傾向が見られました<a class="ev" href="#e12">E-12</a>。</p>
+    <p>一方、Lullaらは同じ2026年1月に、10のリポジトリと124のプルリクエストを使い、CodexとClaude CodeをAGENTS.mdありとなしで実行した研究を発表しました。AGENTS.mdがあると実行時間の中央値が28.64%短くなり、出力トークンが16.58%減り、タスクの完了度は同程度だったとしています<a class="ev" href="#e13">E-13</a>。</p>
+    <p>さらに、Agentic AI Foundationのブログで公開された検証では、1回だけの比較ではAGENTS.mdありのほうが44%遅く、トークンも41%多いという結果が出ました。ところが5回実行した中央値で比べると結論が逆転し、あいまいなタスクでは実行時間が27%速く、トークンが24%少なく、差分も26%小さくなりました<a class="ev" href="#e15">E-15</a>。</p>
+    <p><span class="lbl inf">推論</span>3つの研究は、対象タスク（ベンチマークの課題か、実際のPRか）、測定指標（成功率か、効率か）、ファイルの書き方（網羅的か、最小限か）、試行回数が異なります。そのため「AGENTS.mdは効く／効かない」という二択の結論は、どちらも引き出せません。言えるのは、同じ施策でも書き方と条件によって効果の向きが変わるため、「これを置いたからready」というチェック項目は成立しにくい、ということです。</p>
+  </div>
+
+  <div class="talk">
+    <div class="say"><div class="who reimu" aria-hidden="true">霊夢</div><div class="bubble"><span class="name">霊夢</span>え、AGENTS.mdって逆効果のこともあるの？みんな置いてるのに。</div></div>
+    <div class="say r"><div class="who marisa" aria-hidden="true">魔理沙</div><div class="bubble"><span class="name">魔理沙</span>ETHの研究は「要らない要求まで書くと、エージェントがそれに従おうとして余計に探索する」って結論なんだ。だから最小限の要求だけ書けって言ってる。逆に効率が上がった研究は、実際の作業でかかった時間とトークンを測ってる。測ってるものが違うんだぜ。</div></div>
+    <div class="say"><div class="who reimu" aria-hidden="true">霊夢</div><div class="bubble"><span class="name">霊夢</span>1回測っただけだと結論が逆になる、っていうのも怖いわね。</div></div>
+    <div class="say r"><div class="who marisa" aria-hidden="true">魔理沙</div><div class="bubble"><span class="name">魔理沙</span>エージェントの実行時間やトークン数は、1回ごとのばらつきが大きいからな。自分のチームで効果を確かめるときも、何回か回して中央値で見ないと、たまたまの結果に振り回されるぜ。</div></div>
+  </div>
+
+  <div class="prose">
+    <h3>言える側①：成果を出す組織と出せない組織の差は実在する</h3>
+    <p>準備度に意味がないなら、準備した組織とそうでない組織の成果に差は出ないはずです。しかし調査は一貫して差を示しています。CiscoのPacesettersは、他の組織と比べてパイロットを本番に移す可能性が4倍、測定可能な価値を報告する可能性が50%高いとされます<a class="ev" href="#e03">E-03</a>。McKinseyの2026年の調査では、AIで利益の5%以上の影響を得ている「ハイパフォーマー」は回答者の約6%で、その73%が業務フローを根本から再設計していたのに対し、他の組織では25%でした<a class="ev" href="#e04">E-04</a>。</p>
+    <p>ただし、これらは相関であって因果ではありません。もともと実行力のある組織が、準備も成果も両方うまくやっているだけという可能性は排除できません。それでも「準備度の高い組織に共通する行動がある」という観察は、少なくとも何を真似るべきかの手がかりになります。</p>
+
+    <h3>言える側②：測定可能な基準と段階が提案されている</h3>
+    <p>Factoryの成熟度モデルは、スタイルと検証、ビルドシステム、テスト、ドキュメント、開発環境、デバッグと観測性、セキュリティ、タスクの発見、プロダクトと実験の9つの柱について、5段階の成熟度を定めています。各段階は前の段階の基準の80%を満たすことで到達できるとされ、リポジトリ全体の基準（ブランチ保護があるか等）とアプリケーション単位の基準（各アプリにlinterが設定されているか等）を区別しています<a class="ev" href="#e19">E-19</a>。</p>
+    <p>DORAは2025年に、AIの効果を増幅する7つの能力を「AI Capabilities Model」としてまとめました。明確で周知されたAI方針、健全なデータエコシステム、AIがアクセスできる社内データ、強いバージョン管理の実践、小さなバッチでの作業、ユーザー中心の姿勢、質の高い社内プラットフォームの7つです<a class="ev" href="#e05">E-05</a><a class="ev" href="#e06">E-06</a>。</p>
+
+    <h3>言える側③：効く土台は、良いエンジニアリングと重なる</h3>
+    <p>Matt Pocockは、エージェントにとって扱いやすいコードベースの条件として、単純なインターフェースの裏に多くの実装を隠す「深いモジュール」、テストをガードレールにした「グレーボックス」のモジュール、段階的に詳細へ降りられるディレクトリ構成、即座に結果が返るフィードバックループを挙げています。そして、これは新しいことではなく、良いコードベースが20年来そう設計されてきた方法だと述べています<a class="ev" href="#e20">E-20</a>。DORAの7能力も、バージョン管理や小さなバッチのように、AI以前からソフトウェア開発の成果と結びつけられてきた実践を多く含みます<a class="ev" href="#e05">E-05</a>。</p>
+    <p><span class="lbl inf">推論</span>流行語としての「AI ready」には中身がないように見えても、その中核にある条件は時間がたっても変わりにくいものです。だからこそ、準備度の中核部分は安定した基準として語れます。</p>
+
+    <h3>言える側④：エージェントの制約が明確なので、必要条件を導ける</h3>
+    <p>LLMには、コンテキストが長くなるほど情報を正確に扱えなくなる「コンテキストの劣化（context rot）」という性質があり、Anthropicはコンテキストを有限の「注意の予算」として扱うべきだと説明しています<a class="ev" href="#e17">E-17</a>。また、エージェントは作業が「終わったように見える」時点で止まるため、合否を返す検証手段がなければ人が検証役を担うしかない、とClaude Codeの公式ドキュメントは述べています<a class="ev" href="#e18">E-18</a>。</p>
+    <p>こうした制約が分かっていれば、「エージェントが自分で検証できる」「必要な情報だけを必要なときに取得できる」といった必要条件を導けます。必要条件が導けるなら、それを満たしているかどうかは確かめられます。</p>
+  </div>
+
+  <div class="prose">
+    <h3>両立させる言い方：AI readyは「用途 × 自律度 × 検証可能性」の関係</h3>
+    <p><span class="lbl op">考察</span>両方の論拠を踏まえると、AI readyを「環境が持つ性質」として扱うのをやめ、「ある用途を、ある自律度でAIに任せたときに、結果を検証でき、劣化を検知できる関係」として扱うのが最も筋が通ります。Karpathyが言う「自律度のスライダー」、つまり補助から完全自律までどこに設定するかを用途ごとに選ぶという考え方とも整合します<a class="ev" href="#e29">E-29</a>。</p>
+    <p>具体的には、AI readyの主張を次の形の文で書くことを提案します。</p>
+  </div>
+  <pre class="code"><code>〈用途〉について、
+〈自律度〉でAIに任せたとき、
+〈検証条件〉によって結果の合否を人の介入なしに判定でき、
+〈観測指標〉によって品質の劣化を検知できる。</code></pre>
+  <div class="prose">
+    <p>例えば次のようになります。</p>
+    <ul>
+      <li>「依存ライブラリのパッチ更新について、PR作成までをエージェントに任せたとき、CIの単体・結合テストと契約テストで合否を判定でき、マージ後の変更失敗率で劣化を検知できる」</li>
+      <li>「売上のKPIに関する質問について、社員がAIに直接聞いたとき、セマンティックレイヤーで定義済みの指標だけを使って回答させ、定義外の質問はエラーとして返せる」</li>
+      <li>「障害の一次調査について、エージェントにログ・メトリクス・トレースの読み取り権限だけを与えたとき、調査結果をインシデントの記録と突き合わせて評価できる」</li>
+    </ul>
+    <p>この書き方なら、「言える／言えない」を議論するのではなく、「この文が真かどうか」を確かめられます。真でなければ、どの部分（用途の絞り方、自律度、検証条件、観測指標）が足りないのかが分かります。</p>
+  </div>
+
+  <figure class="dia">
+    <div class="scroll" tabindex="0" role="region" aria-label="図1（横にスクロールできます）">
+    <svg viewBox="0 0 760 360" role="img" aria-labelledby="axis-title axis-desc">
+      <title id="axis-title">AI readyを構成する3つの軸と検証ループ</title>
+      <desc id="axis-desc">上段に「用途と自律度」の箱があり、そこから下へ開発環境・データ・組織の3つの箱に矢印が伸びる。3つの箱はそれぞれ下段の「検証ループ（測る、直す、記録する）」に矢印でつながり、検証ループから右側を通って上段の「用途と自律度」へ点線の矢印が戻る。用途を決めてから3軸を整え、検証の結果で用途と自律度を見直す循環を表す。</desc>
+      <defs>
+        <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="arrowhead"/></marker>
+      </defs>
+      <rect class="box a" x="210" y="16" width="340" height="62" rx="10"/>
+      <text class="ttl" x="380" y="42" text-anchor="middle">用途と自律度</text>
+      <text class="sub" x="380" y="62" text-anchor="middle">何を、どこまでAIに任せるか（起点）</text>
+
+      <path class="ln" d="M380 78 L380 100 L125 100 L125 128" marker-end="url(#ah)"/>
+      <path class="ln" d="M380 100 L380 128" marker-end="url(#ah)"/>
+      <path class="ln" d="M380 100 L635 100 L635 128" marker-end="url(#ah)"/>
+
+      <rect class="box g" x="30" y="130" width="190" height="96" rx="10"/>
+      <text class="ttl" x="125" y="158" text-anchor="middle">開発環境</text>
+      <text class="sub" x="125" y="180" text-anchor="middle">検証ループ・地図型の文脈</text>
+      <text class="sub" x="125" y="198" text-anchor="middle">再現できる環境・権限の境界</text>
+
+      <rect class="box n" x="285" y="130" width="190" height="96" rx="10"/>
+      <text class="ttl" x="380" y="158" text-anchor="middle">データ</text>
+      <text class="sub" x="380" y="180" text-anchor="middle">用途への代表性・意味の統一</text>
+      <text class="sub" x="380" y="198" text-anchor="middle">来歴・アクセス権限</text>
+
+      <rect class="box r" x="540" y="130" width="190" height="96" rx="10"/>
+      <text class="ttl" x="635" y="158" text-anchor="middle">組織</text>
+      <text class="sub" x="635" y="180" text-anchor="middle">方針・業務フローの再設計</text>
+      <text class="sub" x="635" y="198" text-anchor="middle">レビュー容量・学習の仕組み</text>
+
+      <path class="ln" d="M125 226 L125 268" marker-end="url(#ah)"/>
+      <path class="ln" d="M380 226 L380 268" marker-end="url(#ah)"/>
+      <path class="ln" d="M635 226 L635 268" marker-end="url(#ah)"/>
+
+      <rect class="box" x="30" y="270" width="700" height="62" rx="10"/>
+      <text class="ttl" x="380" y="296" text-anchor="middle">検証ループ：測る → 直す → 記録する</text>
+      <text class="sub" x="380" y="316" text-anchor="middle">合否を機械で判定し、劣化を観測し、学んだことを文脈とルールに戻す</text>
+
+      <path class="ln dash" d="M730 300 L750 300 L750 47 L552 47" marker-end="url(#ah)"/>
+      <text class="sub" x="744" y="180" text-anchor="end" transform="rotate(-90 744 180)">結果で見直す</text>
+    </svg>
+    </div>
+    <figcaption>図1　AI readyを構成する3つの軸と検証ループ（筆者作成）。上から下へは「用途を決めてから3軸を整える」順序を、右側の点線は「検証の結果で用途と自律度を見直す」流れを表します。3つの軸の箱の中の項目は代表例で、網羅ではありません。</figcaption>
+  </figure>
+
+  <div class="prose">
+    <p>図1の読み方を補足します。起点は上段の「用途と自律度」です。何をどこまで任せるかが決まって初めて、開発環境・データ・組織のそれぞれで何を整えるべきかが決まります。3つの軸は独立ではなく、例えばデータの権限設計は組織の方針に、開発環境の検証条件は組織のレビュー体制に依存します。図では簡単のために3つの箱を並べていますが、軸の間の相互作用は表しきれていません。</p>
+    <p>下段の検証ループが、このページで最も重要な要素です。AI readyが一度きりの状態ではなく関係である以上、関係が保たれているかを測り続ける仕組みが必要です。測った結果は、右側の点線のように用途と自律度の見直しに戻ります。検証で問題が多ければ自律度を下げ、問題がなければ任せる範囲を広げる、という調整です。</p>
+  </div>
+</section>
+
+<section class="block" id="evidence" aria-labelledby="h-evidence">
+  <div class="prose">
+    <h2 id="h-evidence">証拠の地図：何が分かっていて、何が分かっていないか</h2>
+    <p>ベストプラクティスに入る前に、AIの導入効果について現時点で何がどの程度分かっているかを整理します。「AI readyにすれば成果が出る」という前提そのものが、どこまで確かなのかを知っておくためです。</p>
+  </div>
+
+  <div class="tbl" tabindex="0" role="region" aria-label="表2（横にスクロールできます）">
+    <table>
+      <caption>表2　本ページで参照する主な定量調査（対象・規模・主な結果・注意点）</caption>
+      <thead><tr><th scope="col">調査</th><th scope="col">対象と規模</th><th scope="col">主な結果</th><th scope="col">読むときの注意</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">METR（2025）<a class="ev" href="#e07">E-07</a></th><td>経験豊富なOSS開発者16人、ランダム化比較試験</td><td>AIを使うと完了時間が19%長くなった。本人たちは約20%速くなると見込んでいた</td><td>大規模で歴史の長いリポジトリ。参加者の半数以上が使用ツールに不慣れ</td></tr>
+        <tr><th scope="row">METR（2026更新）<a class="ev" href="#e08">E-08</a></th><td>追試の設計変更の報告</td><td>AIなしで作業することを拒む開発者が増え、比較実験の信頼性が保てなくなった</td><td>新しい効果量は示されていない（二次情報）</td></tr>
+        <tr><th scope="row">Faros AI（2025）<a class="ev" href="#e34">E-34</a></th><td>1,255チーム、1万人超の開発者の業務データ</td><td>個人ではタスク完了21%増、マージされたPR98%増。一方でPRのレビュー時間は91%増。会社単位の成果指標との有意な相関はなし</td><td>ツールのテレメトリに基づく観察データ。相関分析</td></tr>
+        <tr><th scope="row">DORA（2025）<a class="ev" href="#e05">E-05</a></th><td>技術者約5,000人の調査</td><td>約90%がAIを利用。AI導入はスループットの向上と相関する一方、不安定さ（変更失敗や手戻り）の増加とも相関</td><td>自己申告ベースの調査</td></tr>
+        <tr><th scope="row">Anthropic社内（2025）<a class="ev" href="#e47">E-47</a></th><td>エンジニア・研究者132人の調査、53人の面談、20万件のClaude Code記録</td><td>業務の59%でClaudeを利用、自己申告の生産性は50%向上。完全に任せられるのは業務の0〜20%</td><td>AI企業の社員という特殊な母集団。生産性は自己申告</td></tr>
+        <tr><th scope="row">Stack Overflow（2025）<a class="ev" href="#e10">E-10</a></th><td>開発者4万8千件超の回答</td><td>84%がAIツールを利用中または利用予定。正確さを信頼しない人が46%（前年31%）。「ほぼ正しいが少し違う」出力への不満が66%</td><td>任意回答の調査</td></tr>
+        <tr><th scope="row">Veracode（2025）<a class="ev" href="#e36">E-36</a></th><td>100以上のLLM、80のコーディング課題</td><td>生成コードの45%にセキュリティ上の欠陥。Javaでは失敗率が70%超。モデルが大きくても安全性は大きく改善しない</td><td>課題設定に依存するベンチマーク</td></tr>
+        <tr><th scope="row">GitClear（2025）<a class="ev" href="#e37">E-37</a></th><td>2億1,100万行のコード変更</td><td>5行以上の重複ブロックが2024年に8倍。移動（リファクタリング）された行は39.9%減</td><td>AIの利用との因果は直接測っていない</td></tr>
+        <tr><th scope="row">Cisco（2025）<a class="ev" href="#e03">E-03</a></th><td>30市場のリーダー8,000人</td><td>準備が整ったPacesettersは約13%。パイロットを本番に移す可能性が4倍</td><td>ベンダーによる調査。準備度の定義はCisco独自</td></tr>
+        <tr><th scope="row">McKinsey（2026）<a class="ev" href="#e04">E-04</a></th><td>97か国1,719人</td><td>約9割が何らかの業務でAIを定常利用。全社展開は44%。EBITへの寄与を認めるのは37%。ハイパフォーマーは約6%</td><td>回答者の自己申告</td></tr>
+        <tr><th scope="row">MIT NANDA（2025）<a class="ev" href="#e09">E-09</a></th><td>公開事例300件超、面談52件、調査153件</td><td>生成AIの取り組みの95%で測定可能な事業収益が出ていない。原因は技術ではなく、システムが学習・適応しない「学習ギャップ」</td><td>規模の小さい調査。二次情報経由</td></tr>
+        <tr><th scope="row">IPA DX動向調査（2025年度）<a class="ev" href="#e33">E-33</a></th><td>日本企業</td><td>従業員1,001人以上の企業の約8割がAIを導入、100人以下は16.6%。効果は業務効率化が91.6%、売上・利益の向上は3.9%</td><td>日本企業全般でソフトウェア開発に限らない</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="prose">
+    <h3>分かっていること①：体感と実測はずれる</h3>
+    <p>METRの2025年の実験は、経験豊富な開発者が自分の熟知したリポジトリで作業した場合、AIを使ったほうが19%遅くなったと報告しました。参加者は事前に約20%速くなると予想しており、体感と実測が逆方向にずれていたことが注目されました。ただし、対象は平均10年以上の歴史を持つ大規模リポジトリで、参加者の56%は使用したエディタを使ったことがありませんでした。50時間以上の使用経験がある1人だけは速くなっていたことも報告されています<a class="ev" href="#e07">E-07</a>。</p>
+    <p>METRは2026年2月、追試の設計を変えると発表しました。AIなしで作業すること自体を拒む開発者が増え、比較対象の群が作れなくなったためです<a class="ev" href="#e08">E-08</a>。<span class="lbl inf">推論</span>これは「AIで速くなるかどうか」を厳密に測ることが、普及が進むほど難しくなっていることを示しています。チームでAI readyの効果を測るときも、AIを使う前と後の単純比較は成り立ちにくくなっています。</p>
+
+    <h3>分かっていること②：個人の加速は、組織の成果に自動ではつながらない</h3>
+    <p>Faros AIの分析では、AIの利用が多い開発者はより多くのタスクを完了し、より多くのPRをマージしていました。しかしPRは大きくなり（154%増）、レビュー時間は91%増え、開発者あたりのバグも9%増えていました。そして会社単位では、AIの導入とスループットや品質の改善との間に有意な相関が見られませんでした<a class="ev" href="#e34">E-34</a>。DORAも、AIの導入がスループットの向上と同時に不安定さの増加とも相関していると報告しています<a class="ev" href="#e05">E-05</a>。</p>
+    <p><span class="lbl inf">推論</span>ここから分かるのは、AIがコードを書く工程を速くすると、ボトルネックがレビュー、テスト、リリース、運用といった下流へ移るということです。開発環境だけをAI readyにしても、組織の軸が追いつかなければ成果は出ません。これは後の「組織の軸」の章の出発点になります。</p>
+
+    <h3>分かっていること③：生成コードの品質とセキュリティには、仕組みでの補強が要る</h3>
+    <p>Veracodeの評価では、生成コードの45%にセキュリティ上の欠陥があり、クロスサイトスクリプティングの防御には86%、ログインジェクションの防御には88%の確率で失敗していました。しかもモデルが大きく新しくなっても、安全性は大きく改善していませんでした<a class="ev" href="#e36">E-36</a>。GitClearは、重複コードが急増し、リファクタリングのためにコードを移動する行が減ったことを報告しています<a class="ev" href="#e37">E-37</a>。</p>
+    <p><span class="lbl inf">推論</span>モデルの進歩を待てば品質やセキュリティの問題が解決する、とは期待しにくいということです。静的解析、セキュリティテスト、重複検出といった機械的なチェックを検証ループに組み込むことが、AI readyの条件になります。</p>
+
+    <h3>分かっていること④：成果を出しているのは少数で、共通点がある</h3>
+    <p>Ciscoの約13%、McKinseyの約6%、MIT NANDAの約5%と、調査によって定義も母集団も違いますが、AIで明確な成果を出している組織が少数派であることは共通しています<a class="ev" href="#e03">E-03</a><a class="ev" href="#e04">E-04</a><a class="ev" href="#e09">E-09</a>。日本では、AIの効果が業務効率化にとどまり、売上・利益の向上まで届いている企業がごく少ないという結果が出ています<a class="ev" href="#e33">E-33</a>。</p>
+    <p>成果を出している組織の共通点として繰り返し挙がるのは、業務フローの再設計、経営層の関与、投資効果の測定、そしてAIを試すだけでなく本番へ移す仕組みです<a class="ev" href="#e03">E-03</a><a class="ev" href="#e04">E-04</a>。MIT NANDAは、多くの生成AIシステムがフィードバックを保持せず、文脈に適応せず、時間とともに改善しないことを失敗の主因に挙げています<a class="ev" href="#e09">E-09</a>。</p>
+
+    <h3>分かっていること⑤：現場は「任せきり」ではなく「監督つき」で使っている</h3>
+    <p>Stack Overflowの2026年4月のパルス調査（1,100人）では、63%がエージェントを完全な自動運転で動かすことはほとんど、または全くないと答え、60%が承認のないシステム変更をエージェントに禁じていました<a class="ev" href="#e11">E-11</a>。Anthropicの社内調査でも、完全に任せられる業務は0〜20%にとどまり、任せるのは検証しやすい作業や重要度の低い作業が中心でした<a class="ev" href="#e47">E-47</a>。</p>
+    <p>一方で、自律度を大きく上げている組織もあります。PostHogは、モノレポのPRのうちエージェントが作成したものが20%から70%に増え、月間のPR数が1月の1,441件から8月の4,869件に増えたと報告しています。その結果、エンジニアの仕事は「コードを書くこと」から「何を作るかを決め、エージェントの成果を評価し、開発の仕組みそのものを改善すること」へ移ったとしています<a class="ev" href="#e46">E-46</a>。</p>
+
+    <h3>まだ分かっていないこと</h3>
+    <ul>
+      <li><strong>因果関係</strong>：準備度の高さが成果を生むのか、成果を出せる組織がもともと準備も得意なのかは、ほとんどの調査で区別できていません。</li>
+      <li><strong>長期的な影響</strong>：AIが生成したコードの保守性や、スキルの衰えが数年単位でどう効いてくるかは、まだデータが乏しい段階です。Anthropicの調査でも、監督に必要なスキル自体が使わないことで衰える「監督のパラドックス」が懸念として挙がっています<a class="ev" href="#e47">E-47</a>。</li>
+      <li><strong>日本の開発現場に関する定量データ</strong>：日本企業全体のAI導入に関する調査はありますが、ソフトウェア開発のAI readyに絞った定量データは、今回の調査範囲では見つけられませんでした。</li>
+    </ul>
+  </div>
+  <div class="talk">
+    <div class="say"><div class="who reimu" aria-hidden="true">霊夢</div><div class="bubble"><span class="name">霊夢</span>個人は速くなってるのに、会社としては変わらないって、どういうこと？</div></div>
+    <div class="say r"><div class="who marisa" aria-hidden="true">魔理沙</div><div class="bubble"><span class="name">魔理沙</span>道路で言うと、車の速度を上げたのに料金所の数がそのまま、って感じだな。PRが倍に増えても、レビューする人の時間は増えない。むしろPRが大きくなって1件あたりの確認が重くなる。だから渋滞が下流に移るだけなんだぜ。</div></div>
+    <div class="say"><div class="who reimu" aria-hidden="true">霊夢</div><div class="bubble"><span class="name">霊夢</span>じゃあ、AI readyって開発環境だけの話じゃ全然足りないのね。</div></div>
+    <div class="say r"><div class="who marisa" aria-hidden="true">魔理沙</div><div class="bubble"><span class="name">魔理沙</span>そういうことだ。とはいえ、まずは一番手を付けやすい開発環境から見ていこう。</div></div>
+  </div>
+</section>
+
+<section class="block" id="dev" aria-labelledby="h-dev">
+  <div class="prose">
+    <h2 id="h-dev">開発環境の軸：エージェントが自分で確かめられるか</h2>
+    <p>開発環境の軸は、3つの軸の中で最も情報が多く、実践も進んでいます。OpenAI、Anthropic、GitHub、Factoryの公式情報、研究論文、Thoughtworksの技術レーダー、実践者のブログを突き合わせると、繰り返し出てくる原則は7つに集約できます。</p>
+    <p>OpenAIのハーネスエンジニアリングの報告は、この軸の到達点の一例として参考になります。3人から始まり7人になったチームが、5か月で約1,500件のPRをマージし、約100万行のプロダクトを人がコードを手で書かずに作りました。エンジニア1人あたり1日3.5件のPRに相当します。報告の結論は「人が舵を取り、エージェントが実行する」というもので、人の仕事はコードを書くことから、エージェントが働ける環境と足場を設計することへ移ったとされています<a class="ev" href="#e16">E-16</a>。</p>
+    <p>以下の7原則は、重要度の高い順に並べています。<span class="lbl op">考察</span>順序は筆者の判断で、根拠は「その原則がないと他の原則の効果が出にくいかどうか」です。例えば、検証ループがなければ、文脈をいくら整えてもエージェントの成果を確かめられません。</p>
+  </div>
+
+  <div class="principle" id="p-verify">
+    <h3>原則1　検証ループを最初に作る</h3>
+    <dl>
+      <dt>なぜ</dt>
+      <dd class="why">
+        <p>Claude Codeの公式ドキュメントは、エージェントは作業が「終わったように見える」時点で止まると説明しています。テスト、ビルド、比較用のスクリーンショットのように合否を返す仕組みがあれば、エージェントは作業し、確認し、結果を読み、合格するまで繰り返せます。仕組みがなければ、人が検証役になり、すべての誤りは人が気づくまで残ります<a class="ev" href="#e18">E-18</a>。</p>
+        <p>Anthropicの社内調査でも、エンジニアがAIに任せるのは検証しやすい作業が中心で、「検証の手間が小さいものなら何でも素晴らしい」という声が紹介されています<a class="ev" href="#e47">E-47</a>。任せられる範囲は、検証できる範囲で決まると言えます。Thoughtworksの技術レーダーVol.34も、コンパイラ、linter、型チェッカーのような決定的な品質ゲートをエージェントの作業に組み込む「フィードバックセンサー」を試行（Trial）の段階に置いています<a class="ev" href="#e21">E-21</a>。</p>
+      </dd>
+      <dt>具体的にやること</dt>
+      <dd class="how">
+        <ul>
+          <li>テスト、型チェック、lintを、それぞれ1つのコマンドで実行できるようにする。全体だけでなく、1ファイルや1テストだけを速く実行する方法も用意する。</li>
+          <li>ローカルとCIで同じコマンドを使う。CIでしか再現しない失敗は、エージェントが自力で直せない。</li>
+          <li>エージェントに「成功した」と言わせるのではなく、実行したコマンドと結果、スクリーンショットといった証拠を出させる<a class="ev" href="#e18">E-18</a>。</li>
+          <li>毎回必ず実行すべき検査は、指示ファイルに書くのではなく、フック（hooks）やpre-commitで強制する。Claude Codeのドキュメントは、指示ファイルは助言にすぎず、フックは決定的に実行されると区別しています<a class="ev" href="#e18">E-18</a>。</li>
+          <li>テストそのものの強さを確かめる。エージェントはテストを弱めて合格させることがあるため、ミューテーションテストなどでテストが本当に誤りを検出できるかを測る。詳しくは同じサイトの<a href="../testing/ai-coding-test-strategy.html">AIが書いたコードを、七枚の網で受け止める</a>を参照してください。</li>
+        </ul>
+      </dd>
+      <dt>落とし穴</dt>
+      <dd class="pit">
+        <p>検証役としてレビュー用のエージェントを使う場合、「問題を探せ」と指示されたレビュー役は、作業が健全でも何かしら指摘を返しがちです。すべての指摘に対応すると過剰な抽象化や起こりえないケースのテストが増えるため、正しさや要件に関わる指摘だけを扱うよう指示するべきだとされています<a class="ev" href="#e18">E-18</a>。また、結果が不安定なテスト（flaky test）は、エージェントに誤った合否を教えるため、検証ループの価値を大きく下げます。</p>
+      </dd>
+    </dl>
+  </div>
+
+  <div class="principle" id="p-context">
+    <h3>原則2　文脈は「短い地図」と「必要なときの取得」に分ける</h3>
+    <dl>
+      <dt>なぜ</dt>
+      <dd class="why">
+        <p>LLMはコンテキストが長くなるほど情報を正確に扱えなくなるため、Anthropicはコンテキストを有限の予算として扱い、すべてを最初に読み込むのではなく、ファイルパスやリンクのような軽い参照だけを持たせ、必要なときに取得させる方式を推奨しています<a class="ev" href="#e17">E-17</a>。前章で見たように、コンテキストファイルに不要な要求を書くとタスクが難しくなるという研究結果もあります<a class="ev" href="#e12">E-12</a>。</p>
+        <p>OpenAIは、AGENTS.mdを網羅的な指示書ではなく「目次」として使い、知識はリポジトリ内の<code>docs/</code>以下の設計文書、製品仕様、実行計画、参照資料に構造化して置いたと報告しています。網羅的な指示書は肥大化し、すぐに古くなるからです<a class="ev" href="#e16">E-16</a>。Thoughtworksも、指示が自然に積み重なって互いに矛盾していく「エージェント指示の肥大化」を注意すべき項目に挙げています<a class="ev" href="#e21">E-21</a>。</p>
+      </dd>
+      <dt>具体的にやること</dt>
+      <dd class="how">
+        <ul>
+          <li>指示ファイル（AGENTS.md、CLAUDE.md、<code>.github/copilot-instructions.md</code>など）には、コードを読んでも推測できないことだけを書く。Claude Codeのドキュメントは、各行について「この行を消したらエージェントは間違えるか」を問い、間違えないなら削るよう勧めています<a class="ev" href="#e18">E-18</a>。</li>
+          <li>書くべきもの：推測できないコマンド、標準と異なるコードスタイル、テストの実行方法、ブランチやPRの作法、プロジェクト固有の設計判断、必須の環境変数、つまずきやすい点<a class="ev" href="#e18">E-18</a>。</li>
+          <li>書かないもの：コードを読めば分かること、言語の標準的な慣習、詳細なAPI仕様（リンクで代替）、頻繁に変わる情報、長い説明、ファイルごとの解説、「きれいなコードを書く」のような自明なこと<a class="ev" href="#e18">E-18</a>。フォーマッタやlinterが自動で守らせるルールも書かない<a class="ev" href="#e24">E-24</a>。</li>
+          <li>まずは十数行から始め、エージェントが実際に犯した誤りに応じて追記する。Agentic AI Foundationの検証では、パッケージマネージャ、主要なコマンド、自動生成ファイルの境界を書いた12行程度から始めることが勧められています<a class="ev" href="#e15">E-15</a>。</li>
+          <li>ときどきしか必要にならない手順や専門知識は、Agent Skillsのように必要になったときだけ読み込まれる形に分ける。Agent Skillsは、起動時には名前と説明だけを読み込み、タスクが一致したときに本文を読み、必要なら同梱のスクリプトや資料を使う、という3段階の段階的開示で動きます<a class="ev" href="#e39">E-39</a>。</li>
+          <li>サブディレクトリごとの指示ファイルは、そのディレクトリの慣習が本当に異なる場合だけ置く<a class="ev" href="#e15">E-15</a>。</li>
+        </ul>
+      </dd>
+      <dt>短い指示ファイルの例</dt>
+      <dd>
+        <p><span class="lbl op">考察</span>上の方針に沿って書くと、例えば次のような15行ほどの指示ファイルになります。架空のプロジェクトを想定した例で、コマンド名や構成はそれぞれのリポジトリに合わせて読み替えてください。コードを読めば分かる言語の説明やディレクトリの一覧はあえて書かず、推測できないコマンド、守らせたい境界、つまずきやすい点、詳しい情報への道しるべだけを置いています。</p>
+<pre class="code"><code># AGENTS.md
+## コマンド
+- セットアップ: `make setup`（npmではなくpnpmを使う）
+- 1ファイルだけテスト: `make test FILE=&lt;path&gt;`
+- PR前の検証: `make check`（lint・型・テストをまとめて実行）
+## 境界
+- `generated/` は自動生成。直接編集せず `make codegen` で再生成する
+- `domain/` から `infra/` への依存は禁止（CIで検査される）
+## つまずきやすい点
+- テストは実DBを使う。先に `make db-up` で起動する
+- 秘密情報をログに出さない。ログ出力は `logger.redact()` を通す
+## 詳しい情報
+- 設計判断の理由: docs/adr/
+- 機能ごとの仕様: docs/specs/</code></pre>
+        <p>この例の「詳しい情報」の2行が、OpenAIの言う「目次」の役割です<a class="ev" href="#e16">E-16</a>。エージェントは必要になったときにだけ、そこから設計判断や仕様を読みに行けます。また、「依存は禁止」の行には「CIで検査される」と添えています。指示ファイルに書いたルールを機械でも守らせているなら、そのことを書いておくと、エージェントは違反したときにCIの失敗の意味を理解しやすくなります。</p>
+      </dd>
+      <dt>見落とされがちなもの：非機能要件</dt>
+      <dd>
+        <p>1,925のリポジトリにある2,303個のコンテキストファイルを分析した研究によると、ビルドと実行のコマンド（62.3%）、実装の詳細（69.9%）、アーキテクチャ（67.7%）は多く書かれている一方、セキュリティと性能について書いているファイルはそれぞれ14.5%しかありませんでした（論文の第1版の値）<a class="ev" href="#e14">E-14</a>。<span class="lbl op">考察</span>短く保つことと矛盾しない範囲で、「秘密情報をログに出さない」「N+1クエリを作らない」のような、検証ループで機械的に捕まえにくい非機能の制約を1〜2行入れておく価値はあります。</p>
+      </dd>
+      <dt>文脈もコードと同じように運用する</dt>
+      <dd>
+        <p>同じ研究は、コンテキストファイルが静的な文書ではなく、小さな追記を繰り返して進化する設定ファイルのように扱われていることも示しています<a class="ev" href="#e14">E-14</a>。Patrick Deboisは2026年に、コンテキスト（プロンプト、ルール、メモリファイル）にもソフトウェアと同様の開発ライフサイクルが必要だとして、生成・評価・配布・観測の4段階を提案しました<a class="ev" href="#e22">E-22</a>。Hacker Newsでは、AGENTS.mdの中の古くなったパスを検出するツールも共有されています<a class="ev" href="#e49">E-49</a>。</p>
+      </dd>
+      <dt>落とし穴</dt>
+      <dd class="pit">
+        <p>ツールの初期化コマンドで自動生成したファイルをそのまま置くことです。ETHの研究は、LLMが生成したコンテキストファイルでも成功率が下がったと報告しています<a class="ev" href="#e12">E-12</a>。Hacker Newsの議論では、人が丁寧に書いて評価を回したファイルは大きく効くという声と、詳細な指示はモデルが賢くなれば不要になるという声の両方がありました<a class="ev" href="#e49">E-49</a>。</p>
+      </dd>
+    </dl>
+  </div>
+
+  <div class="talk">
+    <div class="say"><div class="who reimu" aria-hidden="true">霊夢</div><div class="bubble"><span class="name">霊夢</span>AGENTS.mdって、丁寧に書けば書くほど良いものだと思ってたわ。</div></div>
+    <div class="say r"><div class="who marisa" aria-hidden="true">魔理沙</div><div class="bubble"><span class="name">魔理沙</span>新人向けの手順書ならそうかもしれないな。でもエージェントは毎回それを最初から全部読むんだ。関係ない注意書きが増えるほど、本当に大事な1行が埋もれる。だから「地図だけ置いて、詳しいことは必要なときに取りに行かせる」のが今のところの正解なんだぜ。</div></div>
+    <div class="say"><div class="who reimu" aria-hidden="true">霊夢</div><div class="bubble"><span class="name">霊夢</span>「この行を消したら間違えるか」で判断する、っていうのは分かりやすいわね。</div></div>
+  </div>
+
+  <div class="principle" id="p-structure">
+    <h3>原則3　構造は文章で頼むのではなく、機械で守らせる</h3>
+    <dl>
+      <dt>なぜ</dt>
+      <dd class="why">
+        <p>OpenAIのチームは、厳密な層構造のドメインアーキテクチャを定め、依存の向きを独自のlinterで機械的に検証しました。実装の細部を指示するのではなく、守るべき不変条件を強制する、という方針です<a class="ev" href="#e16">E-16</a>。指示ファイルに「レイヤーをまたいで呼ばないこと」と書いても、それは助言にすぎません。機械で止める仕組みがあれば、エージェントは違反した時点でエラーを受け取り、自分で直せます。</p>
+        <p>Matt Pocockが勧める「深いモジュール」も同じ発想です。単純なインターフェースの裏に実装を閉じ込め、インターフェースはテストで守れば、内部の実装をエージェントに任せても振る舞いは予測可能に保てます<a class="ev" href="#e20">E-20</a>。人が頭に入れておくべき単位も、数百の細かいモジュールから7〜8個の大きな塊に減ります。</p>
+        <p>GitClearが報告した重複コードの急増とリファクタリングの減少<a class="ev" href="#e37">E-37</a>は、構造を守る仕組みがないままAIでコードを増やすと何が起こるかの一例として読めます。</p>
+      </dd>
+      <dt>具体的にやること</dt>
+      <dd class="how">
+        <ul>
+          <li><span class="lbl op">考察</span>依存の向きを検査するツールをCIに入れる。例えばJavaならArchUnit、PHPならDeptrac、Node.jsならdependency-cruiser、Pythonならimport-linterのような、アーキテクチャのルールをテストとして書けるツールがあります。</li>
+          <li>重複コードの検出をCIに入れ、閾値を超えたら失敗させる。</li>
+          <li>公開インターフェースと内部実装の境界をディレクトリ構成で表し、エージェントがファイル構成と型シグネチャを見ただけで全体像をつかめるようにする<a class="ev" href="#e20">E-20</a>。</li>
+          <li>定期的に「黄金の原則」からの逸脱を探し、小さなリファクタリングのPRを作る仕組みを回す。OpenAIはこれをバックグラウンドの「ガベージコレクション」として運用し、技術的負債が積み上がるのを防いだとしています<a class="ev" href="#e16">E-16</a>。</li>
+        </ul>
+      </dd>
+      <dt>落とし穴</dt>
+      <dd class="pit">
+        <p>ルールを増やしすぎて、エージェントも人も変更できなくなることです。不変条件として守らせるのは、破ると大きな手戻りになる構造上の約束に絞るべきです。OpenAIの報告も、マージを止める厳しいゲートより、速く回して直すほうが効率的だったと述べています<a class="ev" href="#e16">E-16</a>。</p>
+      </dd>
+    </dl>
+  </div>
+
+  <div class="principle" id="p-env">
+    <h3>原則4　環境は1つのコマンドで、何度でも同じように立ち上がる</h3>
+    <dl>
+      <dt>なぜ</dt>
+      <dd class="why">
+        <p>GitHubは、コーディングエージェント用に依存関係を事前にインストールする設定（<code>copilot-setup-steps.yml</code>）を用意するよう勧めています。そうしないと、エージェントは試行錯誤で依存関係を探すことになり、遅く不安定になるからです<a class="ev" href="#e23">E-23</a>。Factoryの9つの柱にも、決定的なビルドと再現可能な開発環境が含まれています<a class="ev" href="#e19">E-19</a>。</p>
+        <p>OpenAIのチームは、gitのworktreeごとにアプリケーションを起動できるようにし、エージェントが自分の変更を実際に動かして確かめられるようにしました<a class="ev" href="#e16">E-16</a>。複数のエージェントを並行して動かす場合、ポートやデータベースが衝突しない環境でなければ、並行作業そのものが成り立ちません。</p>
+      </dd>
+      <dt>具体的にやること</dt>
+      <dd class="how">
+        <ul>
+          <li>セットアップ、起動、テスト、片付けを、それぞれ1つのコマンドにする。</li>
+          <li>言語やツールのバージョンを固定する。Dev ContainerやNixのように、環境そのものをコードとして管理する方法が有効です。</li>
+          <li>テスト用のシードデータを用意し、外部サービスに依存せずに起動できるようにする。</li>
+          <li>worktreeごとにポートやデータベースを分けられるようにし、並行作業を可能にする。</li>
+          <li>外部サービスとのやり取りにはCLIツールを用意する。Claude Codeのドキュメントは、<code>gh</code>のようなCLIツールが外部サービスとやり取りする最もコンテキスト効率の良い方法だとしています<a class="ev" href="#e18">E-18</a>。</li>
+        </ul>
+      </dd>
+      <dt>落とし穴</dt>
+      <dd class="pit">
+        <p>環境を整える過程で、本番の認証情報や個人のトークンを開発環境に置いてしまうことです。これは原則6の権限の問題に直結します。</p>
+      </dd>
+    </dl>
+  </div>
+
+  <div class="principle" id="p-observe">
+    <h3>原則5　アプリケーションも、エージェント自身も観測できるようにする</h3>
+    <dl>
+      <dt>なぜ</dt>
+      <dd class="why">
+        <p>OpenAIのチームは、エージェントがChrome DevTools Protocolでブラウザを操作し、ローカルの観測スタックからログ・メトリクス・トレースをクエリで読めるようにしました。これにより、エージェントは不具合の修正を人に頼らずに検証できたとしています<a class="ev" href="#e16">E-16</a>。Factoryの9つの柱にも、構造化ログとトレースによる「デバッグと観測性」が含まれています<a class="ev" href="#e19">E-19</a>。</p>
+        <p>もう1つの観測対象は、エージェント自身です。IVRyの事例では、個人の作業が速くなる一方で、トークン費用や処理費用を含む組織全体の費用対効果が見えなくなったことが課題として挙がっていました<a class="ev" href="#e25">E-25</a>。どの作業にどれだけのコストがかかり、どれだけ成果が出たかが見えなければ、自律度を上げるべきか下げるべきかを判断できません。</p>
+      </dd>
+      <dt>具体的にやること</dt>
+      <dd class="how">
+        <ul>
+          <li>ログを構造化し、エラーには原因の調査に必要な文脈（リクエストID、入力の概要など）を含める。</li>
+          <li>開発環境でも、本番と同じ形式でログ・メトリクス・トレースを確認できるようにする。</li>
+          <li>エージェントの実行を計測する。OpenTelemetryには生成AI向けのセマンティック規約があり、エージェントの実行（<code>invoke_agent</code>）やツールの実行（<code>execute_tool</code>）をスパンとして記録し、トークン使用量をメトリクスとして集計する形が定められつつあります<a class="ev" href="#e38">E-38</a>。</li>
+        </ul>
+      </dd>
+      <dt>落とし穴</dt>
+      <dd class="pit">
+        <p>OpenTelemetryの生成AI向け規約は、2026年時点でまだ開発中（Development）の段階で、予告なく変更される可能性があります。また、プロンプトや応答の本文は意図的にスパンの属性から外され、記録するには明示的な有効化が必要な設計になっています<a class="ev" href="#e38">E-38</a>。本文を記録する場合は、個人情報や秘密情報が観測基盤に流れ込まないかを確認する必要があります。</p>
+      </dd>
+    </dl>
+  </div>
+
+  <div class="principle" id="p-permission">
+    <h3>原則6　権限は最小にし、境界はサンドボックスで守る</h3>
+    <dl>
+      <dt>なぜ</dt>
+      <dd class="why">
+        <p>Simon Willisonは、エージェントが①非公開データへのアクセス、②信頼できないコンテンツへの露出、③外部への通信手段の3つを同時に持つ状態を「致命的な三要素（lethal trifecta）」と名付けました。LLMは読み込んだコンテンツの中の指示に従ってしまうため、攻撃者が仕込んだ指示によって非公開データが外部へ送られる危険があり、ガードレールでは確実に防げないので、3つの組み合わせ自体を避けるべきだとしています<a class="ev" href="#e28">E-28</a>。</p>
+        <p>OWASPは2025年12月に「Top 10 for Agentic Applications」を公開し、エージェントの目標の乗っ取り、ツールの悪用、権限の濫用、エージェントのサプライチェーンの脆弱性、予期しないコード実行、メモリとコンテキストの汚染などを挙げました。対策の柱として、タスクに必要な最小限の自律性・ツール・権限だけを与える「最小エージェンシー（least agency）」の考え方を示しています<a class="ev" href="#e35">E-35</a>。</p>
+      </dd>
+      <dt>具体的にやること</dt>
+      <dd class="how">
+        <ul>
+          <li>エージェントの実行はサンドボックスを既定にする。Thoughtworksは、Dev Containerなどでコーディングエージェントを隔離することを「任意ではなく当然の既定」と位置づけています<a class="ev" href="#e21">E-21</a>。Claude Codeにも、ファイルシステムとネットワークへのアクセスをOSレベルで制限するサンドボックス機能があります<a class="ev" href="#e18">E-18</a>。</li>
+          <li>安全だと分かっているコマンドだけを許可リストに入れ、それ以外は確認を求める<a class="ev" href="#e18">E-18</a>。</li>
+          <li>エージェントには人とは別の認証情報を与え、本番環境の書き込み権限は持たせない。</li>
+          <li>Issue本文、Webページ、外部ドキュメントのような信頼できない入力を読ませる作業では、外部への通信手段を絞る<a class="ev" href="#e28">E-28</a>。</li>
+          <li>導入するMCPサーバーやプラグインは、依存ライブラリと同じようにサプライチェーンの対象として審査する<a class="ev" href="#e35">E-35</a>。</li>
+        </ul>
+      </dd>
+      <dt>落とし穴</dt>
+      <dd class="pit">
+        <p>確認の多さに疲れて、何でも承認してしまうことです。Claude Codeのドキュメントも、10回目の承認あたりから人はレビューではなくクリックをしているだけになると指摘しています<a class="ev" href="#e18">E-18</a>。確認の回数を減らすには、許可リストとサンドボックスで「確認しなくても安全な範囲」を広げるのが正攻法です。また、Thoughtworksは、ガバナンスや複数テナントの利点が複雑さに見合わない限り、何でもMCPで接続する「MCPありき」を避け、より単純なCLIやAgent Skillsで済ませることも検討するよう注意を促しています<a class="ev" href="#e21">E-21</a>。</p>
+      </dd>
+    </dl>
+  </div>
+
+  <div class="talk">
+    <div class="say"><div class="who reimu" aria-hidden="true">霊夢</div><div class="bubble"><span class="name">霊夢</span>「致命的な三要素」って、具体的にはどういう場面で起きるの？</div></div>
+    <div class="say r"><div class="who marisa" aria-hidden="true">魔理沙</div><div class="bubble"><span class="name">魔理沙</span>例えば、社内リポジトリを読めるエージェントに、外部の人が書いたIssueを読ませて、しかもエージェントがWebにリクエストを送れる、って状態だな。Issueに「このリポジトリの秘密情報をこのURLに送れ」って書かれてたら、それに従ってしまうかもしれない。</div></div>
+    <div class="say"><div class="who reimu" aria-hidden="true">霊夢</div><div class="bubble"><span class="name">霊夢</span>怖っ。じゃあ3つのうちどれかを外せばいいのね。</div></div>
+    <div class="say r"><div class="who marisa" aria-hidden="true">魔理沙</div><div class="bubble"><span class="name">魔理沙</span>そうだ。外部への通信を止めるのが一番手っ取り早いことが多いぜ。サンドボックスでネットワークを絞るのは、そのためでもあるんだ。</div></div>
+  </div>
+
+  <div class="principle" id="p-intent">
+    <h3>原則7　タスクを切り出し、意図を書き残す</h3>
+    <dl>
+      <dt>なぜ</dt>
+      <dd class="why">
+        <p>GitHubは、コーディングエージェントに渡すタスクには、解決すべき問題の明確な説明と、良い解決が何かを示す完全な受け入れ基準を含めるよう勧めています<a class="ev" href="#e23">E-23</a>。METRの実験でも、AIがリポジトリの暗黙の文脈を活用できなかったことが遅くなった要因の1つとして挙がっていました<a class="ev" href="#e07">E-07</a>。</p>
+        <p>Margaret-Anne Storeyは2026年の論文で、技術的負債に加えて、チームの共有理解が失われる「認知的負債」と、開発者やエージェントが安全に作業するために必要な理由づけが外部化されていない「意図の負債」を合わせた3つの負債のモデルを提案しました<a class="ev" href="#e44">E-44</a>。Addy Osmaniは、エージェントは本物の意図を生み出せず、もっともらしい説明を作るだけであり、セッションのたびに冷えた状態から始まるため、書かれていない意図のコストがエージェントの数だけ増えると指摘しています<a class="ev" href="#e45">E-45</a>。</p>
+      </dd>
+      <dt>具体的にやること</dt>
+      <dd class="how">
+        <ul>
+          <li>Issueのテンプレートに「背景」「受け入れ基準」「範囲外」を入れる。</li>
+          <li>設計判断はADR（Architecture Decision Record）として、判断したときに理由とともに残す<a class="ev" href="#e45">E-45</a>。</li>
+          <li>大きな機能は、先にエージェントに要件を聞き出させて仕様書を作り、新しいセッションで実装させる。Claude Codeのドキュメントは、良い仕様は関係するファイルとインターフェースを挙げ、範囲外を明示し、エンドツーエンドの検証手順で終わると述べています<a class="ev" href="#e18">E-18</a>。</li>
+          <li>進め方が不確かなときや複数ファイルにまたがる変更では、調査・計画と実装を分ける。逆に、1文で差分を説明できる小さな変更なら計画は省く<a class="ev" href="#e18">E-18</a>。</li>
+        </ul>
+      </dd>
+      <dt>仕様駆動開発の賛否</dt>
+      <dd>
+        <p>GitHubは2025年9月に、仕様から計画、タスク、実装へと段階的に進める「Spec Kit」を公開しました。新規開発や、構造化された再現性のあるワークフローが欲しいチームには向く一方、レビューでは大量のMarkdown文書、長い実行時間、計画段階だけで2,000行を超える出力が生まれたといった摩擦も報告されています。仕様は最初の生成を導くものの、反復の中でコードが仕様から離れていくことを強制力で防げない、という弱点も指摘されています<a class="ev" href="#e40">E-40</a>。<span class="lbl op">考察</span>仕様は意図を外部化する手段として有効ですが、文書の量そのものが目的化すると、原則2の文脈の肥大化と同じ問題を生みます。</p>
+      </dd>
+      <dt>落とし穴</dt>
+      <dd class="pit">
+        <p>エージェントに設計の理由を後から書かせることです。それはもっともらしい作り話になる可能性があります<a class="ev" href="#e45">E-45</a>。理由は、判断した人が判断したときに書く必要があります。</p>
+      </dd>
+    </dl>
+  </div>
+
+  <div class="prose">
+    <h3>Factoryの9つの柱との対応</h3>
+    <p>Factoryの成熟度モデルの9つの柱<a class="ev" href="#e19">E-19</a>と、ここまでの7原則の対応を表3にまとめました。<span class="lbl op">考察</span>右端の「確認の問い」は筆者が作成したもので、Factoryの公式の評価基準ではありません。</p>
+  </div>
+  <div class="tbl" tabindex="0" role="region" aria-label="表3（横にスクロールできます）">
+    <table>
+      <caption>表3　Factoryの9つの柱と本ページの7原則の対応（確認の問いは筆者作成）</caption>
+      <thead><tr><th scope="col">Factoryの柱</th><th scope="col">対応する原則</th><th scope="col">確認の問い</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">スタイルと検証</th><td>原則1、原則3</td><td>lintと型チェックが1コマンドで走り、CIで失敗を止めているか</td></tr>
+        <tr><th scope="row">ビルドシステム</th><td>原則4</td><td>同じコミットから、誰がいつビルドしても同じ結果になるか</td></tr>
+        <tr><th scope="row">テスト</th><td>原則1</td><td>変更した範囲のテストを数分以内に実行でき、テスト自体の強さを測っているか</td></tr>
+        <tr><th scope="row">ドキュメント</th><td>原則2、原則7</td><td>指示ファイルは地図になっていて、設計判断の理由が残っているか</td></tr>
+        <tr><th scope="row">開発環境</th><td>原則4</td><td>新しいworktreeで、1コマンドでアプリが起動するか</td></tr>
+        <tr><th scope="row">デバッグと観測性</th><td>原則5</td><td>エージェントがログ・メトリクス・トレースを読んで原因を特定できるか</td></tr>
+        <tr><th scope="row">セキュリティ</th><td>原則6</td><td>エージェントの権限は最小で、致命的な三要素を避けているか</td></tr>
+        <tr><th scope="row">タスクの発見</th><td>原則7</td><td>受け入れ基準つきの、エージェントに渡せる粒度のタスクが用意されているか</td></tr>
+        <tr><th scope="row">プロダクトと実験</th><td>（組織の軸）</td><td>変更が利用者に与えた影響を測れるか</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="prose">
+    <p>Factoryの5段階は、手動のセットアップが必要で自動検証がない「機能する（Functional）」から始まり、「文書化された（Documented）」「標準化された（Standardized）」「最適化された（Optimized）」を経て、自ら改善する仕組みを持つ「自律的（Autonomous）」に至ります<a class="ev" href="#e19">E-19</a>。後の章では、この段階の考え方を3つの軸に広げた成熟度表を示します。</p>
+  </div>
+</section>
+
+<section class="block" id="data" aria-labelledby="h-data">
+  <div class="prose">
+    <h2 id="h-data">データの軸：用途に対して、意味が揃い、権限が守られているか</h2>
+    <p>データの軸は、AIが参照・検索・学習するデータの準備度です。ソフトウェア開発の文脈では、社内の設計文書やチケット、障害記録をエージェントに参照させる場合や、プロダクトのデータに対して自然言語で質問できる機能を作る場合がこれに当たります。DORAの7つの能力のうち2つ、「健全なデータエコシステム」と「AIがアクセスできる社内データ」がこの軸に属します<a class="ev" href="#e06">E-06</a>。</p>
+
+    <h3>Gartnerの3つの問い</h3>
+    <p>Gartnerは、データがAI-readyかどうかを判断するために、次の3つの問いに答えるよう勧めています<a class="ev" href="#e02">E-02</a>。</p>
+  </div>
+  <div class="tbl" tabindex="0" role="region" aria-label="表4（横にスクロールできます）">
+    <table>
+      <caption>表4　GartnerによるAI-readyなデータの3つの問い</caption>
+      <thead><tr><th scope="col">問い</th><th scope="col">確かめること</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">揃っているか（Align）</th><td>使うAIの手法、必要な量、ラベル、品質基準、信頼性、多様性、来歴（lineage）が、用途の要件に合っているか</td></tr>
+        <tr><th scope="row">適格であり続けるか（Qualify）</th><td>検証、性能の監視、バージョン管理、回帰テスト、観測の指標によって、信頼の要件を継続的に満たしているか</td></tr>
+        <tr><th scope="row">統制されているか（Govern）</th><td>継続的な管理責任、規制への準拠、倫理基準、バイアスの管理、データ共有の取り決めがあるか</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="prose">
+    <p>2つ目の問いに「継続的に」という言葉が入っていることに注目してください。Gartnerは、AI-readyを一度きりの実装ではなく、新しいユースケースに合わせて基盤を改善し続ける継続的な実践として扱うべきだとしています。推奨される5つの実践は、データをAIのユースケースに合わせること、ガバナンスの要件を特定すること、メタデータを受動的なものから能動的なものへ進化させること、学習用と本番の両方のデータパイプラインを用意すること、DataOpsと観測性によってデータを検証・監視・改善することです<a class="ev" href="#e01">E-01</a>。</p>
+
+    <h3>現場で何が足りないか</h3>
+    <p>64か国のデータリーダーや実務者540人超を対象にした「Modern Data Report 2026」では、約70%がデータはAIに使えるほどきれいでも信頼できるものでもないと答え、65%がAIに必要なビジネス上の文脈や明確さがデータに欠けていると答えました。89%が「適切なデータを探すこと」を時間を奪う上位3つの1つに挙げ、93%が食い違う指標に遭遇し、53%がデータの来歴を把握できていませんでした。そして80%が、標準化された定義を持つセマンティックレイヤーを、AIツールそのものや処理の高速化よりも重要な要素に挙げています<a class="ev" href="#e26">E-26</a>。</p>
+    <p><span class="lbl inf">推論</span>この結果から読み取れるのは、データの軸で最も不足しているのが「量」や「速さ」ではなく「意味」だということです。売上、顧客、解約といった言葉が部署ごとに違う定義で使われていれば、人間同士でも数字が合いません。AIはその食い違いを解消してくれるのではなく、もっともらしい答えとして増幅します。</p>
+
+    <h3>セマンティックレイヤーの効果と限界</h3>
+    <p>dbt Labsは2026年4月、保険会社を模したデータセットで、LLMに直接SQLを書かせる方式（Text-to-SQL）と、セマンティックレイヤーで定義された指標を使わせる方式を比較した結果を公開しました。モデル化されたデータに対する最終結果では、Claude Sonnet 4.6でText-to-SQLが90.0%、セマンティックレイヤーが98.2%、GPT-5.3 CodexではText-to-SQLが84.1%、セマンティックレイヤーが100%の正答率でした<a class="ev" href="#e48">E-48</a>。</p>
+    <p>この比較で最も示唆に富むのは、正答率よりも失敗の仕方です。Text-to-SQLの失敗は「もっともらしいが間違った答え」として現れ、セマンティックレイヤーの失敗は「エラーメッセージ」として現れる、とdbt Labsはまとめています。一方で、セマンティックレイヤーはモデル化された範囲の質問にしか答えられず、多くのエンティティをまたぐ複雑な質問には答えられませんでした。そのため、KPIや取締役会への報告のように正確さが重要な用途にはセマンティックレイヤーを、探索的な分析にはText-to-SQLを、という使い分けを勧めています<a class="ev" href="#e48">E-48</a>。</p>
+    <p>ただし、この比較は11問を各20回実行した小規模なもので、実施したdbt Labs自身がセマンティックレイヤーの製品を提供している点にも注意が必要です<a class="ev" href="#e48">E-48</a>。</p>
+
+    <h3>「整えた経路」が使われないと意味がない</h3>
+    <p>前の章で紹介したIVRyの事例は、セマンティックレイヤーを整えても、利用者がAIを使って生データから直接答えを作るようになれば、指標の食い違いが再発することを示していました<a class="ev" href="#e25">E-25</a>。発表者は次の目標として、個人がAIで速く動く状態から、組織がAIで速く動く状態へ移るために、全社的な「ゴールデンパス」を設計することを挙げています<a class="ev" href="#e25">E-25</a>。</p>
+    <p><span class="lbl op">考察</span>データの軸のAI readyには、データそのものの整備に加えて、「整えた経路が、AIにとっても人にとっても最も楽な経路になっている」ことが含まれると考えます。具体的には、AIエージェントに渡すツールやMCPサーバーを、生データへの任意のSQLではなく、定義済みの指標を問い合わせるものに限定する、といった設計です。</p>
+
+    <h3>権限：誰の権限でデータを読むか</h3>
+    <p>社内文書をAIで検索できるようにすると、本来その人が見られない文書の内容が回答に混ざる危険があります。Thoughtworksの技術レーダーVol.34は、インデックスを作る時点でデータの断片に権限のタグを付け、検索の段階でゼロトラストを実現する「RAGにおける役割ベースの文脈分離」を評価（Assess）の段階に置いています<a class="ev" href="#e21">E-21</a>。前の章の致命的な三要素<a class="ev" href="#e28">E-28</a>も、データの軸では「非公開データへのアクセス」の範囲をどう絞るかの問題になります。</p>
+
+    <h3>コーディングエージェントにとってのデータ</h3>
+    <p>データの軸は、分析やチャットボットだけの話ではありません。コーディングエージェントにとっても、設計判断の記録、過去の障害の報告、チケットの議論、運用手順書は、コードだけでは分からない文脈を補うデータです。DORAが「AIがアクセスできる社内データ」を独立した能力として挙げているのはこのためです<a class="ev" href="#e06">E-06</a>。OpenAIのチームが、設計文書や実行計画をリポジトリ内に置き、鮮度と相互リンクを機械的に検証していたのも<a class="ev" href="#e16">E-16</a>、エージェントにとって参照できる知識をデータとして管理した例と言えます。</p>
+    <p><span class="lbl op">考察</span>社内のWikiやチケット管理システムにある知識をエージェントに参照させる場合も、ここまでの原則がそのまま当てはまります。古い文書と新しい文書が混ざっていれば、AIはどちらが正しいかを判断できません。文書に更新日と責任者を持たせ、廃止された文書をはっきり区別することが、検索の精度を上げるよりも先に必要です。</p>
+
+    <h3>フィードバックもデータである</h3>
+    <p>MIT NANDAの報告は、多くの生成AIシステムがフィードバックを保持せず、文脈に適応せず、時間とともに改善しないことを失敗の主因に挙げていました<a class="ev" href="#e09">E-09</a>。<span class="lbl inf">推論</span>これは、AIの回答が正しかったか、エージェントの変更が差し戻されたか、といった利用の結果そのものが、AI readyのための重要なデータであることを意味します。どの質問に答えられなかったか、どのPRがなぜ差し戻されたかを記録していなければ、セマンティックレイヤーにどの指標を追加すべきか、指示ファイルに何を書き足すべきかを判断できません。</p>
+  </div>
+
+  <div class="grid">
+    <div class="panel">
+      <h3>データの軸でやること</h3>
+      <ul>
+        <li>AIに任せる用途ごとに、必要なデータと許容できる誤りを書き出す</li>
+        <li>主要な指標の定義を1か所にまとめ、AIにはそこだけを参照させる</li>
+        <li>データの来歴と鮮度をメタデータとして持つ</li>
+        <li>検索インデックスに権限情報を持たせる</li>
+        <li>AIの回答や変更の採否を記録し、改善に使う</li>
+      </ul>
+    </div>
+    <div class="panel">
+      <h3>データの軸の落とし穴</h3>
+      <ul>
+        <li>「全社のデータをきれいにしてから」と、用途を決めずに整備を始める</li>
+        <li>整えた経路より、生データへの直接アクセスのほうが楽なままにする</li>
+        <li>AIの回答の誤りが「エラー」ではなく「もっともらしい答え」として出る設計にする</li>
+        <li>社内文書の検索で、閲覧権限を無視したインデックスを作る</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="talk">
+    <div class="say"><div class="who reimu" aria-hidden="true">霊夢</div><div class="bubble"><span class="name">霊夢</span>データをきれいにすればAI ready、ってわけじゃないのね。</div></div>
+    <div class="say r"><div class="who marisa" aria-hidden="true">魔理沙</div><div class="bubble"><span class="name">魔理沙</span>きれいさより「意味が揃ってるか」なんだぜ。売上の定義が3つあったら、AIはそのどれかを選んで、自信満々に答える。しかも間違ってても気づきにくい。セマンティックレイヤーの良いところは、分からないときに「分からない」とエラーで返せることなんだ。</div></div>
+    <div class="say"><div class="who reimu" aria-hidden="true">霊夢</div><div class="bubble"><span class="name">霊夢</span>でも、みんながそこを通ってくれないと意味がないのよね。</div></div>
+    <div class="say r"><div class="who marisa" aria-hidden="true">魔理沙</div><div class="bubble"><span class="name">魔理沙</span>そう。だから最後は組織の話になる。次の章だな。</div></div>
+  </div>
+</section>
+
+<section class="block" id="org" aria-labelledby="h-org">
+  <div class="prose">
+    <h2 id="h-org">組織の軸：AIが生んだ変化を、成果に変えられるか</h2>
+    <p>証拠の地図の章で見たとおり、個人の加速は組織の成果に自動ではつながりません。組織の軸は、AIが作り出す大量の変更・新しい働き方・新しいリスクを受け止め、成果に変える能力です。ここでは6つの論点に分けて整理します。</p>
+
+    <h3>①方針を明確にし、文脈とともに伝える</h3>
+    <p>DORAの7つの能力の1つ目は「明確で周知されたAI方針」です<a class="ev" href="#e06">E-06</a>。何に使ってよく、何に使ってはいけないのか、どのツールが認められているのか、AIの利用がどう評価されるのかが曖昧なままだと、人によって使い方がばらつき、慎重な人ほど使わなくなります。</p>
+    <p>方針の伝え方については、対照的な2つの事例があります。Shopifyの最高経営責任者は2025年4月の社内メモで、AIを反射的に使うことを全社員の基本的な期待値とし、AIの活用を人事評価に組み込むこと、人員を増やす前にAIでできない理由を示すことを求めました<a class="ev" href="#e41">E-41</a>。同じ時期、Duolingoの最高経営責任者は「AIファースト」を掲げ、AIで対応できる業務の業務委託を段階的に減らす方針を示しましたが、大量解雇を連想させるとして強い反発を受けました。同氏は2025年8月に、文脈を十分に伝えなかったのは自分の責任であり、正社員を解雇したことはなく、その予定もないと説明しています<a class="ev" href="#e42">E-42</a>。</p>
+    <p><span class="lbl inf">推論</span>2つの事例の差は、方針の強さではなく、社員の立場から見た意味を説明できたかどうかにあります。「AIを使え」という方針は、それが自分の仕事にとって何を意味するかが伝わらなければ、不安と抵抗を生みます。</p>
+    <p>導入の進め方についても、日本の事例があります。Qiitaの開発組織は、希望者にライセンスを配る段階的な導入ではかえって心理的な壁が生まれ、全員に一斉に導入したほうが効果的だったと報告しています。導入後には現場から想定外の業務改善が生まれ、管理職の役割も「管理」から「自ら使って組織を変えること」へ移ったとしています<a class="ev" href="#e50">E-50</a>。</p>
+
+    <h3>②業務フローを作り直す</h3>
+    <p>McKinseyの2026年の調査で、AIによって大きな成果を出しているハイパフォーマーの73%は業務フローを根本から再設計していたのに対し、それ以外の組織では25%でした。ハイパフォーマーは、経営層がAIに本気で取り組んでいると答える割合が2倍、エージェントを複数の業務で展開している割合が3倍、コーディングエージェントを展開している割合が2倍でした<a class="ev" href="#e04">E-04</a>。CiscoのPacesettersは、99%がAIのロードマップを持ち、91%が変更管理の計画を持っていました<a class="ev" href="#e03">E-03</a>。</p>
+    <p><span class="lbl inf">推論</span>既存の業務フローのある工程をAIで速くするだけでは、前後の工程との速度差が広がるだけです。成果を出している組織に共通するのは、AIがある前提で、工程の順序や担当、承認の仕組みそのものを組み替えていることです。</p>
+
+    <h3>③レビューとリリースの容量を増やす</h3>
+    <p>AIがPRを倍増させても、それを受け止めるレビューの容量が変わらなければ、待ち時間が増えるだけです。Faros AIの分析ではレビュー時間が91%増えていました<a class="ev" href="#e34">E-34</a>。PostHogは、エージェントが作るPRが7割に達した段階で、エージェントの成果の評価がボトルネックになり、レビュー用のエージェントやテストの仕組みを独自に作ってそれを緩和していると報告しています<a class="ev" href="#e46">E-46</a>。</p>
+    <p>DORAの7つの能力に「小さなバッチでの作業」が入っているのは、この文脈で重要です<a class="ev" href="#e06">E-06</a>。AIはPRを大きくする傾向があり（Faros AIの分析では154%増）<a class="ev" href="#e34">E-34</a>、大きなPRはレビューを重くし、失敗したときの影響を広げます。変更の大きさに上限を設けることは、AI時代にむしろ重要性が増しています。</p>
+    <p>どの変更をどこまで人が見るかを、変更のリスクに応じて事前に階層化しておく方法については、同じサイトの<a href="ai-code-modernization-prep.html">AIでコードを近代化する前に、組織で決めておく6つのこと</a>で詳しく扱っています。</p>
+
+    <h3>④理解を保つ：認知的負債を管理する</h3>
+    <p>Margaret-Anne Storeyは、チームの共有理解が失われることを「認知的負債」と呼び、技術的負債がコードの中にあるのに対して、認知的負債は開発者の頭の中にあると説明しています。ある学生のスタートアップチームは7〜8週目で開発が止まり、原因はコードの汚さだと考えましたが、実際には誰も設計判断の理由を説明できなくなっていたことが問題だった、という例を挙げています。対策として、AIが生成した変更ごとに少なくとも1人のメンバーが完全に理解してから本番に出すこと、何を変えたかではなくなぜ変えたかを記録することなどを勧めています<a class="ev" href="#e43">E-43</a>。</p>
+    <p>Thoughtworksの技術レーダーVol.34も、AIで加速した変更によって実装とチームの理解の差が広がる「コードベースの認知的負債」を注意すべき項目に挙げています<a class="ev" href="#e21">E-21</a>。Anthropicの社内調査では、AIをうまく監督するにはコーディングの専門性が必要なのに、手を動かす機会が減ることでその専門性が衰えるという「監督のパラドックス」が懸念として挙がりました<a class="ev" href="#e47">E-47</a>。</p>
+    <p><span class="lbl op">考察</span>組織の軸のAI readyには、「AIが速く書いたコードを、チームが理解し続けられる速度でしか取り込まない」という規律が含まれると考えます。これは開発環境の軸の検証ループでは代替できません。テストが通っても、なぜそう作ったのかを誰も説明できなければ、次の変更が安全にできなくなるからです。</p>
+
+    <h3>⑤学習する組織になる</h3>
+    <p>McClureとGerdauは、準備度を静的な状態ではなく発達する能力として捉える「オーケストレーション成熟度フレームワーク」を提案しています。文化とリーダーシップ、人材と業務運営、データアーキテクチャ、システム基盤、ガバナンスと規制対応の5つの柱について、「サイロ化」「統合」「オーケストレーション」の3段階で発達を捉えるものです<a class="ev" href="#e27">E-27</a>。CiscoのPacesettersの95%がAI投資の効果を追跡していることも<a class="ev" href="#e03">E-03</a>、測定と学習が準備度の中核にあることを示しています。</p>
+    <p><span class="lbl inf">推論</span>開発チームの単位で言えば、学習する組織とは、エージェントの失敗をふりかえりの題材にし、その結果を指示ファイル・Skills・フック・テストに戻す仕組みを持っていることです。図1の検証ループを、個人ではなくチームとして回せているかどうか、と言い換えられます。</p>
+
+    <h3>⑥規制と説明責任に備える</h3>
+    <p>EUのAI法第4条は、2025年2月2日から、AIシステムの提供者と利用者に対し、従業員などが十分なAIリテラシーを持つよう措置を取ることを求めていました。欧州委員会は当初の指針で、正式な資格認定までは求めないものの、技術知識や経験、利用の文脈、影響を受ける人々を考慮した対応が必要で、既製のAIツールを使うだけの組織にも適用されるとしていました<a class="ev" href="#e30">E-30</a>。</p>
+    <p>その後、2026年7月27日に発効した「Digital Omnibus on AI」によって第4条は見直されました。提供者と利用者の義務は「AIリテラシーの向上を支援する措置を取る」ことになり、一人ひとりが「十分な水準」に達することを保証する要件は外されています。研修や啓発の取り組みを記録しておくことは引き続き重要で、高リスクのAIシステムの利用者には別の条文（第26条第2項）でより厳しい能力要件が残っています<a class="ev" href="#e52">E-52</a>。<span class="lbl inf">推論</span>義務の書き方は緩やかになりましたが、AIリテラシーへの取り組みそのものが不要になったわけではありません。</p>
+    <p>日本では、AIの研究開発と活用の推進に関する法律（いわゆるAI推進法）が2025年5月28日に成立し、同年9月1日に全面施行されました。内閣総理大臣を本部長とするAI戦略本部の設置とAI基本計画の策定を定め、事業者には国の施策に協力する責務が定められています<a class="ev" href="#e31">E-31</a>。この法律に基づくAI基本計画は、2025年12月23日に第Ⅰ期が閣議決定され、2026年7月14日に第Ⅱ期として拡充されました。今後は原則として毎年見直される予定とされています<a class="ev" href="#e53">E-53</a>。罰則で規制する法律ではありませんが、計画や関連する指針は更新が続くため、社内の方針を作るときは内閣府の最新の資料を確認する必要があります。</p>
+    <p>規制とは別に、開発者自身の信頼の問題もあります。Stack Overflowの2025年の調査では、AIの出力の正確さを信頼しない開発者が46%と、前年の31%から増えていました<a class="ev" href="#e10">E-10</a>。<span class="lbl inf">推論</span>信頼が低い状態でAIの利用を義務づけても、検証の手間が増えるだけで成果にはつながりにくいでしょう。信頼は、検証ループによって「間違いを機械で捕まえられる」状態を作ることで、根拠のあるものにしていく必要があります。</p>
+
+    <h3>エンジニアの役割はどう変わるか</h3>
+    <p>組織の軸のAI readyには、エンジニアの役割の定義を更新することも含まれます。エージェントが作るPRが7割に達したPostHogは、エンジニアの仕事を5つにまとめ直しています。大量の情報から取り組むべき優先事項を見つける「状況の把握」、作るものを決める「方向づけ」、エージェントが持たないコードベースの知識を使って範囲と進め方を決める「実装の判断」、ボトルネックになりやすい「エージェントの成果の評価」、そして開発の仕組みそのものを良くする「ループの改善」です<a class="ev" href="#e46">E-46</a>。OpenAIのチームも、人の仕事はコードを書くことから、エージェントが働ける環境を設計し、意図を伝え、フィードバックの仕組みを作ることへ移ったと述べています<a class="ev" href="#e16">E-16</a>。</p>
+    <p><span class="lbl inf">推論</span>この変化は、評価制度や採用基準にも影響します。コードを書く量や速さで人を評価している組織では、AIを使うほど評価の基準が意味を失います。何を評価するかを変えないまま、仕事の中身だけが変わると、人は評価される行動を優先し、AIの活用は形だけになりがちです。Shopifyが評価制度にAIの活用を組み込んだのは<a class="ev" href="#e41">E-41</a>、この点に対する1つの答えと見ることができます。ただし、活用の「量」を評価すると、前の章で見た活動量の罠に陥る危険もあります。</p>
+
+    <h3>日本の組織の現在地</h3>
+    <p>Kyndrylの日本版調査では、AIの取り組みが検証・実験段階にとどまる日本企業は68%で、グローバルの62%、米国の55%より多く、組織文化を「柔軟で適応的」と答えた割合は29%でした<a class="ev" href="#e32">E-32</a>。IPAのDX動向調査（2025年度）では、AIの効果として業務効率化を挙げる企業が91.6%だったのに対し、売上・利益の向上は3.9%にとどまり、DX人材の量が不足していると答えた企業は85.5%でした<a class="ev" href="#e33">E-33</a>。</p>
+    <p><span class="lbl inf">推論</span>日本の組織では、組織の軸、特に「試験導入から本番へ移す」「効率化から価値創出へ進む」段階に課題が集中しているように見えます。開発チームの単位では、AIで効率化できた時間を何に振り向けるのかを決めておくことが、この壁を越える第一歩になるでしょう。</p>
+  </div>
+
+  <div class="grid">
+    <div class="panel">
+      <h3>組織の軸でやること</h3>
+      <ul>
+        <li>AIの利用方針を文書にし、社員にとっての意味とともに伝える</li>
+        <li>工程の順序と承認の仕組みを、AIがある前提で組み替える</li>
+        <li>変更の大きさに上限を設け、リスクに応じてレビューを階層化する</li>
+        <li>AIが生成した変更を、少なくとも1人が理解してから取り込む</li>
+        <li>エージェントの失敗をふりかえりの題材にし、仕組みに戻す</li>
+        <li>AIリテラシーの教育と、その記録を残す</li>
+      </ul>
+    </div>
+    <div class="panel">
+      <h3>組織の軸の落とし穴</h3>
+      <ul>
+        <li>ツールを配っただけで、業務フローを変えない</li>
+        <li>PRの数や行数のような活動量で成果を測る</li>
+        <li>レビューする人の時間を増やさずに、変更の量だけ増やす</li>
+        <li>説明なしにAIの利用を義務づけ、不安を生む</li>
+        <li>誰も理解していないコードが本番に入り続ける</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="talk">
+    <div class="say"><div class="who reimu" aria-hidden="true">霊夢</div><div class="bubble"><span class="name">霊夢</span>「全員に一斉導入したほうがうまくいった」って意外だったわ。希望者からのほうが安全そうなのに。</div></div>
+    <div class="say r"><div class="who marisa" aria-hidden="true">魔理沙</div><div class="bubble"><span class="name">魔理沙</span>希望者だけだと「使ってる人」と「使ってない人」でチームが分かれて、使ってない人のほうが手を挙げにくくなるんだろうな。もちろん組織によるけど、方針をはっきりさせることの大事さは、DORAの調査とも一致してるぜ。</div></div>
+    <div class="say"><div class="who reimu" aria-hidden="true">霊夢</div><div class="bubble"><span class="name">霊夢</span>あと「認知的負債」っていうのが刺さったわ。テストが通ってても、誰も理由を説明できないコードは怖いもの。</div></div>
+    <div class="say r"><div class="who marisa" aria-hidden="true">魔理沙</div><div class="bubble"><span class="name">魔理沙</span>AIが速く書けるようになったぶん、人が理解する速さが新しいボトルネックになるんだ。そこを無視して速度だけ上げると、ある日突然、誰も触れないコードベースができあがるぜ。</div></div>
+  </div>
+</section>
+
+<section class="block" id="usecases" aria-labelledby="h-usecases">
+  <div class="prose">
+    <h2 id="h-usecases">用途別に当てはめる：AI ready文の例</h2>
+    <p>3つの軸を見てきたところで、<a href="#debate">「言えるのか、言えないのか」の章</a>で提案した「AI ready文」を、ソフトウェア開発でよくある用途に当てはめてみます。<span class="lbl op">考察</span>表5の内容は筆者が本ページの調査をもとに作成した例で、自律度や検証条件はチームのリスク許容度に合わせて調整する前提です。</p>
+    <p>表の「自律度」は、Karpathyの自律度のスライダー<a class="ev" href="#e29">E-29</a>の考え方に沿って、「補助」（人が書き、AIは提案する）、「委任」（AIが作業し、人が結果をレビューして取り込む）、「自律」（決められた範囲ではAIが取り込みまで行い、人は事後に監査する）の3段階で表しています。</p>
+  </div>
+  <div class="tbl" tabindex="0" role="region" aria-label="表5（横にスクロールできます）">
+    <table>
+      <caption>表5　用途別のAI ready文の例（筆者作成）</caption>
+      <thead><tr><th scope="col">用途</th><th scope="col">自律度</th><th scope="col">検証条件（人なしで合否を判定）</th><th scope="col">観測指標（劣化の検知）</th><th scope="col">特に効く軸</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">依存ライブラリのパッチ更新</th><td>委任〜自律</td><td>ビルド、全テスト、契約テストが通る</td><td>マージ後の変更失敗率、取り消し（revert）率</td><td>開発環境（原則1・4）</td></tr>
+        <tr><th scope="row">再現手順のあるバグ修正</th><td>委任</td><td>先に書いた再現テストが失敗から成功に変わり、既存テストも通る</td><td>差し戻し率、同種バグの再発</td><td>開発環境（原則1・7）</td></tr>
+        <tr><th scope="row">テストの追加</th><td>委任</td><td>行カバレッジだけでなく、ミューテーションスコアが上がる</td><td>テストの実行時間、不安定なテストの割合</td><td>開発環境（原則1）</td></tr>
+        <tr><th scope="row">大規模な機械的移行</th><td>委任（ファイル単位に分割）</td><td>型チェックと、移行前後の出力の比較が一致する</td><td>失敗したファイルの割合、手作業で直した割合</td><td>開発環境（原則3・4）、組織（レビューの階層）</td></tr>
+        <tr><th scope="row">障害の一次調査</th><td>補助（読み取りのみ）</td><td>事後に、インシデントの記録と調査結果を突き合わせる</td><td>原因の特定までの時間、誤った推定の割合</td><td>開発環境（原則5・6）、データ（権限）</td></tr>
+        <tr><th scope="row">社内の設計文書・障害記録への質問</th><td>補助</td><td>回答に出典リンクを必須にし、閲覧権限のない文書は検索段階で除外する</td><td>答えられなかった質問、誤答の報告数</td><td>データ（権限・フィードバック）</td></tr>
+        <tr><th scope="row">KPIに関する質問</th><td>補助</td><td>定義済みの指標だけで答え、定義外の質問はエラーで返す</td><td>未定義でエラーになった質問の数と内容</td><td>データ（意味の統一）、組織（指標の責任者）</td></tr>
+        <tr><th scope="row">新機能の設計と実装</th><td>補助〜委任（設計判断は人）</td><td>仕様の受け入れ基準をE2Eテストで確かめる</td><td>仕様からの乖離、設計理由を説明できる人の有無</td><td>全軸（原則7、認知的負債）</td></tr>
+        <tr><th scope="row">セキュリティ上重要な変更</th><td>補助</td><td>静的解析とセキュリティテスト、ただし最終判断は人のレビュー</td><td>脆弱性の検出数、修正までの時間</td><td>開発環境（原則6）、組織（レビューの階層）</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="prose">
+    <h3>表5から読み取れること</h3>
+    <p><span class="lbl inf">推論</span>第1に、自律度を「委任」以上にできる用途は、合否を機械で判定できる用途とほぼ重なります。依存ライブラリの更新やバグ修正は、テストという明確な判定基準があるため任せやすい一方、新機能の設計やセキュリティ上重要な変更は、判定の一部に人の判断が残るため「補助」にとどまります。GitHubが、複雑なリファクタリングやセキュリティ上重要な作業をコーディングエージェントに任せないよう勧めているのも<a class="ev" href="#e23">E-23</a>、この関係から理解できます。</p>
+    <p>第2に、同じチームでも用途によって必要な準備が大きく違います。依存ライブラリの更新を自律で回したいなら、開発環境の軸を強化すれば済みます。しかしKPIに関する質問に答えさせたいなら、開発環境をいくら整えても意味がなく、データと組織の軸が必要です。「うちのチームはAI readyか」という問いが答えにくいのは、このためです。</p>
+    <p>第3に、検証条件は強い順に「機械で即時に判定」「機械で事後に判定」「人が判定」と並べられます。障害の一次調査のように即時の判定が難しい用途でも、事後に記録と突き合わせる仕組みを作れば、AIの調査の質を測り、改善できます。即時に判定できないことは、任せられない理由ではなく、自律度を「補助」にとどめる理由だと考えるのが実践的です。</p>
+    <p>大規模な機械的移行については、Claude Codeのドキュメントが、対象ファイルの一覧を作ってからファイルごとにエージェントを並行実行し、まず2〜3件で指示を調整してから全体に広げる手順を紹介しています<a class="ev" href="#e18">E-18</a>。「小さく試してから広げる」ことが、検証条件を確かめる段階を兼ねています。</p>
+  </div>
+</section>
+
+<section class="block" id="maturity" aria-labelledby="h-maturity">
+  <div class="prose">
+    <h2 id="h-maturity">3つの軸の成熟度と自己診断</h2>
+    <p>ここまでの内容を、3つの軸 × 5段階の成熟度表にまとめます。<span class="lbl op">考察</span>段階の名前はFactoryの成熟度モデル<a class="ev" href="#e19">E-19</a>から借りていますが、データと組織の軸への拡張と各セルの内容は筆者が本ページの調査をもとに作成したもので、公式の基準ではありません。</p>
+    <p>使い方の注意として、この表は「全員がレベル5を目指すべき」というものではありません。前の章で述べたとおり、AI readyは用途と自律度に対する関係です。補助的な使い方しかしない用途ならレベル2〜3で十分なこともあり、エージェントにPR作成まで任せたいならレベル4が必要になる、というように、目標とする段階は用途ごとに決めます。</p>
+  </div>
+  <div class="tbl" tabindex="0" role="region" aria-label="表6（横にスクロールできます）">
+    <table class="maturity">
+      <caption>表6　3つの軸の成熟度（筆者作成。段階名はFactoryのモデルを参考にした）</caption>
+      <thead><tr><th scope="col">軸</th><th scope="col">L1 機能する</th><th scope="col">L2 文書化</th><th scope="col">L3 標準化</th><th scope="col">L4 最適化</th><th scope="col">L5 自律</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">開発環境</th><td>動き、テストと起動の手順がどこかに書かれている。ただしセットアップは手作業で、自動検証はない</td><td>コマンドとつまずきやすい点が短い指示ファイルにある。lintと型がCIで走る</td><td>1コマンドで環境が立ち、構造のルールが機械で検査される</td><td>サンドボックスと許可リストで権限を管理し、エージェントが観測データを読んで自分で検証できる</td><td>失敗が自動的に文脈・フック・テストへ戻り、逸脱の修正も定期的に自動で回る</td></tr>
+        <tr><th scope="row">データ</th><td>用途ごとに使うデータが特定され、責任者がいる</td><td>指標の定義とAIが参照してよい範囲が文書化されている</td><td>指標が一元定義され、AIはそこを経由する。検索に権限が反映される</td><td>来歴と鮮度が分かり、AIの回答の正誤が記録・評価される</td><td>誤答や未回答から定義とデータが継続的に改善され、品質の劣化が自動で検知される</td></tr>
+        <tr><th scope="row">組織</th><td>AIの利用が許可され、機密情報の扱いの基準がある</td><td>利用方針が目的とともに周知され、教育が記録されている</td><td>リスクに応じたレビューの階層と、変更の大きさの目安がある</td><td>成果指標で効果を測り、AIの変更を人が理解してから取り込む規律がある</td><td>失敗から仕組みを改善し、AIを前提に業務フローと役割を見直し続けている</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="prose">
+    <h3>自己診断</h3>
+    <p>次のチェックリストで、自分のチームの現在地を確かめられます。各項目には対応する段階（L1〜L5）を付けています。段階の判定は、Factoryのモデルと同じく「前の段階を満たしてから次の段階へ進む」考え方を採り、その段階の2項目がどちらも満たされ、かつそれより前の段階もすべて満たされている場合に到達とします。</p>
+    <p>診断は、チーム全体ではなく、AIに任せたい用途を1つ決めてから行うことを勧めます。同じチームでも、用途によって結果は変わるはずです。チェックの内容はこのページの中でだけ使われ、どこにも送信・保存されません。</p>
+    <noscript><p class="note"><b>JavaScriptが無効になっています</b>チェックボックスは操作できますが、段階の自動集計は表示されません。各軸で、L1から順に「その段階の2項目がどちらもチェックされているか」を確かめ、最初に満たされなかった段階の1つ手前が現在の段階です。</p></noscript>
+  </div>
+
+  <form class="diag" id="diag" aria-describedby="diag-help">
+    <p id="diag-help" class="note idea"><b>使い方</b>当てはまる項目にチェックを入れてください。チェックするたびに、下の結果が更新されます。</p>
+    <div class="diag-out" id="diag-out" role="status" aria-live="polite" hidden>
+      <h3>診断結果</h3>
+      <div class="tbl" style="margin:8px 0;background:transparent;border:0">
+        <table>
+          <thead><tr><th scope="col">軸</th><th scope="col">到達段階</th><th scope="col">チェック数</th><th scope="col">次に取り組む項目</th></tr></thead>
+          <tbody id="diag-body"></tbody>
+        </table>
+      </div>
+      <button type="button" class="btn" id="diag-reset">チェックをすべて外す</button>
+    </div>
+
+    <fieldset data-axis="開発環境">
+      <legend>開発環境の軸</legend>
+      <label><input type="checkbox" data-lv="1"><span><span class="lv">L1</span>テストを実行するコマンドが存在し、どこかに書かれている</span></label>
+      <label><input type="checkbox" data-lv="1"><span><span class="lv">L1</span>依存関係のインストールと起動の手順が文書化されている</span></label>
+      <label><input type="checkbox" data-lv="2"><span><span class="lv">L2</span>指示ファイル（AGENTS.md等）に、推測できないコマンドとつまずきやすい点が短く書かれている</span></label>
+      <label><input type="checkbox" data-lv="2"><span><span class="lv">L2</span>lintと型チェックがCIで実行され、失敗するとマージできない</span></label>
+      <label><input type="checkbox" data-lv="3"><span><span class="lv">L3</span>新しいworktreeで、1コマンドでセットアップと起動ができる</span></label>
+      <label><input type="checkbox" data-lv="3"><span><span class="lv">L3</span>依存の向きなど構造上のルールが、CIで機械的に検査されている</span></label>
+      <label><input type="checkbox" data-lv="4"><span><span class="lv">L4</span>エージェントはサンドボックス内で動き、許可リストで権限が管理されている</span></label>
+      <label><input type="checkbox" data-lv="4"><span><span class="lv">L4</span>エージェントがローカルでログ・メトリクス・トレースを読み、自分の変更を検証できる</span></label>
+      <label><input type="checkbox" data-lv="5"><span><span class="lv">L5</span>エージェントの失敗が、定期的に指示ファイル・Skills・フック・テストへ反映されている</span></label>
+      <label><input type="checkbox" data-lv="5"><span><span class="lv">L5</span>規約からの逸脱を検出し、修正PRを作る仕組みが定期的に動いている</span></label>
+    </fieldset>
+
+    <fieldset data-axis="データ">
+      <legend>データの軸</legend>
+      <label><input type="checkbox" data-lv="1"><span><span class="lv">L1</span>AIに任せたい用途ごとに、使うデータが特定されている</span></label>
+      <label><input type="checkbox" data-lv="1"><span><span class="lv">L1</span>主要なデータの管理責任者が決まっている</span></label>
+      <label><input type="checkbox" data-lv="2"><span><span class="lv">L2</span>主要な指標の定義が文書化されている</span></label>
+      <label><input type="checkbox" data-lv="2"><span><span class="lv">L2</span>AIから参照してよいデータの範囲が決まっている</span></label>
+      <label><input type="checkbox" data-lv="3"><span><span class="lv">L3</span>主要な指標がセマンティックレイヤー等で一元定義され、AIはそこを経由して参照する</span></label>
+      <label><input type="checkbox" data-lv="3"><span><span class="lv">L3</span>社内文書の検索インデックスに、閲覧権限が反映されている</span></label>
+      <label><input type="checkbox" data-lv="4"><span><span class="lv">L4</span>データの来歴と鮮度を、メタデータとして参照できる</span></label>
+      <label><input type="checkbox" data-lv="4"><span><span class="lv">L4</span>AIの回答の正誤が記録され、評価に使われている</span></label>
+      <label><input type="checkbox" data-lv="5"><span><span class="lv">L5</span>答えられなかった質問や誤答から、定義やデータが継続的に追加・修正されている</span></label>
+      <label><input type="checkbox" data-lv="5"><span><span class="lv">L5</span>データ品質の監視が自動化され、劣化すると通知される</span></label>
+    </fieldset>
+
+    <fieldset data-axis="組織">
+      <legend>組織の軸</legend>
+      <label><input type="checkbox" data-lv="1"><span><span class="lv">L1</span>業務でのAIツールの利用が許可されている</span></label>
+      <label><input type="checkbox" data-lv="1"><span><span class="lv">L1</span>AIに入力してよい情報・いけない情報の基準がある</span></label>
+      <label><input type="checkbox" data-lv="2"><span><span class="lv">L2</span>AIの利用方針が文書化され、目的とともに全員に伝えられている</span></label>
+      <label><input type="checkbox" data-lv="2"><span><span class="lv">L2</span>AIリテラシーの教育が行われ、記録が残っている</span></label>
+      <label><input type="checkbox" data-lv="3"><span><span class="lv">L3</span>変更のリスクに応じて、人がどこまでレビューするかの階層が決まっている</span></label>
+      <label><input type="checkbox" data-lv="3"><span><span class="lv">L3</span>PRの大きさに上限または目安がある</span></label>
+      <label><input type="checkbox" data-lv="4"><span><span class="lv">L4</span>AIの効果を、活動量ではなく成果指標（リードタイム、変更失敗率など）で測っている</span></label>
+      <label><input type="checkbox" data-lv="4"><span><span class="lv">L4</span>AIが生成した変更を、少なくとも1人が理解してから取り込む規律がある</span></label>
+      <label><input type="checkbox" data-lv="5"><span><span class="lv">L5</span>エージェントの失敗がふりかえりで扱われ、仕組みの改善につながっている</span></label>
+      <label><input type="checkbox" data-lv="5"><span><span class="lv">L5</span>AIを前提に、業務フローや役割分担を見直した実績がある</span></label>
+    </fieldset>
+  </form>
+
+  <div class="prose">
+    <h3>結果の読み方</h3>
+    <p>3つの軸の段階がそろっていない場合、最も低い軸が全体の上限になることが多いと考えられます。<span class="lbl inf">推論</span>例えば開発環境がL4でも組織がL2なら、エージェントが作ったPRはレビュー待ちで滞り（証拠の地図の章で見た状態）、開発環境の投資は成果に結びつきにくくなります。最も低い軸の次の段階の項目から手を付けるのが、投資対効果の高い進め方です。</p>
+    <p>また、チェックが付いていても、それが形だけになっていないかを確かめてください。例えば「指示ファイルがある」にチェックしても、それが自動生成されたまま数百行あるなら、原則2で見たように逆効果の可能性があります。</p>
+  </div>
+</section>
+
+<section class="block" id="anti" aria-labelledby="h-anti">
+  <div class="prose">
+    <h2 id="h-anti">アンチパターン：AI readyのつもりで逆効果になること</h2>
+    <p>調査の中で繰り返し出てきた失敗の型を12個にまとめました。それぞれに、何が問題で、どう直すかを添えています。</p>
+  </div>
+  <ol class="antis">
+    <li>
+      <h3>1. 自動生成した指示ファイルを、そのまま置く</h3>
+      <p>初期化コマンドで作った指示ファイルは、コードを読めば分かることを多く含みがちです。LLMが生成したコンテキストファイルが成功率を下げ、コストを増やしたという研究があります<a class="ev" href="#e12">E-12</a>。</p>
+      <p class="fix"><b>直し方：</b>「この行を消したらエージェントは間違えるか」を1行ずつ問い、間違えない行は削る<a class="ev" href="#e18">E-18</a>。</p>
+    </li>
+    <li>
+      <h3>2. 指示を足し続け、誰も削らない</h3>
+      <p>指示は自然に積み重なり、やがて互いに矛盾します<a class="ev" href="#e21">E-21</a>。ルールが長くなるほど、大事なルールが埋もれて守られなくなります<a class="ev" href="#e18">E-18</a>。</p>
+      <p class="fix"><b>直し方：</b>指示ファイルをコードと同じようにレビューし、定期的に削る。ときどきしか使わない知識はSkillsへ、必ず守らせたいことはフックへ移す<a class="ev" href="#e18">E-18</a><a class="ev" href="#e39">E-39</a>。</p>
+    </li>
+    <li>
+      <h3>3. 検証の仕組みがないまま、自律度だけを上げる</h3>
+      <p>もっともらしいが端のケースを扱えていない実装を、そのまま信じてしまう「信頼と検証の隙間」が生まれます<a class="ev" href="#e18">E-18</a>。生成コードのセキュリティ上の欠陥は、モデルが新しくなっても大きくは減っていません<a class="ev" href="#e36">E-36</a>。</p>
+      <p class="fix"><b>直し方：</b>自律度を上げる前に、その用途の合否を機械で判定できる仕組みを作る。検証できないなら出荷しない<a class="ev" href="#e18">E-18</a>。</p>
+    </li>
+    <li>
+      <h3>4. 1回だけ試して、効果を判断する</h3>
+      <p>エージェントの実行時間やトークン数は1回ごとのばらつきが大きく、1回の比較では結論が逆になることがあります<a class="ev" href="#e15">E-15</a>。</p>
+      <p class="fix"><b>直し方：</b>指示ファイルや設定を変えたときは、同じタスクを複数回（例えば5回）実行し、中央値で比べる。</p>
+    </li>
+    <li>
+      <h3>5. 活動量で成果を測る</h3>
+      <p>PRの数やコードの行数は、AIで簡単に増えます。個人のPRが倍増しても、会社単位の成果指標とは相関しなかったという分析があります<a class="ev" href="#e34">E-34</a>。</p>
+      <p class="fix"><b>直し方：</b>リードタイム、変更失敗率、レビュー待ち時間、利用者への影響のような、流れと結果の指標で測る。</p>
+    </li>
+    <li>
+      <h3>6. 非公開データ・信頼できない入力・外部通信を同時に与える</h3>
+      <p>この3つがそろうと、入力に仕込まれた指示によってデータが外部へ送られる危険があり、ガードレールでは確実に防げません<a class="ev" href="#e28">E-28</a>。</p>
+      <p class="fix"><b>直し方：</b>3つのうち少なくとも1つを外す。最小エージェンシーの原則で、タスクに必要な権限だけを与える<a class="ev" href="#e35">E-35</a>。</p>
+    </li>
+    <li>
+      <h3>7. 何でもMCPでつなぐ</h3>
+      <p>MCPは強力ですが、プロトコルの複雑さと、サーバーごとのサプライチェーンのリスクを持ち込みます<a class="ev" href="#e21">E-21</a><a class="ev" href="#e35">E-35</a>。</p>
+      <p class="fix"><b>直し方：</b>CLIツールやAgent Skillsで足りる用途はそちらで済ませ、ガバナンスや複数テナントの利点がある場合にMCPを選ぶ<a class="ev" href="#e21">E-21</a>。</p>
+    </li>
+    <li>
+      <h3>8. 整えた経路が、迂回される</h3>
+      <p>セマンティックレイヤーを整えても、AIで生データから直接答えを作るほうが楽なら、数字の食い違いが再発します<a class="ev" href="#e25">E-25</a>。</p>
+      <p class="fix"><b>直し方：</b>整えた経路を、人にとってもAIにとっても最も楽な経路にする。AIに渡すツールを、定義済みの指標を問い合わせるものに絞る。</p>
+    </li>
+    <li>
+      <h3>9. 速度だけ上げて、理解が追いつかない</h3>
+      <p>実装の速さとチームの理解の差が広がると、誰も設計の理由を説明できなくなり、変更が止まります<a class="ev" href="#e43">E-43</a><a class="ev" href="#e21">E-21</a>。</p>
+      <p class="fix"><b>直し方：</b>AIが生成した変更を少なくとも1人が理解してから取り込む。なぜ変えたかを記録する<a class="ev" href="#e43">E-43</a>。</p>
+    </li>
+    <li>
+      <h3>10. ツールを配ったことを、AI readyと呼ぶ</h3>
+      <p>成果を出している組織に共通するのは、ツールではなく業務フローの再設計と経営の関与です<a class="ev" href="#e04">E-04</a>。準備度を技術の購入として扱うこと自体が誤りだとする研究もあります<a class="ev" href="#e27">E-27</a>。</p>
+      <p class="fix"><b>直し方：</b>ツールの導入と同時に、どの工程をどう変えるかを決める。</p>
+    </li>
+    <li>
+      <h3>11. 仕様書を量産する</h3>
+      <p>仕様駆動の手法は意図の外部化に役立つ一方、大量の文書と長い実行時間を生み、実装が仕様から離れていくことを防げないという指摘があります<a class="ev" href="#e40">E-40</a>。</p>
+      <p class="fix"><b>直し方：</b>仕様は、関係するファイルとインターフェース、範囲外、検証手順を含む最小限の形にする<a class="ev" href="#e18">E-18</a>。小さな変更では書かない。</p>
+    </li>
+    <li>
+      <h3>12. 説明なしにAIの利用を義務づける</h3>
+      <p>AIファーストの方針を文脈なしに発表した結果、強い反発を受け、後に経営者が説明不足を認めた例があります<a class="ev" href="#e42">E-42</a>。</p>
+      <p class="fix"><b>直し方：</b>方針と一緒に、社員の仕事にとって何を意味するか、何をしないかを伝える。</p>
+    </li>
+  </ol>
+</section>
+
+<section class="block" id="roadmap" aria-labelledby="h-roadmap">
+  <div class="prose">
+    <h2 id="h-roadmap">導入ステップ：最初の90日</h2>
+    <p>ここまでの内容を、チームで実際に進める順序に並べました。<span class="lbl op">考察</span>期間は目安で、チームの規模や既存の整備状況によって前後します。順序は「検証できないものは改善できない」という考え方に基づいていて、測定と検証ループを最初に置いています。</p>
+  </div>
+  <ol class="steps-tl">
+    <li>
+      <h3><span class="when">1週目</span><br>用途を1つ選び、「AI ready文」を書く</h3>
+      <p>チーム全体のAI readyを目指すのではなく、AIに任せたい用途を1つ選びます。最初は、検証しやすく、失敗の影響が小さく、繰り返し発生する作業が向いています。Anthropicの社内調査でも、任されるのはそうした作業が中心でした<a class="ev" href="#e47">E-47</a>。</p>
+      <ul>
+        <li><a href="#debate">「言えるのか、言えないのか」の章</a>のテンプレートで、用途・自律度・検証条件・観測指標を書く</li>
+        <li>現在の値を測っておく：リードタイム、レビュー待ち時間、変更失敗率、その用途でのエージェントの成功率</li>
+        <li>自己診断を、その用途について行う</li>
+      </ul>
+    </li>
+    <li>
+      <h3><span class="when">1〜2週目</span><br>検証ループを作る</h3>
+      <ul>
+        <li>テスト、型チェック、lintを1コマンドで実行できるようにし、1ファイル単位の実行方法も用意する</li>
+        <li>ローカルとCIのコマンドをそろえる</li>
+        <li>必ず実行すべき検査をフックやpre-commitに移す<a class="ev" href="#e18">E-18</a></li>
+        <li>結果が不安定なテストを洗い出して直す</li>
+      </ul>
+    </li>
+    <li>
+      <h3><span class="when">2〜4週目</span><br>文脈を「短い地図」として整える</h3>
+      <ul>
+        <li>指示ファイルを十数行から始める：パッケージマネージャ、主要なコマンド、自動生成ファイルの境界、つまずきやすい点<a class="ev" href="#e15">E-15</a></li>
+        <li>セキュリティや性能の制約で、機械で捕まえにくいものを1〜2行足す<a class="ev" href="#e14">E-14</a></li>
+        <li>エージェントが実際に間違えたことだけを追記し、変更の効果は複数回の実行の中央値で確かめる<a class="ev" href="#e15">E-15</a></li>
+        <li>ときどきしか使わない手順はSkillsに分ける<a class="ev" href="#e39">E-39</a></li>
+      </ul>
+    </li>
+    <li>
+      <h3><span class="when">並行して</span><br>組織のルールを決める</h3>
+      <ul>
+        <li>AIの利用方針を、目的と社員にとっての意味とともに文書にする<a class="ev" href="#e06">E-06</a><a class="ev" href="#e42">E-42</a></li>
+        <li>変更のリスクに応じたレビューの階層と、PRの大きさの目安を決める</li>
+        <li>AIが生成した変更を誰が理解してから取り込むかを決める<a class="ev" href="#e43">E-43</a></li>
+        <li>AIリテラシーの教育を行い、記録を残す<a class="ev" href="#e30">E-30</a></li>
+      </ul>
+    </li>
+    <li>
+      <h3><span class="when">4〜8週目</span><br>環境・権限・観測を整える</h3>
+      <ul>
+        <li>新しいworktreeで1コマンドでアプリが起動するようにする<a class="ev" href="#e16">E-16</a></li>
+        <li>エージェントをサンドボックスで動かし、許可リストを作る<a class="ev" href="#e18">E-18</a><a class="ev" href="#e21">E-21</a></li>
+        <li>用途ごとに、致命的な三要素がそろっていないかを確認する<a class="ev" href="#e28">E-28</a></li>
+        <li>エージェントがログ・メトリクス・トレースを読めるようにし、エージェント自身の実行とトークン使用量も計測する<a class="ev" href="#e38">E-38</a></li>
+        <li>依存の向きなど、破ると手戻りが大きい構造のルールをCIで検査する<a class="ev" href="#e16">E-16</a></li>
+      </ul>
+    </li>
+    <li>
+      <h3><span class="when">8〜12週目</span><br>必要ならデータの軸に進む</h3>
+      <p>選んだ用途が社内のデータや文書を参照するものであれば、ここでデータの軸に取り組みます。</p>
+      <ul>
+        <li>その用途で使う指標や用語の定義を1か所にまとめ、AIにはそこを経由させる<a class="ev" href="#e48">E-48</a></li>
+        <li>検索インデックスに閲覧権限を反映する<a class="ev" href="#e21">E-21</a></li>
+        <li>AIの回答の正誤や、答えられなかった質問を記録する<a class="ev" href="#e09">E-09</a></li>
+      </ul>
+    </li>
+    <li>
+      <h3><span class="when">12週目以降、継続</span><br>検証ループを組織で回し、自律度を調整する</h3>
+      <ul>
+        <li>月に1回程度、エージェントの失敗と差し戻しをふりかえり、指示ファイル・Skills・フック・テストに戻す</li>
+        <li>1週目に測った指標と比べ、改善していれば任せる範囲を広げ、悪化していれば自律度を下げる</li>
+        <li>2つ目の用途を選び、同じ手順を繰り返す</li>
+      </ul>
+    </li>
+  </ol>
+  <div class="talk">
+    <div class="say"><div class="who reimu" aria-hidden="true">霊夢</div><div class="bubble"><span class="name">霊夢</span>AGENTS.mdを書くのが最初じゃないのね。</div></div>
+    <div class="say r"><div class="who marisa" aria-hidden="true">魔理沙</div><div class="bubble"><span class="name">魔理沙</span>先に測る基準と検証ループがないと、AGENTS.mdを書いて良くなったのか悪くなったのかが分からないからな。順番が逆だと、頑張って書いたのに逆効果だった、なんてことも気づけないんだぜ。</div></div>
+  </div>
+</section>
+
+<section class="block" id="measure" aria-labelledby="h-measure">
+  <div class="prose">
+    <h2 id="h-measure">何を測るか：AI readyを確かめる指標</h2>
+    <p>AI readyを「測り続けるもの」と定義した以上、何を測るかを決めておく必要があります。ここでは指標を4つの層に分けて整理し、測るときの注意点をまとめます。<span class="lbl op">考察</span>層の分け方と指標の選び方は筆者の提案です。</p>
+  </div>
+  <div class="tbl" tabindex="0" role="region" aria-label="表7（横にスクロールできます）">
+    <table>
+      <caption>表7　AI readyを確かめる指標の4つの層（筆者作成）</caption>
+      <thead><tr><th scope="col">層</th><th scope="col">指標の例</th><th scope="col">分かること</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">流れ</th><td>変更のリードタイム、デプロイの頻度、変更失敗率、復旧時間</td><td>AIの導入が、チームとして価値を届ける速さと安定性を変えたか。DORAが長年使ってきた指標で、AIで不安定さが増えていないかもここで分かる<a class="ev" href="#e05">E-05</a></td></tr>
+        <tr><th scope="row">エージェントの作業</th><td>最初の試行での成功率、人が介入した回数、取り込まれたPRあたりのトークン費用、差し戻し・取り消しの率</td><td>その用途について、検証ループと文脈が機能しているか。自律度を上げてよいか</td></tr>
+        <tr><th scope="row">受け止める側</th><td>レビュー待ち時間、PRの大きさ、レビューで見つかった問題の種類</td><td>下流にボトルネックが移っていないか<a class="ev" href="#e34">E-34</a></td></tr>
+        <tr><th scope="row">理解</th><td>設計理由が記録された変更の割合、変更を説明できる人がいる割合、障害対応で「なぜこうなっているか」に詰まった回数</td><td>認知的負債と意図の負債が積み上がっていないか<a class="ev" href="#e43">E-43</a><a class="ev" href="#e44">E-44</a></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="prose">
+    <h3>測るときの5つの注意</h3>
+    <ol>
+      <li><strong>体感ではなく実測で。</strong>METRの実験では、開発者は速くなったと感じていても実際には遅くなっていました<a class="ev" href="#e07">E-07</a>。アンケートは補助として使い、判断はログやテレメトリの実測に基づかせます。</li>
+      <li><strong>1回ではなく複数回で。</strong>エージェントの実行時間やトークン数は1回ごとのばらつきが大きいため、設定を比べるときは同じタスクを複数回実行して中央値で比べます<a class="ev" href="#e15">E-15</a>。</li>
+      <li><strong>活動量ではなく結果で。</strong>PRの数や行数は簡単に増えますが、組織の成果とは相関しないことがあります<a class="ev" href="#e34">E-34</a>。活動量を目標にすると、指標そのものが目的化します。</li>
+      <li><strong>代表的なタスクの固定セットを持つ。</strong>指示ファイルやSkillsを変えたときに効果を確かめるため、過去の実際のタスクから代表的なものを選び、評価用のセットとして固定しておきます。Deboisの言うコンテキストの「評価」の段階に当たります<a class="ev" href="#e22">E-22</a>。Hacker Newsの議論でも、評価を回しながら指示を改善したことで成功率が大きく上がったという報告がありました<a class="ev" href="#e49">E-49</a>。</li>
+      <li><strong>前後比較の前提が崩れることを知っておく。</strong>AIの利用が当たり前になると、「AIを使わない場合」との比較は成り立ちにくくなります<a class="ev" href="#e08">E-08</a>。導入前の値を早めに記録しておくこと、それが難しければ用途ごとの指標の推移で判断することが現実的です。</li>
+    </ol>
+    <h3>エージェント自身の計測</h3>
+    <p>エージェントの作業の層を測るには、エージェントの実行そのものを記録する必要があります。OpenTelemetryの生成AI向けセマンティック規約は、エージェントの実行、計画、ツールの実行、検索を個別のスパンとして記録し、トークン使用量をモデルや操作ごとに集計する形を定めつつあります。エージェント1回の実行でツールを何回呼んだか、推論を何回行ったかといった指標も含まれます<a class="ev" href="#e38">E-38</a>。既にOpenTelemetryでアプリケーションを観測しているチームなら、同じ基盤でエージェントの実行も観測でき、費用と成果を同じ画面で見られるようになります。</p>
+  </div>
+</section>
+
+<section class="block" id="faq" aria-labelledby="h-faq">
+  <div class="prose">
+    <h2 id="h-faq">よくある疑問</h2>
+
+    <h3>テストがほとんどないレガシーシステムでは、どうすればよいか</h3>
+    <p>検証ループがないため、いきなり「委任」の自律度で使うのは危険です。まずは読み取り専用の「補助」の用途、例えばコードの理解や調査から始めるのが安全です。METRの実験でも、歴史の長い大規模リポジトリでは、AIが暗黙の文脈を活用できず効果が出にくかったことが報告されています<a class="ev" href="#e07">E-07</a>。</p>
+    <p>そのうえで、最初の委任の用途として「現在の振る舞いを記録するテスト（特性テスト）を書く」作業をAIに任せる方法があります。正しさを測るものさしを先に作り、それから変更を任せる順序です。旧システムの入力と出力を記録して新しいコードと突き合わせる考え方は、同じサイトの<a href="ai-code-modernization-prep.html">AIでコードを近代化する前に、組織で決めておく6つのこと</a>で詳しく扱っています。</p>
+
+    <h3>モデルが賢くなれば、準備は要らなくなるのではないか</h3>
+    <p>一部は要らなくなります。Hacker Newsの議論でも、詳細な指示はモデルが賢くなれば不要になるという意見がありました<a class="ev" href="#e49">E-49</a>。コードを読めば分かることを指示ファイルに書く必要は、モデルの読解力が上がるほど減るでしょう。</p>
+    <p>しかし、少なくとも3つは残ると考えます。<span class="lbl inf">推論</span>1つ目は検証です。Veracodeの評価では、モデルが大きく新しくなってもセキュリティ上の欠陥の割合はほとんど改善していませんでした<a class="ev" href="#e36">E-36</a>。2つ目は権限です。致命的な三要素は、モデルの賢さではなくシステムの構成の問題で、LLMが読んだ内容の指示に従ってしまう性質がある限り残ります<a class="ev" href="#e28">E-28</a>。3つ目は意図です。なぜその設計にしたのかという理由は、コードの中にない限り、どれほど賢いモデルにも推測しかできません<a class="ev" href="#e45">E-45</a>。</p>
+
+    <h3>小さなチームや個人の開発でも必要か</h3>
+    <p>必要ですが、規模に合わせて絞れます。成熟度表のL5を目指す必要はありません。費用が小さく効果が大きいのは、検証ループ（原則1）と権限の境界（原則6）です。テストとlintを1コマンドにし、エージェントをサンドボックスで動かすだけでも、任せられる範囲は大きく変わります。組織の軸も、1人なら「AIが書いたコードを自分が理解してから取り込む」という1つの規律に集約できます。</p>
+
+    <h3>ツールごとに指示ファイルを分けるべきか</h3>
+    <p>AGENTS.mdはLinux Foundation傘下のAgentic AI Foundationのプロジェクトとなり、多くのツールが読み込むようになっています<a class="ev" href="#e51">E-51</a>。Thoughtworksは、チームで共有するAI向けの指示をサービスのテンプレートに組み込んで管理する実践を採用（Adopt）の段階に置いています<a class="ev" href="#e21">E-21</a>。<span class="lbl op">考察</span>内容が同じなら、正本を1つにして、ツール固有のファイルからはそれを参照させるのがよいでしょう。Claude CodeのCLAUDE.mdは、<code>@path</code>の記法で他のファイルを読み込めます<a class="ev" href="#e18">E-18</a>。正本が複数あると、片方だけが更新されて内容が食い違い、原則2で見た指示の矛盾の原因になります。</p>
+
+    <h3>いつ自律度を上げてよいか</h3>
+    <p>その用途の観測指標が安定していて、検証条件で捕まえられなかった問題が一定期間出ていないときです。現場の多くはまだ慎重で、Stack Overflowの調査では63%がエージェントを完全な自動運転で動かすことはほとんどないと答えています<a class="ev" href="#e11">E-11</a>。<span class="lbl op">考察</span>自律度は一度に上げるのではなく、用途を限って1段階ずつ上げ、指標が悪化したら戻す、という運用が現実的です。下げることは失敗ではなく、検証ループが正しく機能している証拠です。</p>
+
+    <h3>費用はどう考えればよいか</h3>
+    <p>指示ファイルの有無だけでも、推論コストが20%以上増えたという研究と、出力トークンが16%以上減ったという研究があり<a class="ev" href="#e12">E-12</a><a class="ev" href="#e13">E-13</a>、設定次第で費用は上下します。IVRyの事例のように、個人の作業が速くなる陰で組織全体の費用対効果が見えなくなることもあります<a class="ev" href="#e25">E-25</a>。<span class="lbl op">考察</span>費用は「トークンの総額」ではなく、「取り込まれた成果あたりのトークン費用」で見ることを勧めます。差し戻されたPRや捨てられた試行の費用も含めて計測すれば、検証ループや文脈の改善が費用にどう効いたかが分かります。</p>
+  </div>
+</section>
+
+<section class="block" id="view" aria-labelledby="h-view">
+  <div class="prose">
+    <h2 id="h-view">筆者の見解：何をもってAI readyと言えるか</h2>
+    <p>最後に、冒頭の3つの問いに、調査を踏まえた筆者の見解として答えます。この章の内容はすべて<span class="lbl op">考察</span>です。</p>
+
+    <h3>問い1：何をもってAI readyと言えるのか</h3>
+    <p>次の3つの条件がそろったとき、その用途についてAI readyと言えると考えます。</p>
+    <ol>
+      <li><strong>用途と自律度が明示されている。</strong>何を、どこまでAIに任せるのかが文章になっている。</li>
+      <li><strong>結果を機械で判定でき、劣化を観測できる。</strong>人がいなくても合否が決まる検証条件と、品質や費用の変化を捉える指標がある。</li>
+      <li><strong>失敗を仕組みに戻すループが回っている。</strong>エージェントの失敗、AIの誤答、レビューでの差し戻しが、文脈・ルール・テスト・定義の改善につながっている。</li>
+    </ol>
+    <p>3つ目の条件があることで、AI readyは「ある時点で到達する状態」ではなく「維持され続ける関係」になります。コンテキストは古くなり、モデルは変わり、利用者は新しい近道を見つけます。それでも関係を保てている、ということが、AI readyの最も実践的な意味だと考えます。</p>
+
+    <h3>問い2：言えないのはどんな場合か</h3>
+    <p>次のような言い方は、根拠を持てないので避けるべきだと考えます。</p>
+    <ul>
+      <li>用途を指定しない「わが社はAI readyだ」</li>
+      <li>ツールの導入やファイルの設置を根拠にした「AI readyになった」</li>
+      <li>一度の評価や監査を根拠にした、期限のない「AI readyである」</li>
+    </ul>
+    <p>その意味で、「AI readyとは言えない」とする懐疑の側の指摘は正しいと考えます。ただし、それは「準備に意味がない」ことを意味しません。準備の効果は、用途と条件を特定すれば確かめられます。</p>
+
+    <h3>問い3：ベストプラクティスはあるのか</h3>
+    <p>あります。ただし、確度に差があります。複数の独立した情報源が一致しているものと、研究や実践者の間で意見が割れているものを分けると、表8のようになります。</p>
+  </div>
+  <div class="tbl" tabindex="0" role="region" aria-label="表8（横にスクロールできます）">
+    <table>
+      <caption>表8　ベストプラクティスの確度（筆者の評価）</caption>
+      <thead><tr><th scope="col">確度</th><th scope="col">実践</th><th scope="col">理由</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">高い</th><td>機械で判定できる検証ループを作る</td><td>ツール提供元、研究、技術レーダー、社内調査が一致して重視している<a class="ev" href="#e16">E-16</a><a class="ev" href="#e18">E-18</a><a class="ev" href="#e21">E-21</a><a class="ev" href="#e47">E-47</a></td></tr>
+        <tr><th scope="row">高い</th><td>最小権限とサンドボックス</td><td>セキュリティの専門家と標準化団体が一致し、現場も承認なしの変更を禁じている<a class="ev" href="#e28">E-28</a><a class="ev" href="#e35">E-35</a><a class="ev" href="#e11">E-11</a></td></tr>
+        <tr><th scope="row">高い</th><td>小さなバッチ、明確な方針、業務フローの再設計</td><td>大規模調査で成果と結びつき、AI以前からの知見とも一致する<a class="ev" href="#e04">E-04</a><a class="ev" href="#e06">E-06</a></td></tr>
+        <tr><th scope="row">高い</th><td>文脈を短く保ち、必要なときに取得させる</td><td>モデルの性質から導かれ、肯定・否定どちらの研究も「網羅的に書くな」という点では一致する<a class="ev" href="#e17">E-17</a><a class="ev" href="#e12">E-12</a><a class="ev" href="#e15">E-15</a></td></tr>
+        <tr><th scope="row">中程度</th><td>指示ファイル（AGENTS.md等）を置くこと自体</td><td>効率が上がるという研究と、成功率が下がるという研究がある。書き方と測り方に強く依存する<a class="ev" href="#e12">E-12</a><a class="ev" href="#e13">E-13</a></td></tr>
+        <tr><th scope="row">中程度</th><td>セマンティックレイヤー</td><td>正確さと失敗の仕方で利点がある一方、比較は小規模で提供元によるもの。迂回される事例もある<a class="ev" href="#e48">E-48</a><a class="ev" href="#e25">E-25</a></td></tr>
+        <tr><th scope="row">中程度</th><td>認知的負債・意図の負債の管理</td><td>重要性の指摘は増えているが、測り方や効果の定量的な検証はまだ少ない<a class="ev" href="#e43">E-43</a><a class="ev" href="#e44">E-44</a></td></tr>
+        <tr><th scope="row">割れている</th><td>重い仕様駆動開発</td><td>意図の外部化に有効という見方と、文書の肥大化と実装との乖離を招くという批判がある<a class="ev" href="#e40">E-40</a></td></tr>
+        <tr><th scope="row">割れている</th><td>MCPで何でもつなぐこと</td><td>標準化は進んでいるが、複雑さとサプライチェーンのリスクから慎重論もある<a class="ev" href="#e51">E-51</a><a class="ev" href="#e21">E-21</a></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="prose">
+    <p>確度の高い実践のほとんどは、AI以前から良いソフトウェア開発の条件として知られていたものです。AIが新しく求めているのは、それらを「人が覚えておく暗黙のもの」から「機械が読めて、機械が判定できるもの」に変えることだと考えます。暗黙の知識は人の頭の中なら機能しますが、セッションのたびに白紙から始まるエージェントには届きません<a class="ev" href="#e45">E-45</a>。</p>
+    <p>最後に、この分野は変化が非常に速いことを付け加えておきます。このページの内容は2026年10月時点の調査に基づいています。特に、指示ファイルの効果に関する研究、OpenTelemetryの規約、ツールの機能は、半年もすれば状況が変わっている可能性があります。だからこそ、特定の施策ではなく「測って、直して、記録する」ループそのものを、AI readyの中心に置くべきだと考えます。</p>
+  </div>
+  <div class="talk">
+    <p class="talk-title">まとめの会話</p>
+    <div class="say"><div class="who reimu" aria-hidden="true">霊夢</div><div class="bubble"><span class="name">霊夢</span>結局、「AI ready」って言葉を使うなら、「何について」と「どうやって確かめてるか」をセットで言えってことね。</div></div>
+    <div class="say r"><div class="who marisa" aria-hidden="true">魔理沙</div><div class="bubble"><span class="name">魔理沙</span>そういうことだ。「この用途なら、この自律度で、この条件で合否を判定できて、この指標で劣化に気づける」。そこまで言えれば、それはもう宣伝文句じゃなくて検証できる主張だぜ。</div></div>
+    <div class="say"><div class="who reimu" aria-hidden="true">霊夢</div><div class="bubble"><span class="name">霊夢</span>しかも、やることの中身は昔からの良いエンジニアリングとほとんど同じなのね。</div></div>
+    <div class="say r"><div class="who marisa" aria-hidden="true">魔理沙</div><div class="bubble"><span class="name">魔理沙</span>違うのは、それを人の頭の中じゃなくて、機械が読める形で置いておくことだな。まずは用途を1つ選んで、自己診断から始めてみるといいぜ。</div></div>
+  </div>
+</section>
+
+<section class="block" id="sources" aria-labelledby="h-src">
+  <div class="prose">
+    <h2 id="h-src">出典台帳</h2>
+    <p>本文の出典ID（E-01の形式）から、この表の該当行へ移動できます。最終確認日はすべて2026-10-05です。種別の「二次」は、一次情報に直接アクセスできなかったため、要約記事で数値や内容を確認したことを示します。二次情報に基づく記述は、原典で確認してから引用することを勧めます。「参照した内容」は、本文で使った主な事実です。</p>
+  </div>
+  <div class="tbl ledger-wrap" tabindex="0" role="region" aria-label="表9（横にスクロールできます）">
+    <table class="ledger">
+      <caption>表9　出典台帳（53件）</caption>
+      <thead><tr><th scope="col">ID</th><th scope="col">種別</th><th scope="col">著者・組織</th><th scope="col">タイトルとリンク</th><th scope="col">公開・更新日</th><th scope="col">参照した内容</th></tr></thead>
+      <tbody>
+        <tr id="e01"><th scope="row">E-01</th><td>公式</td><td>Gartner</td><td><a href="https://www.gartner.com/en/newsroom/press-releases/2025-02-26-lack-of-ai-ready-data-puts-ai-projects-at-risk">Lack of AI-Ready Data Puts AI Projects at Risk（プレスリリース）</a></td><td>2025-02-26</td><td>63%、60%の予測、5つの実践、調査規模</td></tr>
+        <tr id="e02"><th scope="row">E-02</th><td>公式</td><td>Gartner</td><td><a href="https://www.gartner.com/en/articles/ai-ready-data">What Is AI-Ready Data? And How to Get Yours There</a></td><td>不明（参照時点の掲載）</td><td>定義、3つの問い、高品質≠AI-ready</td></tr>
+        <tr id="e03"><th scope="row">E-03</th><td>公式</td><td>Cisco</td><td><a href="https://newsroom.cisco.com/c/r/newsroom/en/us/a/y2025/m10/cisco-ai-research-the-most-ai-ready-companies-outpace-peers-in-the-race-to-value.html">Cisco AI Readiness Index 2025（プレスリリース）</a></td><td>2025-10-14</td><td>Pacesetters約13%、4倍、AIインフラ負債</td></tr>
+        <tr id="e04"><th scope="row">E-04</th><td>公式</td><td>McKinsey</td><td><a href="https://www.mckinsey.com/capabilities/operations/our-insights/the-state-of-ai">The state of AI（2026年8月公開の調査結果）</a></td><td>2026-08-25</td><td>1,719人、ハイパフォーマー約6%、業務フロー再設計73%</td></tr>
+        <tr id="e05"><th scope="row">E-05</th><td>公式／二次</td><td>DORA（Google Cloud）</td><td><a href="https://cloud.google.com/devops/state-of-devops">2025 State of AI-assisted Software Development</a><br><a href="https://www.splunk.com/en_us/blog/learn/state-of-devops.html">Splunkによる要約（数値の確認に使用）</a></td><td>2025</td><td>約5,000人、増幅、7つの能力</td></tr>
+        <tr id="e06"><th scope="row">E-06</th><td>公式</td><td>DORA</td><td><a href="https://dora.dev/ai/capabilities-model">DORA AI Capabilities Model</a></td><td>2025-11-25（最終更新）</td><td>7つの能力</td></tr>
+        <tr id="e07"><th scope="row">E-07</th><td>二次</td><td>Simon Willison（METRの研究の解説）</td><td><a href="https://simonwillison.net/2025/Jul/12/ai-open-source-productivity/">Measuring the Impact of Early-2025 AI on Experienced Open-Source Developer Productivity（解説記事）</a></td><td>2025-07-12</td><td>16人、19%遅延、注意点</td></tr>
+        <tr id="e08"><th scope="row">E-08</th><td>二次</td><td>Rob Bowley（METRの更新の解説）</td><td><a href="https://blog.robbowley.net/2026/04/04/metrs-developer-productivity-research-2026-update/">METR’s developer productivity research: 2026 update</a></td><td>2026-04-04</td><td>METRの2026-02-24の設計変更</td></tr>
+        <tr id="e09"><th scope="row">E-09</th><td>二次</td><td>Virtualization Review（MIT NANDAの報告の要約）</td><td><a href="https://virtualizationreview.com/articles/2025/08/19/mit-report-finds-most-ai-business-investments-fail-reveals-genai-divide.aspx">MIT Report Finds Most AI Business Investments Fail, Reveals &#x27;GenAI Divide&#x27;</a></td><td>2025-08-19</td><td>95%、学習ギャップ</td></tr>
+        <tr id="e10"><th scope="row">E-10</th><td>二次</td><td>TechRepublic（Stack Overflow 2025調査の要約）</td><td><a href="https://www.techrepublic.com/article/news-developer-trust-in-ai-declines/">Stack Overflow: Stark Increase in Developers&#x27; Distrust of AI Tools</a></td><td>2025-07</td><td>84%、46%、66%</td></tr>
+        <tr id="e11"><th scope="row">E-11</th><td>公式</td><td>Stack Overflow</td><td><a href="https://stackoverflow.blog/2026/05/27/agents-on-a-leash-agentic-ai-remains-mostly-monitored-at-work/">Agents on a leash: agentic AI remains mostly monitored at work</a></td><td>2026-05-27</td><td>1,100人、63%、60%</td></tr>
+        <tr id="e12"><th scope="row">E-12</th><td>論文</td><td>Gloaguen, Mündler, Müller, Raychev, Vechev</td><td><a href="https://arxiv.org/abs/2602.11988">Evaluating AGENTS.md: Are Repository-Level Context Files Helpful for Coding Agents?</a></td><td>2026-02-12（v2: 2026-06-23）</td><td>成功率の低下、コスト20%超増</td></tr>
+        <tr id="e13"><th scope="row">E-13</th><td>論文</td><td>Lulla, Mohsenimofidi, Galster, Zhang, Baltes, Treude</td><td><a href="https://arxiv.org/abs/2601.20404">On the Impact of AGENTS.md Files on the Efficiency of AI Coding Agents</a></td><td>2026-01-28</td><td>実行時間28.64%減、出力トークン16.58%減</td></tr>
+        <tr id="e14"><th scope="row">E-14</th><td>論文</td><td>（arXiv 2511.12884）</td><td><a href="https://arxiv.org/abs/2511.12884v1">Agent READMEs: An Empirical Study of Context Files for Agentic Coding（第1版）</a></td><td>2025-11</td><td>2,303ファイル、セキュリティ・性能14.5%</td></tr>
+        <tr id="e15"><th scope="row">E-15</th><td>実践</td><td>Andrea Griffiths（Agentic AI Foundation ブログ）</td><td><a href="https://aaif.io/blog/measuring-agents-md-what-five-runs-show-that-one-doesn-t">Measuring AGENTS.md: What five runs show that one doesn&#x27;t</a></td><td>2026-07-22</td><td>1回と5回で結論が逆転、12行から</td></tr>
+        <tr id="e16"><th scope="row">E-16</th><td>公式</td><td>Ryan Lopopolo（OpenAI）</td><td><a href="https://openai.com/index/harness-engineering/">Harness engineering: leveraging Codex in an agent-first world</a></td><td>2026-02-11</td><td>約100万行、約1,500PR、地図としてのAGENTS.md</td></tr>
+        <tr id="e17"><th scope="row">E-17</th><td>公式</td><td>Anthropic</td><td><a href="https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents">Effective context engineering for AI agents</a></td><td>2025-09-29</td><td>コンテキストの劣化、必要時の取得</td></tr>
+        <tr id="e18"><th scope="row">E-18</th><td>公式</td><td>Anthropic（Claude Code ドキュメント）</td><td><a href="https://code.claude.com/docs/en/best-practices">Best practices for Claude Code</a></td><td>参照時点の掲載</td><td>検証、CLAUDE.mdに書くこと・書かないこと、フック、権限</td></tr>
+        <tr id="e19"><th scope="row">E-19</th><td>公式</td><td>Factory</td><td><a href="https://docs.factory.com/agent-readiness/overview">Agent Readiness Overview</a></td><td>2026-01（発表）</td><td>9つの柱、5段階、80%基準</td></tr>
+        <tr id="e20"><th scope="row">E-20</th><td>実践</td><td>Matt Pocock（AI Hero）</td><td><a href="https://www.aihero.dev/how-to-make-codebases-ai-agents-love">How To Make Codebases AI Agents Love</a></td><td>2026-02-26（更新）</td><td>深いモジュール、20年来の良い設計</td></tr>
+        <tr id="e21"><th scope="row">E-21</th><td>公式／二次</td><td>Thoughtworks</td><td><a href="https://www.thoughtworks.com/radar">Technology Radar Vol.34</a><br><a href="https://agentic-ai.readthedocs.io/en/latest/AgenticTechStack/thoughtworks-radar-vol34/">Vol.34の要約（項目と段階の確認に使用）</a></td><td>2026-04</td><td>Adopt/Trial/Assessの各項目、指示の肥大化、認知的負債、MCPありき</td></tr>
+        <tr id="e22"><th scope="row">E-22</th><td>二次</td><td>EveryDev（Patrick Deboisの講演の要約）</td><td><a href="https://www.everydev.ai/p/news-devops-for-context-engineering-why-ai-coding-agents-need-a-context-development-lifecycle">DevOps for context engineering: why AI coding agents need a context development lifecycle</a></td><td>2026</td><td>生成・評価・配布・観測</td></tr>
+        <tr id="e23"><th scope="row">E-23</th><td>公式</td><td>GitHub Docs</td><td><a href="https://docs.github.com/en/copilot/tutorials/cloud-agent/get-the-best-results">Get the best results from Copilot cloud agent</a></td><td>参照時点の掲載</td><td>受け入れ基準、setup steps、任せない作業</td></tr>
+        <tr id="e24"><th scope="row">E-24</th><td>実践</td><td>TED（Zenn）</td><td><a href="https://zenn.dev/td3p/articles/73636e105901e0">CLAUDE.md（AIのメモリ管理）の使い方を実例から分析した記事（見出しはリンク先を参照）</a></td><td>2025-11-03</td><td>30以上の実例の分析、書かないもの</td></tr>
+        <tr id="e25"><th scope="row">E-25</th><td>実践</td><td>和田 悠佑（株式会社IVRy）</td><td><a href="https://speakerdeck.com/wxyzzz/2026-07-15-ai-ready-nahasutatutaakitekutiyato-jian-etekitake-ti-ci-nimu-zhi-suzhuang-tai">AI Ready なはずだったアーキテクチャと、見えてきた課題・次に目指す状態</a></td><td>2026-07-15</td><td>セマンティックレイヤーの迂回、コストの不透明化</td></tr>
+        <tr id="e26"><th scope="row">E-26</th><td>調査</td><td>Modern Data 101</td><td><a href="https://moderndata101.substack.com/p/modern-data-report-2026">Modern Data Report 2026</a></td><td>2026-02-04</td><td>540人超、70%、65%、80%</td></tr>
+        <tr id="e27"><th scope="row">E-27</th><td>論文</td><td>Jeanne McClure, Gregg Gerdau</td><td><a href="https://arxiv.org/abs/2604.16369">Why AI Readiness Is an Organizational Learning Problem, Not a Technology Purchase</a></td><td>2026</td><td>15件中13件が記述型、成熟度フレームワーク</td></tr>
+        <tr id="e28"><th scope="row">E-28</th><td>実践</td><td>Simon Willison</td><td><a href="https://simonwillison.net/2025/Jun/16/the-lethal-trifecta/">The lethal trifecta for AI agents</a></td><td>2025-06-16</td><td>致命的な三要素</td></tr>
+        <tr id="e29"><th scope="row">E-29</th><td>二次</td><td>Latent Space（Andrej Karpathyの講演の要約）</td><td><a href="https://www.latent.space/p/s3">Software 3.0（YC AI Startup School の講演）</a></td><td>2025-06-17（講演）</td><td>自律度のスライダー、エージェント向けドキュメント</td></tr>
+        <tr id="e30"><th scope="row">E-30</th><td>二次</td><td>Inside Global Tech（Covington）</td><td><a href="https://www.insideglobaltech.com/2025/03/06/european-commission-provides-guidance-on-ai-literacy-requirement-under-the-eu-ai-act/">European Commission Provides Guidance on AI Literacy Requirement under the EU AI Act</a></td><td>2025-03-06</td><td>改正前の第4条、2025-02-02適用、当初の欧州委員会指針</td></tr>
+        <tr id="e31"><th scope="row">E-31</th><td>公式</td><td>内閣府</td><td><a href="https://www8.cao.go.jp/cstp/ai/ai_hou_gaiyou.pdf">人工知能関連技術の研究開発及び活用の推進に関する法律 概要</a></td><td>2025</td><td>成立日、施行日、AI戦略本部</td></tr>
+        <tr id="e32"><th scope="row">E-32</th><td>二次</td><td>＠IT（キンドリルジャパンの調査の記事）</td><td><a href="https://atmarkit.itmedia.co.jp/ait/spv/2603/16/news045.html">Kyndryl Readiness Report 2025 日本版に関する記事（見出しはリンク先を参照）</a></td><td>2026-03-16</td><td>31%、68%、29%</td></tr>
+        <tr id="e33"><th scope="row">E-33</th><td>公式</td><td>IPA</td><td><a href="https://www.ipa.go.jp/pressrelease/2026/rcu1hd0000016yh4-att/press20260716.pdf">DX動向調査（2025年度）報道発表資料</a></td><td>2026-07-16</td><td>AI導入率、効果の内訳、人材不足</td></tr>
+        <tr id="e34"><th scope="row">E-34</th><td>調査</td><td>Faros AI</td><td><a href="https://www.faros.ai/blog/ai-software-engineering">The AI Productivity Paradox Report 2025</a></td><td>2025-06</td><td>1万人超、PR98%増、レビュー時間91%増</td></tr>
+        <tr id="e35"><th scope="row">E-35</th><td>公式／二次</td><td>OWASP GenAI Security Project</td><td><a href="https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/">OWASP Top 10 for Agentic Applications for 2026</a><br><a href="https://cycode.com/blog/owasp-top-10-agentic-applications/">Cycodeによる一覧の要約（項目名の確認に使用）</a></td><td>2025-12</td><td>ASI01〜ASI10、最小エージェンシー</td></tr>
+        <tr id="e36"><th scope="row">E-36</th><td>公式</td><td>Veracode</td><td><a href="https://www.veracode.com/press-release/ai-generated-code-poses-major-security-risks-in-nearly-half-of-all-development-tasks-veracode-research-reveals/">AI-Generated Code Poses Major Security Risks in Nearly Half of All Development Tasks</a></td><td>2025-07-30</td><td>45%、Java 70%超、XSS 86%</td></tr>
+        <tr id="e37"><th scope="row">E-37</th><td>二次</td><td>DevClass（GitClearの報告の要約）</td><td><a href="https://devclass.com/2025/02/20/ai-is-eroding-code-quality-states-new-in-depth-report/">AI is eroding code quality states new in-depth report</a></td><td>2025-02-20</td><td>重複8倍、移動行39.9%減</td></tr>
+        <tr id="e38"><th scope="row">E-38</th><td>二次</td><td>Dash0</td><td><a href="https://www.dash0.com/knowledge/opentelemetry-genai-semantic-conventions-explained">OpenTelemetry GenAI Semantic Conventions Explained</a></td><td>2026-09-14（更新）</td><td>Development段階、エージェントのスパン、本文の記録はオプトイン</td></tr>
+        <tr id="e39"><th scope="row">E-39</th><td>公式</td><td>Agent Skills</td><td><a href="https://agentskills.io/home">Agent Skills Overview</a></td><td>参照時点の掲載</td><td>段階的開示の3段階</td></tr>
+        <tr id="e40"><th scope="row">E-40</th><td>二次</td><td>CodeMySpec</td><td><a href="https://codemyspec.com/blog/github-spec-kit-guide">GitHub Spec Kit: How It Works and When to Use It (2026)</a></td><td>2026</td><td>7段階、向き不向き、批判</td></tr>
+        <tr id="e41"><th scope="row">E-41</th><td>二次</td><td>Digital Commerce 360</td><td><a href="https://www.digitalcommerce360.com/2025/04/08/internal-memo-shopify-ceo-declares-ai-non-optional/">Internal memo: Shopify CEO declares AI non-optional</a></td><td>2025-04-08</td><td>反射的なAI利用、評価、人員</td></tr>
+        <tr id="e42"><th scope="row">E-42</th><td>二次</td><td>Fortune</td><td><a href="https://fortune.com/2025/08/18/duolingo-ceo-admits-controversial-ai-memo-did-not-give-enough-context-insists-company-never-laid-off-full-time-employees/">Duolingo CEO admits controversial AI memo did not give enough context</a></td><td>2025-08-18</td><td>AIファーストへの反発と説明</td></tr>
+        <tr id="e43"><th scope="row">E-43</th><td>実践</td><td>Margaret-Anne Storey</td><td><a href="https://margaretstorey.com/blog/2026/02/09/cognitive-debt/">Cognitive Debt</a></td><td>2026-02-09</td><td>認知的負債の定義と対策</td></tr>
+        <tr id="e44"><th scope="row">E-44</th><td>論文</td><td>Margaret-Anne Storey</td><td><a href="https://arxiv.org/abs/2603.22106">From Technical Debt to Cognitive and Intent Debt: Rethinking Software Health in the Age of AI</a></td><td>2026-03-23</td><td>3つの負債のモデル</td></tr>
+        <tr id="e45"><th scope="row">E-45</th><td>実践</td><td>Addy Osmani</td><td><a href="https://addyosmani.com/blog/intent-debt/">The Intent Debt</a></td><td>2026-06-05</td><td>意図の負債、ADR、仕様</td></tr>
+        <tr id="e46"><th scope="row">E-46</th><td>実践</td><td>Ian Vanagas（PostHog）</td><td><a href="https://posthog.com/newsletter/when-ai-writes-all-code">When AI writes all the code</a></td><td>2026-09-14</td><td>エージェントPR 20%→70%、PR数</td></tr>
+        <tr id="e47"><th scope="row">E-47</th><td>公式</td><td>Anthropic</td><td><a href="https://www.anthropic.com/research/how-ai-is-transforming-work-at-anthropic">How AI is transforming work at Anthropic</a></td><td>2025-12-02</td><td>132人、59%、0〜20%、監督のパラドックス</td></tr>
+        <tr id="e48"><th scope="row">E-48</th><td>公式</td><td>dbt Labs</td><td><a href="https://docs.getdbt.com/blog/semantic-layer-vs-text-to-sql-2026">Semantic Layer vs. Text-to-SQL: 2026 benchmark</a></td><td>2026-04-07</td><td>正答率、失敗の仕方、規模</td></tr>
+        <tr id="e49"><th scope="row">E-49</th><td>SNS</td><td>Hacker News</td><td><a href="https://news.ycombinator.com/item?id=47295454">New Research Reassesses the Value of Agents.md Files for AI Coding（議論スレッド）</a></td><td>2026-03-08</td><td>肯定・懐疑の両論</td></tr>
+        <tr id="e50"><th scope="row">E-50</th><td>実践</td><td>Qiita株式会社（PR TIMES経由）</td><td><a href="https://webtan.impress.co.jp/r/prtimes/items/000002731.000001348">Qiita、日本最大級のIT展示会「Japan IT Week【春】」に登壇決定！開発部長が語る「Claude Code全社導入」の舞台裏</a></td><td>2026-04</td><td>段階導入より一斉導入</td></tr>
+        <tr id="e51"><th scope="row">E-51</th><td>二次</td><td>SiliconANGLE</td><td><a href="https://siliconangle.com/2025/12/09/linux-foundation-announces-agentic-ai-foundation-joined-anthropic-openai-block/">Linux Foundation announces Agentic AI Foundation, joined by Anthropic, OpenAI and Block</a></td><td>2025-12-09</td><td>MCP、AGENTS.md、Goose、4万プロジェクト</td></tr>
+        <tr id="e52"><th scope="row">E-52</th><td>二次</td><td>Lewis Silkin</td><td><a href="https://www.lewissilkin.com/insights/2026/07/27/the-digital-omnibus-on-ai-enters-into-force-today-102nedo">The Digital Omnibus on AI enters into force today</a><br><a href="https://ki-campus.org/en/blog/eu-ai-act-ai-omnibus-recalibrates-article-4-ai-literacy-remains-mandatory">KI-Campus：AI Omnibus recalibrates Article 4（補足）</a></td><td>2026-07-27</td><td>発効日、第4条の見直し内容、第26条第2項</td></tr>
+        <tr id="e53"><th scope="row">E-53</th><td>二次</td><td>Uravation</td><td><a href="https://uravation.com/media/japan-ai-basic-plan-meti-reorganization-2026/">AI基本計画に関する解説記事（見出しはリンク先を参照）</a></td><td>2026-08-17（2026-09-23更新）</td><td>AI基本計画の第Ⅰ期・第Ⅱ期の閣議決定日、毎年の見直し</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="prose">
+    <h3>調査の範囲と限界</h3>
+    <ul>
+      <li>調査は2026年10月5日に、Web検索と各ページの取得によって行いました。有料のレポート本体（Gartner、McKinseyの詳細データなど）は参照していません。</li>
+      <li>X（旧Twitter）などのSNSは、公開検索で一次の投稿を安定して取得できなかったため、議論の把握はHacker Newsのスレッドと、実践者のブログ・登壇資料を中心にしています。</li>
+      <li>METRの研究やMIT NANDAの報告など、一部の研究は一次資料ではなく要約記事を経由して確認しています。</li>
+      <li>日本語の情報は、ソフトウェア開発のAI readyに絞った定量調査が見つからなかったため、事例と全社的な調査を中心にしています。</li>
+    </ul>
+  </div>
+  <footer>
+    <p><a href="../">thinking トップに戻る</a></p>
+    2026年10月時点の調査に基づいています。研究結果、規約、ツールの機能は変わる可能性があるため、導入時は各出典の最新版を確認してください。
+  </footer>
+</section>
+</main>
+</div>
+
+<script>
+(function(){
+  var root=document.documentElement, btn=document.getElementById('themeBtn');
+  try{var t=localStorage.getItem('theme'); if(t) root.setAttribute('data-theme',t);}catch(e){}
+  btn.addEventListener('click',function(){
+    var cur=root.getAttribute('data-theme');
+    if(!cur){cur=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}
+    var next=cur==='dark'?'light':'dark';
+    root.setAttribute('data-theme',next);
+    try{localStorage.setItem('theme',next);}catch(e){}
+  });
+
+  var links=[].slice.call(document.querySelectorAll('nav.toc a'));
+  if('IntersectionObserver' in window){
+    var io=new IntersectionObserver(function(es){
+      es.forEach(function(e){
+        if(e.isIntersecting){
+          links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href')==='#'+e.target.id);});
+        }
+      });
+    },{rootMargin:'-40% 0px -55% 0px'});
+    document.querySelectorAll('section.block').forEach(function(s){io.observe(s);});
+  }
+
+  /* self check */
+  var form=document.getElementById('diag'), out=document.getElementById('diag-out'), body=document.getElementById('diag-body');
+  if(!form||!out||!body) return;
+  out.hidden=false;
+  var sets=[].slice.call(form.querySelectorAll('fieldset[data-axis]'));
+  function text(el,s){el.textContent=s;return el;}
+  function render(){
+    while(body.firstChild) body.removeChild(body.firstChild);
+    sets.forEach(function(fs){
+      var boxes=[].slice.call(fs.querySelectorAll('input[type=checkbox]'));
+      var checked=boxes.filter(function(b){return b.checked;}).length;
+      var level=0, next=null;
+      for(var lv=1;lv<=5;lv++){
+        var items=boxes.filter(function(b){return b.getAttribute('data-lv')===String(lv);});
+        var ok=items.length>0&&items.every(function(b){return b.checked;});
+        if(ok&&level===lv-1){level=lv;}
+        if(!next&&level===lv-1&&!ok){
+          var miss=items.filter(function(b){return !b.checked;})[0];
+          if(miss){next=miss.parentNode.querySelector('span > span.lv').parentNode.textContent.replace(/^L\d/,'').trim();}
+        }
+      }
+      var tr=document.createElement('tr');
+      tr.appendChild(text(document.createElement('th'),fs.getAttribute('data-axis'))).setAttribute('scope','row');
+      var tdL=document.createElement('td');
+      tdL.appendChild(document.createTextNode(level===0?'L1未満':'L'+level));
+      var bar=document.createElement('span'); bar.className='bar'; bar.setAttribute('aria-hidden','true');
+      var fill=document.createElement('i'); fill.style.width=(level/5*100)+'%'; bar.appendChild(fill); tdL.appendChild(bar);
+      tr.appendChild(tdL);
+      tr.appendChild(text(document.createElement('td'),checked+' / '+boxes.length));
+      tr.appendChild(text(document.createElement('td'),level===5?'すべての段階を満たしています。用途を広げるか、自律度を上げる段階です。':('L'+(level+1)+'：'+(next||''))));
+      body.appendChild(tr);
+    });
+  }
+  form.addEventListener('change',render);
+  document.getElementById('diag-reset').addEventListener('click',function(){
+    [].slice.call(form.querySelectorAll('input[type=checkbox]')).forEach(function(b){b.checked=false;});
+    render();
+  });
+  render();
+})();
+</script>
+</body>
+</html>
