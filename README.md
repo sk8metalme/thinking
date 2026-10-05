@@ -15,6 +15,7 @@ docs/                                           Pagesに公開する静的HTML
 ├── index.html                                  トップページと記事一覧
 ├── ai-dev-flow/                                AI開発フローカテゴリ
 │   ├── ai-code-modernization-prep.html
+│   ├── ai-ready-environment.html
 │   └── fractal-loop-engineering.html
 ├── jev/                                        Jevカテゴリ
 │   └── jev-as-a-judge.html
