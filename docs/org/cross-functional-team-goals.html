@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>横断チームの目標は「相手が変わったこと」で書く</title>
+<meta name="description" content="技術支援・共通基盤・品質と開発生産性・AI活用を担う7名の横断開発組織が、メンバーの自律と組織への貢献を両立させる目標をどう立てるか。Google SRE、Spotify、Netflix、サイバーエージェント、メルカリ、DeNAなどの成功・失敗事例から5原則を導き、目標テンプレート、記入例、上層部への説明、最初の90日の進め方にまとめた考察。">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🕸️</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EEF2F0; --paper-2:#E3E9E6; --card:#F8FAF9;
+  --ink:#16232C; --ink-2:#4A5A63; --rule:#C6D1CC;
+  --teal:#1F6F63; --teal-soft:#D5E8E3;
+  --red:#B5392A; --red-soft:#F3DCD7;
+  --amber:#A8720C; --amber-soft:#F2E6CC;
+  --navy:#2D4A6B; --navy-soft:#DCE4EE;
+  --code-bg:#1B2830; --code-ink:#DDE7E3;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN","Yu Mincho","MS PMincho",serif;
+  --sans:"Noto Sans JP","Hiragino Sans","Yu Gothic","Meiryo",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#10191F; --paper-2:#16222A; --card:#18252E;
+    --ink:#E3EAE7; --ink-2:#9FB0AA; --rule:#2C3C45;
+    --teal:#5FBFAE; --teal-soft:#16352F;
+    --red:#EE7A68; --red-soft:#3A1F1B;
+    --amber:#E3B04F; --amber-soft:#382C14;
+    --navy:#8FB0D6; --navy-soft:#1C2B3D;
+    --code-bg:#0B1216; --code-ink:#D5E0DC;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#10191F; --paper-2:#16222A; --card:#18252E;
+  --ink:#E3EAE7; --ink-2:#9FB0AA; --rule:#2C3C45;
+  --teal:#5FBFAE; --teal-soft:#16352F;
+  --red:#EE7A68; --red-soft:#3A1F1B;
+  --amber:#E3B04F; --amber-soft:#382C14;
+  --navy:#8FB0D6; --navy-soft:#1C2B3D;
+  --code-bg:#0B1216; --code-ink:#D5E0DC;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 16px);scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.85;-webkit-font-smoothing:antialiased}
+img,svg{max-width:100%}
+a{color:var(--navy);text-underline-offset:3px}
+a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid var(--amber);outline-offset:2px;border-radius:4px}
+code{font-family:var(--mono);font-size:.88em;background:var(--paper-2);padding:.1em .35em;border-radius:4px}
+h1,h2,h3{font-family:var(--serif);line-height:1.35;letter-spacing:.01em;text-wrap:balance}
+h2{font-size:clamp(1.6rem,3.2vw,2.1rem);margin:0 0 .6em}
+h3{font-size:1.2rem;margin:2em 0 .6em}
+p{margin:0 0 1.1em}
+
+/* layout */
+.shell{display:grid;grid-template-columns:230px minmax(0,1fr);gap:48px;max-width:1180px;margin:0 auto;padding:0 24px}
+nav.toc{position:sticky;top:calc(env(safe-area-inset-top,0px) + 24px);align-self:start;padding-top:40px;font-size:.88rem;max-height:calc(100vh - 48px);overflow:auto}
+nav.toc p{font-family:var(--serif);font-weight:800;margin-bottom:.6em}
+nav.toc ol{list-style:none;margin:0;padding:0;border-left:2px solid var(--rule)}
+nav.toc li a{display:block;padding:.3em .9em;color:var(--ink-2);text-decoration:none;border-left:2px solid transparent;margin-left:-2px}
+nav.toc li a:hover,nav.toc li a.active{color:var(--ink);border-left-color:var(--teal)}
+main{min-width:0;padding-bottom:80px}
+section.block{padding:64px 0 24px;border-top:1px solid var(--rule)}
+.prose{max-width:720px}
+@media (max-width:900px){.shell{grid-template-columns:1fr;gap:0;padding:0 16px}nav.toc{display:none}}
+
+/* hero */
+.hero{padding:56px 0 48px}
+.hero h1{font-size:clamp(2rem,5vw,3.2rem);font-weight:800;margin:0 0 .5em;line-height:1.25}
+.hero .lede{font-size:1.08rem;color:var(--ink-2);max-width:38em}
+.premise{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px;padding:0;list-style:none}
+.premise li{font-size:.85rem;border:1px solid var(--rule);background:var(--card);border-radius:999px;padding:.25em .9em}
+
+/* dialogue */
+.talk{display:grid;gap:14px;margin:28px 0 32px;max-width:720px}
+.say{display:grid;grid-template-columns:52px minmax(0,1fr);gap:12px;align-items:start}
+.say.r{grid-template-columns:minmax(0,1fr) 52px}
+.say.r .who{order:2}
+.who{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;font-family:var(--serif);font-weight:800;font-size:.8rem;color:#fff;line-height:1}
+.who.reimu{background:var(--red)}
+.who.marisa{background:var(--amber)}
+.bubble{background:var(--card);border:1px solid var(--rule);border-radius:14px;padding:.8em 1.05em;font-size:.97rem}
+.say:not(.r) .bubble{border-top-left-radius:4px}
+.say.r .bubble{border-top-right-radius:4px;background:var(--paper-2)}
+.bubble p:last-child{margin-bottom:0}
+.bubble .name{display:block;font-size:.75rem;color:var(--ink-2);margin-bottom:.1em}
+
+/* tables */
+.scroll{overflow-x:auto;background:var(--card);border:1px solid var(--rule);border-radius:10px;margin:22px 0}
+table{border-collapse:collapse;width:100%;font-size:.9rem;min-width:640px}
+caption{text-align:left;font-size:.82rem;color:var(--ink-2);padding:.7em 1em;caption-side:top}
+th,td{padding:.75em 1em;text-align:left;vertical-align:top;border-bottom:1px solid var(--rule)}
+thead th{font-weight:700;background:var(--paper-2);font-size:.82rem;color:var(--ink-2)}
+tbody th{font-weight:700;width:18%}
+tr:last-child td,tr:last-child th{border-bottom:0}
+
+/* chips */
+.chip{display:inline-block;font-size:.75rem;padding:.05em .7em;border-radius:999px;white-space:nowrap;font-weight:700}
+.chip.use{background:var(--teal-soft);color:var(--teal)}
+.chip.some{background:var(--navy-soft);color:var(--navy)}
+.chip.no{background:var(--red-soft);color:var(--red)}
+.chip.human{background:var(--amber-soft);color:var(--amber)}
+
+/* callouts */
+.note{border-left:4px solid var(--teal);background:var(--teal-soft);padding:14px 18px;border-radius:0 8px 8px 0;margin:22px 0;max-width:720px;font-size:.95rem}
+.note.warn{border-color:var(--red);background:var(--red-soft)}
+.note.idea{border-color:var(--amber);background:var(--amber-soft)}
+.note b{display:block;margin-bottom:.2em}
+.note p:last-child{margin:0}
+
+/* diagram */
+.fig{margin:24px 0;background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:16px;overflow-x:auto}
+.fig svg{min-width:760px;width:100%;height:auto;display:block}
+.fig figcaption{font-size:.82rem;color:var(--ink-2);margin-top:10px}
+.fig .box{fill:var(--card);stroke:var(--teal);stroke-width:2}
+.fig .t-name{fill:var(--ink);font:800 16px var(--serif)}
+.fig .t-sub{fill:var(--ink-2);font:12px var(--sans)}
+.fig .t-outer{fill:var(--teal);font:700 13px var(--sans)}
+.fig .t-ng{fill:var(--red);font:700 12px var(--sans)}
+.fig .t-gate{fill:var(--amber);font:700 11px var(--sans)}
+.fig .flow{stroke:var(--ink-2);stroke-width:1.6;fill:none}
+.fig .outer{stroke:var(--teal);stroke-width:2;fill:none}
+.fig .inner{stroke:var(--teal);stroke-width:2;fill:none}
+.fig .ngpath{stroke:var(--red);stroke-width:1.6;fill:none;stroke-dasharray:5 4}
+.fig .gate{fill:var(--amber)}
+.fig .ah-ink{fill:var(--ink-2)} .fig .ah-acc{fill:var(--teal)} .fig .ah-ng{fill:var(--red)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 22px;font-size:.82rem;color:var(--ink-2);margin-top:10px;padding:0;list-style:none}
+
+/* phase cards */
+.phases{display:grid;gap:18px;margin:24px 0}
+.phase{background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:20px 24px}
+.phase header{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 12px;margin-bottom:12px}
+.phase h3{margin:0;font-size:1.2rem}
+.phase .n{font-family:var(--serif);font-weight:800;color:var(--teal);font-size:1.3rem}
+.phase .chips{display:flex;flex-wrap:wrap;gap:6px;margin-left:auto}
+.phase dl{display:grid;grid-template-columns:9em minmax(0,1fr);gap:.5em 1.2em;margin:0;font-size:.93rem}
+.phase dt{color:var(--ink-2);font-weight:700}
+.phase dd{margin:0}
+@media (max-width:640px){.phase dl{grid-template-columns:1fr}.phase dt{margin-top:.5em}.phase .chips{margin-left:0}}
+
+/* roadmap */
+.road{list-style:none;padding:0;margin:24px 0;counter-reset:r;max-width:760px}
+.road li{position:relative;padding:0 0 26px 58px;border-left:2px solid var(--rule);margin-left:18px}
+.road li:last-child{border-left-color:transparent}
+.road li::before{counter-increment:r;content:counter(r);position:absolute;left:-19px;top:-2px;width:36px;height:36px;border-radius:50%;background:var(--ink);color:var(--paper);display:grid;place-items:center;font-family:var(--serif);font-weight:800}
+.road h3{margin:0 0 .3em;font-size:1.08rem}
+.road p{margin:0 0 .4em;font-size:.93rem;color:var(--ink-2)}
+.road .exit{font-size:.85rem;color:var(--teal);margin:0}
+
+pre.code{background:var(--code-bg);color:var(--code-ink);font-family:var(--mono);font-size:.82rem;line-height:1.65;padding:16px 18px;border-radius:10px;overflow-x:auto;margin:18px 0}
+pre.code .c{color:#7F9A92}
+
+.checklist{columns:2 300px;column-gap:32px;margin:20px 0;padding:0;list-style:none;font-size:.93rem}
+.checklist li{break-inside:avoid;padding:.35em 0 .35em 1.7em;position:relative}
+.checklist li::before{content:"";position:absolute;left:0;top:.75em;width:12px;height:12px;border:2px solid var(--teal);border-radius:3px}
+
+details.faq{border-bottom:1px solid var(--rule);padding:.7em 0;max-width:760px}
+details.faq summary{cursor:pointer;font-weight:700;list-style:none;display:flex;gap:.6em}
+details.faq summary::-webkit-details-marker{display:none}
+details.faq summary::before{content:"+";font-family:var(--mono);color:var(--teal);width:1em;flex:0 0 auto}
+details.faq[open] summary::before{content:"−"}
+details.faq div{padding:.6em 0 0 1.6em;font-size:.94rem;color:var(--ink-2)}
+
+ol.sources{font-size:.88rem;padding-left:1.4em;max-width:760px}
+ol.sources li{margin:.3em 0}
+
+footer{border-top:1px solid var(--rule);margin-top:40px;padding-top:24px;font-size:.82rem;color:var(--ink-2)}
+.theme-toggle{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:5;background:var(--card);color:var(--ink);border:1px solid var(--rule);border-radius:999px;padding:.4em .9em;font:inherit;font-size:.82rem;cursor:pointer}
+
+.ref{font-size:.75em;vertical-align:super;margin-left:.1em;text-decoration:none;white-space:nowrap}
+.fig .box.done{fill:var(--teal-soft)}
+.fig .box.svc{stroke:var(--navy);stroke-dasharray:6 4}
+ol.sources li:target{background:var(--amber-soft);border-radius:4px}
+.prose ol{padding-left:1.4em}
+</style>
+</head>
+<body>
+<button class="theme-toggle" id="themeBtn" type="button">表示テーマ切替</button>
+<div class="shell">
+<nav class="toc" aria-label="目次">
+  <p>目次</p>
+  <ol>
+    <li><a href="#summary">結論：5つの原則</a></li>
+    <li><a href="#traps">横断組織の3つの罠</a></li>
+    <li><a href="#frames">目標の土台になる枠組み</a></li>
+    <li><a href="#success">成功事例</a></li>
+    <li><a href="#failure">失敗・反省事例</a></li>
+    <li><a href="#compare">事例の比較</a></li>
+    <li><a href="#apply">7名・4ミッションへの当てはめ</a></li>
+    <li><a href="#explain">上層部への説明</a></li>
+    <li><a href="#roadmap">最初の90日</a></li>
+    <li><a href="#faq">よくある迷い</a></li>
+    <li><a href="#sources">出典</a></li>
+  </ol>
+</nav>
+
+<main>
+<header class="hero">
+  <h1>横断チームの目標は「こなした件数」ではなく「相手が変わったこと」で書く</h1>
+  <p class="lede">他チームへの技術支援、共通基盤、品質・開発生産性、AI活用。4つのミッションを7名で担う横断開発組織が、メンバーの自律と組織への貢献を両立させるには、どんな目標を立てればよいのか。国内外の成功・失敗事例から「効く目標の型」を取り出し、そのまま使える目標案と最初の90日の進め方にまとめました。</p>
+  <ul class="premise" aria-label="このページの前提">
+    <li>7名の横断開発組織（SWAT型）</li>
+    <li>ミッション：技術支援／共通基盤／品質・生産性／AI活用</li>
+    <li>読者：チームメンバーと上層部</li>
+    <li>2026年10月時点の情報</li>
+  </ul>
+</header>
+
+<!-- ============ SUMMARY ============ -->
+<section class="block" id="summary">
+  <div class="prose">
+    <h2>結論：横断組織の目標に効く5つの原則</h2>
+  </div>
+
+  <div class="talk" aria-label="対話による導入">
+    <div class="say"><div class="who reimu" aria-hidden="true">霊夢</div><div class="bubble"><span class="name">霊夢</span><p>横断チームの目標って、「支援を何件やったか」じゃだめなの？ わかりやすいじゃない。</p></div></div>
+    <div class="say r"><div class="who marisa" aria-hidden="true">魔理沙</div><div class="bubble"><span class="name">魔理沙</span><p>わかりやすいけど、件数を追うほど「依頼が来るのを待つチーム」になるんだぜ。しかも依頼が減ったら成果が下がったように見える。本当に良い支援ほど、相手が自分でできるようになって依頼が減るのにな。</p></div></div>
+    <div class="say"><div class="who reimu" aria-hidden="true">霊夢</div><div class="bubble"><span class="name">霊夢</span><p>成功すると数字が下がる目標……たしかに変ね。</p></div></div>
+  </div>
+
+  <div class="prose">
+    <p>調べた事例に共通していたのは、うまくいった横断組織ほど<strong>自分たちの作業量ではなく、支援した相手（プロダクトチームや開発者）に起きた変化</strong>を目標にしていたことです。逆に失敗・反省事例では、作業量の指標、終わりのない支援、方向をそろえないままの自律が目立ちました。そこから次の5原則を導きました。</p>
+  </div>
+
+  <div class="scroll">
+    <table>
+      <caption>表1　横断組織の目標設計の5原則（根拠は後続の章と出典番号を参照）</caption>
+      <thead><tr><th scope="col">原則</th><th scope="col">中身</th><th scope="col">効く悩み</th><th scope="col">主な根拠</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">1. 相手の変化で書く</th><td>主語を「私たち」ではなく「支援先のチーム」にし、リードタイム・満足度・自走できた数などで測る</td><td>依頼待ち／成果が見えない</td><td><a class="ref" href="#s10">[10]</a><a class="ref" href="#s7">[7]</a><a class="ref" href="#s5">[5]</a></td></tr>
+        <tr><th scope="row">2. 約束と挑戦を分ける</th><td>落とせない運用・支援の約束（達成率100%が前提）と、伸びしろを狙う挑戦（70%程度で上出来）を別枠にする</td><td>方向がバラバラ</td><td><a class="ref" href="#s9">[9]</a></td></tr>
+        <tr><th scope="row">3. 割り込みに上限を置く</th><td>依頼対応・運用の割合に上限を決め、戦略テーマの時間を先に確保する</td><td>依頼過多で疲弊</td><td><a class="ref" href="#s1">[1]</a></td></tr>
+        <tr><th scope="row">4. 支援は「卒業」までを1単位に</th><td>伴走の終わり方を最初に決め、相手が自走したら離れる。繰り返し来る依頼は基盤・ツールに変える</td><td>依頼過多／何でも屋化</td><td><a class="ref" href="#s2">[2]</a><a class="ref" href="#s3">[3]</a></td></tr>
+        <tr><th scope="row">5. そろえてから任せる</th><td>目的・境界・判断基準を全員で共有したうえで、テーマごとにオーナーを立てて任せる</td><td>依頼待ち／方向がバラバラ</td><td><a class="ref" href="#s4">[4]</a><a class="ref" href="#s11">[11]</a></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note">
+    <b>このページの使い方</b>
+    <p>メンバーとは第7章の目標テンプレートを一緒に埋める材料として、上層部には第1章と第8章を中心に「なぜ件数で報告しないのか」を説明する材料として使えるように構成しています。</p>
+  </div>
+</section>
+
+<!-- ============ TRAPS ============ -->
+<section class="block" id="traps">
+  <div class="prose">
+    <h2>横断組織が陥りやすい3つの罠</h2>
+  </div>
+
+  <div class="talk" aria-label="対話による導入">
+    <div class="say"><div class="who reimu" aria-hidden="true">霊夢</div><div class="bubble"><span class="name">霊夢</span><p>依頼が多すぎて、メンバーが自分から何かを始める余裕がないのよね。</p></div></div>
+    <div class="say r"><div class="who marisa" aria-hidden="true">魔理沙</div><div class="bubble"><span class="name">魔理沙</span><p>それは個人のやる気の問題じゃなくて、構造の問題なんだぜ。横断組織にはハマりやすい罠が3つある。まずはそこを知るのが先だ。</p></div></div>
+  </div>
+
+  <div class="phases">
+    <article class="phase">
+      <header><span class="n">罠1</span><h3>何でも屋化：割り込みが戦略を食い尽くす</h3></header>
+      <dl>
+        <dt>症状</dt><dd>依頼対応・火消しで1日が終わり、基盤整備や改善テーマが常に後回しになる。メンバーは「次の依頼」を待つ姿勢になる。</dd>
+        <dt>事例の裏づけ</dt><dd>GoogleのSRE本は、手作業・繰り返し・自動化可能で、価値が残らない運用作業を「トイル」と呼び、各エンジニアの時間の50%未満に抑える目標を掲げています。超えた場合の弊害として、キャリアの停滞、士気の低下と離職、開発チームが運用を押しつけてくる前例化などを挙げています<a class="ref" href="#s1">[1]</a>。</dd>
+        <dt>あなたの悩みとの対応</dt><dd>「依頼待ち」と「疲弊」は同じ根から出ています。</dd>
+      </dl>
+    </article>
+    <article class="phase">
+      <header><span class="n">罠2</span><h3>永続サイロ化：いないと回らないチームになる</h3></header>
+      <dl>
+        <dt>症状</dt><dd>支援が終わらず、特定領域の作業がずっと横断チームに残る。相手チームの能力は育たず、横断チームが新たなボトルネックになる。</dd>
+        <dt>事例の裏づけ</dt><dd>DevOps Topologiesは、経営判断でつくった専任DevOpsチームが新たなサイロになるパターンをアンチパターンとして挙げ、例外は「自らを不要にすることを明示した12〜18か月程度の時限チーム」だけだとしています<a class="ref" href="#s3">[3]</a>。Team TopologiesもEnablingチームを、相手の能力が上がったら離れる一時的な支援役と定義しています<a class="ref" href="#s2">[2]</a>。</dd>
+      </dl>
+    </article>
+    <article class="phase">
+      <header><span class="n">罠3</span><h3>成果の不可視化と、作業量指標への逃げ</h3></header>
+      <dl>
+        <dt>症状</dt><dd>成果が他チームの成果に溶けて見えにくい。見せようとしてチケット数・PR数・支援件数を報告すると、今度は件数を増やす行動が評価される。</dd>
+        <dt>事例の裏づけ</dt><dd>Kent BeckとGergely Oroszは、努力→出力→成果（outcome）→影響（impact）という見方を示し、努力や出力を測る指標は副作用が大きいと指摘しています。Facebookでアンケート結果を評価に結びつけたところ、マネージャーとメンバーの間で点数の取引が起きたという体験談も紹介されています<a class="ref" href="#s10">[10]</a>。</dd>
+      </dl>
+    </article>
+  </div>
+
+  <div class="scroll">
+    <table>
+      <caption>表2　いまの悩みと罠・原則の対応</caption>
+      <thead><tr><th scope="col">悩み</th><th scope="col">背景にある罠</th><th scope="col">効く原則</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">メンバーが依頼待ち</th><td>罠1（何でも屋化）、目的が共有されていない</td><td>原則3・5：割り込み上限で時間をつくり、テーマのオーナーを任せる</td></tr>
+        <tr><th scope="row">依頼過多で疲弊</th><td>罠1、罠2（同じ依頼が繰り返し来る）</td><td>原則3・4：上限を決め、繰り返す依頼は卒業か基盤化へ</td></tr>
+        <tr><th scope="row">方向がバラバラ</th><td>4ミッションに優先順位がない、目標が個人の作業計画になっている</td><td>原則2・5：チーム共通の目的と、約束／挑戦の枠をそろえる</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============ FRAMES ============ -->
+<section class="block" id="frames">
+  <div class="prose">
+    <h2>目標の土台になる3つの枠組み</h2>
+  </div>
+
+  <div class="talk" aria-label="対話による導入">
+    <div class="say"><div class="who reimu" aria-hidden="true">霊夢</div><div class="bubble"><span class="name">霊夢</span><p>OKRとかDORAとか、聞いたことはあるけど、全部入れなきゃいけないの？</p></div></div>
+    <div class="say r"><div class="who marisa" aria-hidden="true">魔理沙</div><div class="bubble"><span class="name">魔理沙</span><p>全部じゃなくて役割分担だぜ。「どういう関わり方をするか」はTeam Topologies、「目標の書き方」はOKR、「何で測るか」はDORAやSPACE。この3つを組み合わせると話がブレにくい。</p></div></div>
+  </div>
+
+  <h3>(1) Team Topologies：関わり方を決める</h3>
+  <div class="prose">
+    <p>Team Topologiesはチームを4種類に分けます。横断組織に関係が深いのは、相手の障害を取り除き能力を移す<strong>Enablingチーム</strong>と、開発チームの提供を速める「社内向けプロダクト」を作る<strong>Platformチーム</strong>です。チーム間の関わり方も3つに分けられ、期間を区切って密に一緒に動く<strong>Collaboration</strong>、教えて伴走する<strong>Facilitation</strong>、サービスとして提供し最小限のやり取りで使ってもらう<strong>X-as-a-Service</strong>があります<a class="ref" href="#s2">[2]</a>。</p>
+    <p>4つのミッションを当てはめると、技術支援とAI活用はEnabling型、共通基盤はPlatform型、品質・生産性は両方にまたがります。下の図は、1件の支援がどう始まり、どう終わるべきかをこの3つの関わり方で表したものです。</p>
+  </div>
+
+  <figure class="fig">
+    <svg viewBox="0 0 1040 290" role="img" aria-labelledby="figTitle figDesc">
+      <title id="figTitle">1件の支援が卒業に至るまでの関わり方の変化</title>
+      <desc id="figDesc">依頼の受付から、Collaborationで一緒に解決し、Facilitationで相手に教えて伴走し、相手チームが自走できたら卒業する流れ。同じ種類の依頼が複数のチームから繰り返し来る場合は、X-as-a-Serviceとして基盤やツールに変え、以後はセルフサービスで使ってもらう。</desc>
+      <defs>
+        <marker id="aInk" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ah-ink"/></marker>
+        <marker id="aAcc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ah-acc"/></marker>
+      </defs>
+
+      <rect class="box" x="20" y="50" width="170" height="110" rx="8"/>
+      <text class="t-name" x="105" y="92" text-anchor="middle">依頼の受付</text>
+      <text class="t-sub" x="105" y="116" text-anchor="middle">卒業条件を先に合意</text>
+
+      <rect class="box" x="245" y="50" width="200" height="110" rx="8"/>
+      <text class="t-name" x="345" y="92" text-anchor="middle">一緒に解く</text>
+      <text class="t-sub" x="345" y="116" text-anchor="middle">Collaboration</text>
+      <text class="t-sub" x="345" y="136" text-anchor="middle">期間を区切る</text>
+
+      <rect class="box" x="500" y="50" width="200" height="110" rx="8"/>
+      <text class="t-name" x="600" y="92" text-anchor="middle">教えて伴走</text>
+      <text class="t-sub" x="600" y="116" text-anchor="middle">Facilitation</text>
+      <text class="t-sub" x="600" y="136" text-anchor="middle">相手が手を動かす</text>
+
+      <rect class="box done" x="755" y="50" width="265" height="110" rx="8"/>
+      <text class="t-name" x="887" y="92" text-anchor="middle">卒業（相手が自走）</text>
+      <text class="t-sub" x="887" y="116" text-anchor="middle">横断チームは離れる</text>
+      <text class="t-sub" x="887" y="136" text-anchor="middle">＝目標上の成果</text>
+
+      <path class="flow" d="M190 105 H243" marker-end="url(#aInk)"/>
+      <path class="flow" d="M445 105 H498" marker-end="url(#aInk)"/>
+      <path class="flow" d="M700 105 H753" marker-end="url(#aInk)"/>
+
+      <rect class="box svc" x="430" y="205" width="340" height="62" rx="8"/>
+      <text class="t-name" x="600" y="232" text-anchor="middle">基盤・ツール化（X-as-a-Service）</text>
+      <text class="t-sub" x="600" y="254" text-anchor="middle">以後はセルフサービスで使ってもらう</text>
+
+      <path class="outer" d="M345 160 V236 H428" marker-end="url(#aAcc)"/>
+      <text class="t-outer" x="230" y="200" text-anchor="middle">同種の依頼が</text>
+      <text class="t-outer" x="230" y="218" text-anchor="middle">繰り返し来たら</text>
+      <path class="outer" d="M770 236 H887 V162" marker-end="url(#aAcc)"/>
+    </svg>
+    <ul class="legend" aria-label="図の凡例">
+      <li>四角：支援の段階（上段は1チームへの支援、下段は複数チーム向けの提供）</li>
+      <li>黒い矢印：通常の進み方</li>
+      <li>緑の矢印：繰り返す依頼を基盤・ツールへ切り替える道</li>
+    </ul>
+    <figcaption>図1　支援の始まりから卒業まで。左から右に読みます。Team Topologiesの関わり方の定義<a class="ref" href="#s2">[2]</a>をもとに、このページで整理したものです。実際の支援は段階を飛ばしたり戻ったりします。</figcaption>
+  </figure>
+
+  <div class="prose">
+    <p>この図の大事な点は、<strong>右端の「卒業」を目標上の成果として数える</strong>ことです。そうすれば「依頼が減る＝成功」という、件数指標とは逆向きの、正しい方向にインセンティブが働きます。また、同じ種類の依頼が複数チームから来るなら、それは人手で対応し続けるより、基盤やツールに変える候補だというシグナルになります。</p>
+  </div>
+
+  <h3>(2) OKR：目標の書き方を決める</h3>
+  <div class="prose">
+    <p>GoogleのOKR運用では、OKRを<strong>約束（Committed）</strong>と<strong>挑戦（Aspirational）</strong>に分けます。約束は達成率100%が前提で、届かなければ振り返りで原因を探ります。挑戦は平均70%程度の達成を想定し、ばらつきも許容します。よくある失敗として、いつもの業務をそのまま書いたOKR、達成しても誰も気づかない目標、余力を隠して控えめに約束する「サンドバッギング」などが挙げられています<a class="ref" href="#s9">[9]</a>。</p>
+    <p>横断組織では、<strong>依頼の初動対応や基盤の稼働は約束</strong>、<strong>能力移転や新しい基盤・AI活用の定着は挑戦</strong>と分けると、運用を守りながら攻めの目標を持てます。</p>
+  </div>
+
+  <h3>(3) DORA・SPACE・DevEx：何で測るかを決める</h3>
+  <div class="scroll">
+    <table>
+      <caption>表3　横断組織が使える主な指標の枠組み</caption>
+      <thead><tr><th scope="col">枠組み</th><th scope="col">測るもの</th><th scope="col">横断組織での使いどころ</th><th scope="col">注意点</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">DORA 4指標</th><td>デプロイ頻度、変更のリードタイム、変更失敗率、復旧時間</td><td>支援先・基盤利用チームの「届け方」が良くなったか</td><td>チーム比較や個人評価に使うと歪む。前後比較に使う</td></tr>
+        <tr><th scope="row">SPACE</th><td>満足度、パフォーマンス、活動量、コミュニケーション、効率の5側面<a class="ref" href="#s16">[16]</a></td><td>アンケートとシステム指標を組み合わせ、1つの数字に頼らない</td><td>活動量（Activity）だけを取り出さない</td></tr>
+        <tr><th scope="row">DevEx</th><td>フィードバックループ、認知負荷、集中状態<a class="ref" href="#s17">[17]</a></td><td>AI活用や基盤の効果を「開発者の体感」で測る</td><td>定期的な同じ質問で推移を見る</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============ SUCCESS ============ -->
+<section class="block" id="success">
+  <div class="prose">
+    <h2>成功事例：相手の変化を目標にした組織</h2>
+  </div>
+
+  <div class="talk" aria-label="対話による導入">
+    <div class="say"><div class="who reimu" aria-hidden="true">霊夢</div><div class="bubble"><span class="name">霊夢</span><p>うまくいってる会社は、具体的に何を目標にしてるの？</p></div></div>
+    <div class="say r"><div class="who marisa" aria-hidden="true">魔理沙</div><div class="bubble"><span class="name">魔理沙</span><p>規模は違っても、共通点ははっきりしてるぜ。「強制せずに選ばれること」と「相手側で測ること」だ。海外と国内から6つ見ていこう。</p></div></div>
+  </div>
+
+  <div class="phases">
+    <article class="phase">
+      <header><span class="n">1</span><h3>Google SRE：運用の割合に上限を置く</h3><span class="chips"><span class="chip use">割り込み上限</span><span class="chip some">海外</span></span></header>
+      <dl>
+        <dt>何をしたか</dt><dd>運用作業（トイル）を各エンジニアの時間の50%未満に抑え、残りを将来のトイルを減らすエンジニアリングに充てる目標を掲げた<a class="ref" href="#s1">[1]</a>。</dd>
+        <dt>目標の置き方</dt><dd>「どれだけ運用したか」ではなく「運用に使う割合」をガードレールにし、超えたら改善へ時間を戻す。</dd>
+        <dt>7名組織への示唆</dt><dd>依頼対応の割合を記録し、上限を決めるだけで、改善テーマに使う時間を守れる。まずは測ることから始められる。</dd>
+      </dl>
+    </article>
+
+    <article class="phase">
+      <header><span class="n">2</span><h3>Spotify Backstage：強制せずに99%が使う基盤</h3><span class="chips"><span class="chip use">基盤を製品として扱う</span><span class="chip some">海外</span></span></header>
+      <dl>
+        <dt>何をしたか</dt><dd>社内開発者ポータルBackstageを、開発者に共感して作る製品として扱った。利用は強制せず、ガードレール内での技術選択、四半期ごとの生産性アンケート、社内の成功事例の発信、誰でも社内リポジトリに貢献できる文化で、約1年で任意利用率99%に達したと報じられている<a class="ref" href="#s6">[6]</a>。</dd>
+        <dt>目標・指標</dt><dd>新入社員が10本目のPRをマージするまでの日数（60日から20日未満へ短縮）を主指標にし、利用者満足度86%、コアチーム外からの貢献が80%、100以上のチームから150以上のプラグイン提供などを補助指標にしている<a class="ref" href="#s5">[5]</a>。</dd>
+        <dt>7名組織への示唆</dt><dd>基盤の目標を「作った機能数」ではなく、使う側の時間短縮と自発的な採用・貢献で測る。</dd>
+      </dl>
+    </article>
+
+    <article class="phase">
+      <header><span class="n">3</span><h3>Netflix Productivity Engineering：舗装路を整え、チームを比べない</h3><span class="chips"><span class="chip use">成果で測る</span><span class="chip some">海外</span></span></header>
+      <dl>
+        <dt>何をしたか</dt><dd>コーディング、テスト、デプロイ、監視、障害対応までを支えるフレームワークやツールを「舗装路（paved road）」として提供し、開発者が本業に集中できるようにした<a class="ref" href="#s7">[7]</a>。</dd>
+        <dt>目標・指標</dt><dd>出力量ではなく成果を重視し、SPACEの考え方と利用者満足、DORA指標を成功の目安にしている。チームごとに文脈が違うため、チーム同士を直接比べないと説明している<a class="ref" href="#s7">[7]</a>。</dd>
+        <dt>7名組織への示唆</dt><dd>支援先ごとに「前と比べてどうか」を見る。チームのランキングは作らない。</dd>
+      </dl>
+    </article>
+
+    <article class="phase">
+      <header><span class="n">4</span><h3>サイバーエージェント Developer Productivity室：テーマ別のSIGで任せる</h3><span class="chips"><span class="chip use">テーマのオーナー制</span><span class="chip human">国内</span></span></header>
+      <dl>
+        <dt>何をしたか</dt><dd>全社の開発生産性向上を担う横断組織を、ビルド・デリバリ（SIG-Build）、フィーチャーフラグと実験（SIG-Experiment）、計測・DevOps相談・ツール導入支援（SIG-Enabling）というテーマ別のSIGに分けて運営している<a class="ref" href="#s12">[12]</a>。</dd>
+        <dt>目標・指標</dt><dd>開発者体験を優先し、DORA・SPACE・DevExといったデータに基づく枠組みで判断すること、OSSへの貢献と社外発信を大事にすることを方針に掲げている<a class="ref" href="#s12">[12]</a>。</dd>
+        <dt>7名組織への示唆</dt><dd>4ミッションをテーマとして切り出し、それぞれにオーナーを置く構成は小さな組織でも再現できる。社外・社内への発信は、成果の不可視化への対策にもなる。</dd>
+      </dl>
+    </article>
+
+    <article class="phase">
+      <header><span class="n">5</span><h3>メルカリ Platform：ミッションを「開発者の提供を支援する」と定義</h3><span class="chips"><span class="chip use">相手を主語にしたミッション</span><span class="chip human">国内</span></span></header>
+      <dl>
+        <dt>何をしたか</dt><dd>マイクロサービス移行を機にプラットフォームチームを立ち上げ、ミッションを「グループの開発者が、顧客に新しい価値を迅速かつ安全に届けることを支援するための、インフラ・ツール・ワークフローの提供」と定めた。開発チームがセルフサービスで環境やツールを準備できる形を目指している<a class="ref" href="#s13">[13]</a>。</dd>
+        <dt>目標・指標</dt><dd>3事業で200以上のマイクロサービスを支える規模に育った<a class="ref" href="#s13">[13]</a>。ミッション文そのものが「開発者が速く安全に届けられること」を成果として定義している。</dd>
+        <dt>7名組織への示唆</dt><dd>チームのミッション文を「私たちが何をするか」ではなく「誰がどうなれるか」で書く。</dd>
+      </dl>
+    </article>
+
+    <article class="phase">
+      <header><span class="n">6</span><h3>DeNA SWET：横断で品質を担うエンジニア集団</h3><span class="chips"><span class="chip use">横断ならではの戦略実行</span><span class="chip human">国内</span></span></header>
+      <dl>
+        <dt>何をしたか</dt><dd>テストの専門組織SWET（Software Engineer in Test）を事業部から独立させ、E2Eテストの確立、テストの徹底した自動化、テストしやすい環境の提供を使命として、組織横断の戦略的な取り組みを可能にした。メンバーはテスト担当ではなく開発力のあるエンジニアとして位置づけた<a class="ref" href="#s14">[14]</a>。</dd>
+        <dt>目標・指標</dt><dd>使命を3つに絞り、「横断だからこそできること」に集中した。</dd>
+        <dt>7名組織への示唆</dt><dd>ミッションは数を絞って言語化する。メンバーを「便利な助っ人」ではなく専門性を持つエンジニアとして扱うことが、自律と採用の両方に効く。</dd>
+      </dl>
+    </article>
+  </div>
+
+  <div class="note idea">
+    <b>最初の一手の傾向</b>
+    <p>開発生産性チームの立ち上げを調べたDXのレポートでは、30%超がCI/CDの改善から始めており、オンボーディング、ドキュメント、開発環境など、開発者が毎日感じる痛みを先に取る例が多いとされています。見える痛みを早く取り、信頼を得てから範囲を広げる進め方です<a class="ref" href="#s15">[15]</a>。</p>
+  </div>
+</section>
+
+<!-- ============ FAILURE ============ -->
+<section class="block" id="failure">
+  <div class="prose">
+    <h2>失敗・反省事例：善意の仕組みが裏目に出たとき</h2>
+  </div>
+
+  <div class="talk" aria-label="対話による導入">
+    <div class="say"><div class="who reimu" aria-hidden="true">霊夢</div><div class="bubble"><span class="name">霊夢</span><p>失敗事例って、ダメな会社の話？</p></div></div>
+    <div class="say r"><div class="who marisa" aria-hidden="true">魔理沙</div><div class="bubble"><span class="name">魔理沙</span><p>いや、むしろ有名な会社や良かれと思った仕組みばかりだぜ。成功事例より、こっちのほうが自分たちが踏みそうな地雷がよく見える。</p></div></div>
+  </div>
+
+  <div class="phases">
+    <article class="phase">
+      <header><span class="n">1</span><h3>Spotifyモデル：そろえないままの自律</h3><span class="chips"><span class="chip no">自律の失敗</span></span></header>
+      <dl>
+        <dt>何が起きたか</dt><dd>元Spotifyの社員Jeremiah Leeは2020年の記事で、有名な「Squad・Tribe・Guild」モデルが社内でもうまく機能しなかったと振り返っています。理由として、エンジニアの責任者が曖昧なマトリクス組織、チーム間の協働のやり方が決まっていない「そろわない自律」、アジャイルの実践力を前提にしすぎたこと、独自用語が批判や見直しを難しくしたことを挙げています<a class="ref" href="#s4">[4]</a>。</dd>
+        <dt>教訓</dt><dd>自律は「放っておくこと」ではない。目的と協働の型をそろえたうえで任せないと、チームごとに毎回やり方を作り直すことになる。</dd>
+      </dl>
+    </article>
+    <article class="phase">
+      <header><span class="n">2</span><h3>生産性の測り方論争：作業量で人を測る</h3><span class="chips"><span class="chip no">指標の失敗</span></span></header>
+      <dl>
+        <dt>何が起きたか</dt><dd>2023年、開発者の生産性を測る手法を提案したコンサルティング会社の記事に対し、Kent BeckとGergely Oroszは、努力や出力を測る指標は行動を歪め、成果と影響で測るほうが説明責任を持つチームの実態に合うと反論しました<a class="ref" href="#s10">[10]</a>。</dd>
+        <dt>教訓</dt><dd>横断チームの目標を「支援件数」「PR数」にすると、件数を増やす行動が報われる。目標と個人評価を直結させると、数字の取引が始まる。</dd>
+      </dl>
+    </article>
+    <article class="phase">
+      <header><span class="n">3</span><h3>DORA 2024：基盤を作れば必ず良くなるわけではない</h3><span class="chips"><span class="chip no">基盤の落とし穴</span></span></header>
+      <dl>
+        <dt>何が起きたか</dt><dd>2024年のDORAレポートでは、社内開発者プラットフォームの利用者は個人の生産性が8%、チームのパフォーマンスが10%高かった一方で、デリバリーの速度（スループット）は8%、変更の安定性は14%低いという結果が報告されました<a class="ref" href="#s8">[8]</a><a class="ref" href="#s18">[18]</a>。</dd>
+        <dt>教訓</dt><dd>基盤は「作った」時点ではなく、利用者側の指標で効果を確認して初めて成果と言える。導入前後でDORA指標を見比べる仕組みを最初から組み込む。</dd>
+      </dl>
+    </article>
+    <article class="phase">
+      <header><span class="n">4</span><h3>DevOpsチームのサイロ化：終わりのない専任チーム</h3><span class="chips"><span class="chip no">構造の失敗</span></span></header>
+      <dl>
+        <dt>何が起きたか</dt><dd>開発と運用の橋渡しのために作った専任チームが、かえって新しいサイロになり両者を遠ざけるパターンが、典型的なアンチパターンとして整理されています<a class="ref" href="#s3">[3]</a>。</dd>
+        <dt>教訓</dt><dd>支援には期限と卒業条件を置く。横断チームがいなくても回る状態を成果とみなす。</dd>
+      </dl>
+    </article>
+    <article class="phase">
+      <header><span class="n">5</span><h3>OKRの誤用：いつもの業務を目標と呼ぶ</h3><span class="chips"><span class="chip no">目標設定の失敗</span></span></header>
+      <dl>
+        <dt>何が起きたか</dt><dd>Googleの運用ガイドでは、いつもの業務をそのまま書いたOKR、達成しても誰も気づかない目標、控えめな約束、必要条件だけで十分条件になっていない成果指標などを典型的な落とし穴としています<a class="ref" href="#s9">[9]</a>。</dd>
+        <dt>教訓</dt><dd>「依頼に対応する」「基盤を運用する」は目標ではなく約束枠の前提。目標には、達成したら誰かが気づく変化を書く。</dd>
+      </dl>
+    </article>
+  </div>
+</section>
+
+<!-- ============ COMPARE ============ -->
+<section class="block" id="compare">
+  <div class="prose">
+    <h2>事例の比較：何を目標にし、何が自律を支えたか</h2>
+    <p>成功・失敗の分かれ目を横に並べると、目標の主語、測る場所、自律を支える仕組みの3点に差が出ています。</p>
+  </div>
+  <div class="scroll">
+    <table>
+      <caption>表4　事例の比較（出典は各章を参照）</caption>
+      <thead><tr><th scope="col">事例</th><th scope="col">目標の主語</th><th scope="col">測る場所</th><th scope="col">自律を支えた／欠いた仕組み</th><th scope="col">結果</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">Google SRE</th><td>チーム（時間配分）</td><td>運用作業の割合</td><td>上限を超えたら改善へ時間を戻すルール</td><td><span class="chip use">成功</span></td></tr>
+        <tr><th scope="row">Spotify Backstage</th><td>利用者（開発者）</td><td>オンボーディング日数、満足度、貢献の広がり</td><td>強制しない、誰でも貢献できる、成功事例の発信</td><td><span class="chip use">成功</span></td></tr>
+        <tr><th scope="row">Netflix</th><td>利用者（開発者）</td><td>SPACE、満足度、DORA</td><td>チーム同士を比べない</td><td><span class="chip use">成功</span></td></tr>
+        <tr><th scope="row">サイバーエージェント</th><td>開発者体験</td><td>DORA・SPACE・DevEx</td><td>テーマ別SIGにオーナーを置く、社外発信</td><td><span class="chip use">成功</span></td></tr>
+        <tr><th scope="row">メルカリ</th><td>開発者（ミッション文）</td><td>セルフサービスで提供できる範囲</td><td>ミッション文で成果を定義</td><td><span class="chip use">成功</span></td></tr>
+        <tr><th scope="row">DeNA SWET</th><td>組織全体の品質</td><td>3つの使命の達成</td><td>使命を絞る、専門エンジニアとして扱う</td><td><span class="chip use">成功</span></td></tr>
+        <tr><th scope="row">Spotifyモデル</th><td>各チーム（ばらばら）</td><td>共通の基準なし</td><td>協働の型と責任者が欠けた</td><td><span class="chip no">反省</span></td></tr>
+        <tr><th scope="row">作業量で測る手法</th><td>個人</td><td>努力・出力</td><td>評価直結で数字の取引が発生</td><td><span class="chip no">反省</span></td></tr>
+        <tr><th scope="row">DevOpsサイロ</th><td>専任チーム</td><td>チーム自身の作業</td><td>期限・卒業条件がない</td><td><span class="chip no">反省</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="note warn">
+    <b>比較の限界</b>
+    <p>海外事例の多くは数百〜数千人規模の組織です。数値（99%、60日→20日など）は目標値の参考ではなく、「どこで測ったか」の参考として読んでください。7名の組織では、指標の数を絞り、手作業やアンケートで始めるのが現実的です。</p>
+  </div>
+</section>
+
+<!-- ============ APPLY ============ -->
+<section class="block" id="apply">
+  <div class="prose">
+    <h2>7名・4ミッションへの当てはめ：目標案</h2>
+  </div>
+
+  <div class="talk" aria-label="対話による導入">
+    <div class="say"><div class="who reimu" aria-hidden="true">霊夢</div><div class="bubble"><span class="name">霊夢</span><p>7人で4つのミッション。全部やろうとすると薄くなりそう。</p></div></div>
+    <div class="say r"><div class="who marisa" aria-hidden="true">魔理沙</div><div class="bubble"><span class="name">魔理沙</span><p>だからまず、チーム全体で1つの目的をそろえる。そのうえで、依頼対応は当番制で守り、残りはテーマごとにオーナーを決めて任せるんだぜ。原則5の「そろえてから任せる」だな。</p></div></div>
+    <div class="say"><div class="who reimu" aria-hidden="true">霊夢</div><div class="bubble"><span class="name">霊夢</span><p>オーナーが自分で目標を書くなら、依頼待ちにはなりにくそうね。</p></div></div>
+  </div>
+
+  <h3>ステップ1：チーム共通の目的文をそろえる</h3>
+  <div class="prose">
+    <p>メルカリのミッション文のように、主語を「支援先」にした1文を全員で作ります。以下は叩き台です。</p>
+  </div>
+  <div class="note">
+    <b>目的文の例</b>
+    <p>「社内のプロダクトチームが、自分たちの力で、速く安全に価値を届けられる状態をつくる」</p>
+  </div>
+  <div class="prose">
+    <p>この1文があると、「この依頼は相手が自走できるようになる支援か」「この基盤は相手を速くするか」という判断基準を全員が共有できます。4つのミッションは、この目的に向かう4つの手段という位置づけになります。</p>
+  </div>
+
+  <h3>ステップ2：時間とテーマのポートフォリオを決める</h3>
+  <div class="scroll">
+    <table>
+      <caption>表5　4ミッションの型・目標の種類・指標例（人数と数値は出発点の目安）</caption>
+      <thead><tr><th scope="col">ミッション</th><th scope="col">型</th><th scope="col">目標の種類</th><th scope="col">指標の例（相手側で測る）</th><th scope="col">体制の例</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">技術支援（SWAT）</th><td>Enabling</td><td>約束：初動対応<br>挑戦：卒業</td><td>初動までの時間、卒業した支援の数、同種依頼の再発数</td><td>2名の輪番（週替わりの支援当番）</td></tr>
+        <tr><th scope="row">共通基盤</th><td>Platform</td><td>約束：稼働<br>挑戦：採用・時間短縮</td><td>自発的に採用したチーム数、新規サービスの立ち上げ日数、利用者満足度</td><td>オーナー1〜2名</td></tr>
+        <tr><th scope="row">品質・開発生産性</th><td>Enabling→Platform</td><td>挑戦</td><td>対象チームのリードタイム・変更失敗率の前後比較、CIの待ち時間</td><td>オーナー1〜2名</td></tr>
+        <tr><th scope="row">AI活用</th><td>Enabling</td><td>挑戦（探索）</td><td>AIを日常的に使うチーム数、開発者アンケートでの体感時間短縮、事例の共有数</td><td>オーナー1〜2名</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="prose">
+    <p>支援当番の2名が割り込みを受け止めることで、残り5名はテーマに集中できます。当番を輪番にするのは、全員が支援先の現場感を持ち続けるためと、当番で見つけた「繰り返す依頼」をテーマ側に持ち帰るためです。四半期ごとに、4ミッションのうち重点を1〜2つに絞るとさらに方向がそろいます。</p>
+  </div>
+
+  <h3>ステップ3：ガードレールを置く</h3>
+  <div class="prose">
+    <p>目標とは別に、守るべき下限を3つだけ決めます。</p>
+  </div>
+  <ul class="checklist">
+    <li><strong>割り込み割合</strong>：チーム全体の依頼対応・運用が一定割合（まずは計測し、SREの例を参考に50%を上限の目安に）を超えたら、テーマの範囲を縮めて立て直す<a class="ref" href="#s1">[1]</a></li>
+    <li><strong>支援先の満足度</strong>：支援終了時の短いアンケートで、下がっていないかを見る</li>
+    <li><strong>チームの持続性</strong>：メンバーの負荷や満足度が下がっていないかを月1回確認する</li>
+  </ul>
+
+  <h3>ステップ4：テーマオーナーが自分で目標を書く</h3>
+  <div class="prose">
+    <p>目標はリーダーが割り振るのではなく、テーマのオーナーが次のテンプレートで書き、チームでレビューします。Googleの調査（Project Aristotle）では、効果的なチームの条件として心理的安全性に次いで、信頼性、目標と役割の明確さ、仕事の意味、影響の実感が挙がっています<a class="ref" href="#s11">[11]</a>。自分で書いた目標は「意味」と「影響」を感じやすく、レビューで「明確さ」がそろいます。</p>
+  </div>
+
+<pre class="code" aria-label="目標テンプレート"><span class="c"># 目標テンプレート（四半期）</span>
+テーマ      ：
+オーナー    ：
+目的との関係：チーム目的文のどこに効くか（1文）
+Objective   ：支援先を主語にした、達成したら誰かが気づく変化
+種類        ：約束 / 挑戦
+Key Results ：相手側で測る指標を2〜3個（前→後の形で）
+やらないこと：今期は手を出さない範囲
+卒業条件    ：どうなったら手を離すか
+ガードレール：割り込み割合・支援先満足度・チームの負荷</pre>
+
+  <h3>記入例</h3>
+  <div class="phases">
+    <article class="phase">
+      <header><span class="n">例1</span><h3>AI活用</h3><span class="chips"><span class="chip some">挑戦</span></span></header>
+      <dl>
+        <dt>Objective</dt><dd>2つのプロダクトチームが、AIコーディングエージェントを日常の開発に自分たちで組み込めている</dd>
+        <dt>Key Results</dt><dd>①対象チームの開発者アンケートで「定型作業の時間が減った」と答える割合 現状→目標　②対象チームが自分で書いたエージェント向け指示ファイル（例：CLAUDE.md）がリポジトリに整備され、更新され続けている　③横断チームの手を借りずに新しい使い方を1件以上社内共有している</dd>
+        <dt>やらないこと</dt><dd>全社一斉展開、ツールの全社標準化</dd>
+        <dt>卒業条件</dt><dd>②③を2か月続けて満たしたら伴走を終了し、事例を次のチームに展開する</dd>
+      </dl>
+    </article>
+    <article class="phase">
+      <header><span class="n">例2</span><h3>技術支援（SWAT）</h3><span class="chips"><span class="chip use">約束</span><span class="chip some">挑戦</span></span></header>
+      <dl>
+        <dt>Objective（約束）</dt><dd>支援依頼に、決めた時間内に初動できる</dd>
+        <dt>Key Results</dt><dd>初動までの時間が目標内に収まった割合 100%</dd>
+        <dt>Objective（挑戦）</dt><dd>同じ種類の困りごとで、二度目の依頼が来ない</dd>
+        <dt>Key Results</dt><dd>①支援した案件のうち卒業条件を満たした割合　②同種依頼の再発数 現状→半減　③再発した依頼のうち、基盤・ドキュメント化の候補としてテーマ側に引き渡した件数</dd>
+      </dl>
+    </article>
+  </div>
+  <div class="note warn">
+    <b>数値は叩き台です</b>
+    <p>「現状→目標」の具体値は、最初の2週間の計測（第9章）を見てから決めてください。測らずに決めた数値は、達成不能か、楽すぎるかのどちらかになりがちです。</p>
+  </div>
+</section>
+
+<!-- ============ EXPLAIN ============ -->
+<section class="block" id="explain">
+  <div class="prose">
+    <h2>上層部への説明：件数ではなく変化で報告する</h2>
+  </div>
+
+  <div class="talk" aria-label="対話による導入">
+    <div class="say"><div class="who reimu" aria-hidden="true">霊夢</div><div class="bubble"><span class="name">霊夢</span><p>でも上の人は「今期何件支援したの？」って聞いてくるのよ。</p></div></div>
+    <div class="say r"><div class="who marisa" aria-hidden="true">魔理沙</div><div class="bubble"><span class="name">魔理沙</span><p>件数は参考値として出せばいいんだぜ。主役は「どのチームの何が、どれだけ変わったか」。経営が本当に知りたいのは、横断チームにかけたコストで事業の開発がどう良くなったかだからな。</p></div></div>
+  </div>
+
+  <div class="scroll">
+    <table>
+      <caption>表6　上層部の関心と、報告に使う指標の対応</caption>
+      <thead><tr><th scope="col">上層部の関心</th><th scope="col">報告する内容</th><th scope="col">避けたい報告</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">事業の開発は速くなったか</th><td>支援先・基盤利用チームのリードタイムやデプロイ頻度の前後比較</td><td>横断チームが書いたPR数</td></tr>
+        <tr><th scope="row">品質・安定性は保てているか</th><td>変更失敗率、復旧時間の推移</td><td>テストケース数</td></tr>
+        <tr><th scope="row">横断チームがいる意味はあるか</th><td>卒業したチーム数、自発的に採用された基盤、開発者アンケートの推移</td><td>支援件数だけ</td></tr>
+        <tr><th scope="row">AIなど新技術は根づいたか</th><td>日常的に使うチーム数、社内で自走して広がった事例</td><td>勉強会の開催回数だけ</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="prose">
+    <p>上層部に先に合意してもらうと良いのは、次の3点です。</p>
+    <ol>
+      <li>目標を約束と挑戦に分け、挑戦は70%程度の達成で上出来とみなすこと<a class="ref" href="#s9">[9]</a></li>
+      <li>支援件数が減ることは、卒業が進んだ結果であり得ること</li>
+      <li>OKRの達成率を個人の評価に直結させないこと<a class="ref" href="#s10">[10]</a></li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============ ROADMAP ============ -->
+<section class="block" id="roadmap">
+  <div class="prose">
+    <h2>最初の90日：測ってから決め、任せてから振り返る</h2>
+  </div>
+
+  <div class="talk" aria-label="対話による導入">
+    <div class="say"><div class="who reimu" aria-hidden="true">霊夢</div><div class="bubble"><span class="name">霊夢</span><p>明日から何をすればいいの？</p></div></div>
+    <div class="say r"><div class="who marisa" aria-hidden="true">魔理沙</div><div class="bubble"><span class="name">魔理沙</span><p>いきなり目標を書かずに、まず2週間「時間の使い方」と「依頼」を記録するんだぜ。現状がわからないまま数字を決めても、当たらないからな。</p></div></div>
+  </div>
+
+  <ol class="road">
+    <li>
+      <h3>1〜2週目：時間と依頼を記録する</h3>
+      <p>全員が、依頼対応・運用・テーマ作業の時間をざっくり記録する。依頼は「どのチームから・どんな種類・何回目か」を残す。</p>
+      <p class="exit">完了の目安：割り込み割合と、繰り返し来る依頼の上位3種類がわかる</p>
+    </li>
+    <li>
+      <h3>3〜4週目：目的文とチームの受け口を決める</h3>
+      <p>目的文を全員で作り、受ける依頼・受けない依頼・窓口・初動時間を「チームの受け口」として社内に公開する。上司と、約束／挑戦の区別と報告の仕方を合意する。</p>
+      <p class="exit">完了の目安：目的文と受け口が文書化され、上司の合意がある</p>
+    </li>
+    <li>
+      <h3>5〜6週目：テーマとオーナーを決め、目標を書く</h3>
+      <p>記録から見えた痛みをもとに今期の重点テーマを1〜2つ選び、オーナーがテンプレートで目標を書く。支援当番の輪番を始める。</p>
+      <p class="exit">完了の目安：全テーマに目標と卒業条件がある</p>
+    </li>
+    <li>
+      <h3>7〜12週目：隔週レビューと月1回のデモ</h3>
+      <p>隔週で各オーナーが進捗と障害を短く共有し、チームが助ける。月1回、支援先や上層部も呼んで成果をデモする。割り込み割合が上限を超えたら、テーマの範囲を縮める。</p>
+      <p class="exit">完了の目安：レビューとデモが2回以上回っている</p>
+    </li>
+    <li>
+      <h3>13週目：振り返りと次の四半期</h3>
+      <p>目標の達成度を約束・挑戦ごとに振り返る。支援は「卒業」「継続」「基盤化」に、テーマは「継続」「撤退」に分けて次の四半期を決める。</p>
+      <p class="exit">完了の目安：次の四半期の重点と、やめることが決まっている</p>
+    </li>
+  </ol>
+</section>
+
+<!-- ============ FAQ ============ -->
+<section class="block" id="faq">
+  <div class="prose">
+    <h2>よくある迷い</h2>
+  </div>
+  <details class="faq">
+    <summary>依頼を断ると、他チームとの関係が悪くならない？</summary>
+    <div><p>「断る」のではなく、受け口で「どう受けるか」を先に示しておくのが効果的です。たとえば「この種類はドキュメントを案内する」「この種類は伴走するが期間は2週間」と決めておけば、相手も予測できます。DevOps Topologiesの整理でも、期限のない支援は結局相手との距離を広げるとされています<a class="ref" href="#s3">[3]</a>。</p></div>
+  </details>
+  <details class="faq">
+    <summary>個人の評価とはどう結びつければいい？</summary>
+    <div><p>OKRの達成率をそのまま評価に使うと、控えめな目標や数字の取引が起きやすくなります<a class="ref" href="#s9">[9]</a><a class="ref" href="#s10">[10]</a>。評価では、目標に向けてどう判断し、誰をどう助け、何を学んで共有したかといった行動と貢献を見るほうが、自律を損ないにくいです。</p></div>
+  </details>
+  <details class="faq">
+    <summary>指標を自動で取る仕組みがない</summary>
+    <div><p>最初はアンケートと手作業の記録で十分です。SPACEやDevExも、アンケートによる体感の計測を正式な手段として含めています<a class="ref" href="#s16">[16]</a><a class="ref" href="#s17">[17]</a>。同じ質問を定期的に聞き、推移を見ることを優先してください。</p></div>
+  </details>
+  <details class="faq">
+    <summary>メンバーのやりたいことと、組織の要請が合わない</summary>
+    <div><p>挑戦枠を使います。目的文に効くと説明できるなら、メンバーの関心から始まったテーマを挑戦OKRとして認めると、自律の動機になります。目的文に結びつかない場合は、まず小さな探索として期限を区切ります。</p></div>
+  </details>
+  <details class="faq">
+    <summary>7名で4ミッションは多すぎない？</summary>
+    <div><p>四半期ごとに重点を1〜2つに絞り、残りは約束（最低限の運用）だけにする方法があります。DeNA SWETのように使命を絞って言語化した事例<a class="ref" href="#s14">[14]</a>や、サイバーエージェントのようにテーマ別に分けて任せる事例<a class="ref" href="#s12">[12]</a>が参考になります。</p></div>
+  </details>
+</section>
+
+<!-- ============ SOURCES ============ -->
+<section class="block" id="sources">
+  <div class="prose">
+    <h2>出典</h2>
+    <p>2026年10月7日時点で確認した資料です。本文中の番号はこの一覧に対応します。</p>
+  </div>
+  <ol class="sources">
+    <li id="s1"><a href="https://sre.google/sre-book/eliminating-toil/">Site Reliability Engineering, Chapter 5: Eliminating Toil（Google）</a></li>
+    <li id="s2"><a href="https://teamtopologies.com/learn">Team Topologies: Key Concepts（Team Topologies）</a></li>
+    <li id="s3"><a href="https://web.devopstopologies.com/">DevOps Topologies（Matthew Skelton ほか）</a></li>
+    <li id="s4"><a href="https://www.jeremiahlee.com/posts/failed-squad-goals/">Spotify’s Failed #SquadGoals（Jeremiah Lee, 2020-04-19）</a></li>
+    <li id="s5"><a href="https://backstage.spotify.com/discover/blog/how-we-measure-backstage-success-at-spotify/">How we measure Backstage success at Spotify（Spotify）</a></li>
+    <li id="s6"><a href="https://thenewstack.io/how-spotify-achieved-a-voluntary-99-internal-platform-adoption-rate/">How Spotify Achieved a Voluntary 99% Internal Platform Adoption Rate（The New Stack）</a></li>
+    <li id="s7"><a href="https://linearb.io/blog/creating-a-culture-of-engineering-productivity-at-netflix">Creating a culture of engineering productivity at Netflix（LinearB Dev Interrupted, 2022-03）</a></li>
+    <li id="s8"><a href="https://dora.dev/report/2024">Accelerate State of DevOps Report 2024（DORA）</a></li>
+    <li id="s9"><a href="https://www.whatmatters.com/resources/google-okr-playbook">Google’s OKR Playbook（What Matters）</a></li>
+    <li id="s10"><a href="https://newsletter.pragmaticengineer.com/p/measuring-developer-productivity">Measuring developer productivity? A response to McKinsey（Gergely Orosz, Kent Beck, 2023-08-29）</a></li>
+    <li id="s11"><a href="https://leaderfactor.com/learn/project-aristotle-psychological-safety">Google Project Aristotle and Psychological Safety（LeaderFactor）</a></li>
+    <li id="s12"><a href="https://zenn.dev/cadp/articles/276f56094cfff2">サイバーエージェント Developer Productivity室の紹介（Zenn, 2024-10-31）</a></li>
+    <li id="s13"><a href="https://codezine.jp/article/detail/19938">メルカリのPlatform Engineering 7年間の取り組み（CodeZine, 2024-12-26）</a></li>
+    <li id="s14"><a href="https://codezine.jp/article/detail/7666">DeNAのSWETグループの紹介（CodeZine, 2014-03-17）</a></li>
+    <li id="s15"><a href="https://getdx.com/report/first-devprod-projects/">First DevProd projects（DX）</a></li>
+    <li id="s16"><a href="https://queue.acm.org/detail.cfm?id=3454124">The SPACE of Developer Productivity（ACM Queue, 2021）</a></li>
+    <li id="s17"><a href="https://queue.acm.org/detail.cfm?id=3595878">DevEx: What Actually Drives Productivity（ACM Queue, 2023）</a></li>
+    <li id="s18"><a href="https://www.techtarget.com/it-infrastructure/news/366615375/Google-DORA-issues-platform-engineering-caveats">Google DORA issues platform engineering caveats（TechTarget, 2024-11-07）</a></li>
+  </ol>
+
+  <footer>
+    <p><a href="../">thinking トップに戻る</a></p>
+    このページは事例をもとに目標設計の考え方をまとめたものです。人数配分・上限・指標の数値は出発点の目安であり、自組織の計測結果に合わせて調整してください。事例の数値は各出典の公開時点のものです。
+  </footer>
+</section>
+</main>
+</div>
+
+<script>
+(function(){
+  var root=document.documentElement, btn=document.getElementById('themeBtn');
+  try{var t=localStorage.getItem('theme'); if(t) root.setAttribute('data-theme',t);}catch(e){}
+  btn.addEventListener('click',function(){
+    var cur=root.getAttribute('data-theme');
+    if(!cur){cur=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}
+    var next=cur==='dark'?'light':'dark';
+    root.setAttribute('data-theme',next);
+    try{localStorage.setItem('theme',next);}catch(e){}
+  });
+
+  var links=[].slice.call(document.querySelectorAll('nav.toc a'));
+  if('IntersectionObserver' in window){
+    var io=new IntersectionObserver(function(es){
+      es.forEach(function(e){
+        if(e.isIntersecting){
+          links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href')==='#'+e.target.id);});
+        }
+      });
+    },{rootMargin:'-40% 0px -55% 0px'});
+    document.querySelectorAll('section.block').forEach(function(s){io.observe(s);});
+  }
+})();
+</script>
+</body>
+</html>
